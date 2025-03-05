@@ -1,1 +1,1 @@
-const games = ["Up and Down", "TBD"];
+export const games = ["Up and Down", "TBD"];

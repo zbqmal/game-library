@@ -1,3 +1,5 @@
+import { games } from "./constants";
+
 export default function Home() {
   return (
     <div>
