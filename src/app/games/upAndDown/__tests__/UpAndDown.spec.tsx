@@ -74,6 +74,29 @@ describe("UpAndDown", () => {
     expect(screen.getByText("HINT: CORRECT!!!")).toBeInTheDocument();
   });
 
+  test.each([
+    { value: null, description: "null" },
+    { value: "", description: "an empty string" },
+  ])(
+    "displays nothing when no guess has been made (input value: $description)",
+    ({ value }) => {
+      mockGetRandomInt.mockReturnValue(30);
+
+      render(<UpAndDown />);
+
+      const input = screen.getByPlaceholderText(
+        "Enter your guess.."
+      ) as HTMLInputElement;
+      const button = screen.getByText("GUESS");
+
+      fireEvent.change(input, { target: { value } });
+      fireEvent.click(button);
+
+      expect(screen.queryByText("Your last guess:")).not.toBeInTheDocument();
+      expect(screen.queryByText("HINT:")).not.toBeInTheDocument();
+    }
+  );
+
   it("ensures the form does not submit empty values", () => {
     render(<UpAndDown />);
 

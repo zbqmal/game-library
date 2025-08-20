@@ -6,7 +6,16 @@ import { GuessInput, UpAndDownDescription } from "./components";
 
 export default function UpAndDown() {
   const [answer, setAnswer] = useState<number>(getRandomInt(1, 100));
-  const [guess, setGuess] = useState<number>(0);
+  const [guess, setGuess] = useState<number | null>(null);
+
+  /**
+   * Checks if the user's guess is valid.
+   * @param guess - The number guessed by the user.
+   * @returns A boolean indicating whether the guess is valid.
+   */
+  const isGuessValid = (guess: number | null) => {
+    return guess !== null && guess > 0;
+  };
 
   /**
    * Submit button handler to apply user's guess.
@@ -21,6 +30,20 @@ export default function UpAndDown() {
     setGuess(Number(guess));
   };
 
+  /**
+   * Generates a hint based on the user's guess compared to the correct answer.
+   *
+   * @param guess - The number guessed by the user.
+   * @returns A string indicating whether the guess should be higher ("UP"), lower ("DOWN"), or if it is correct ("CORRECT!!!").
+   */
+  const generateHint = (guess: number | null, answer: number) => {
+    if (guess === null) return "";
+    if (guess > answer) return "DOWN";
+    if (guess < answer) return "UP";
+    if (guess === answer) return "CORRECT!!!";
+    return "";
+  };
+
   return (
     <>
       <UpAndDownDescription />
@@ -28,13 +51,10 @@ export default function UpAndDown() {
         <GuessInput />
         <button type="submit">GUESS</button>
       </form>
-      {guess > 0 && (
+      {isGuessValid(guess) && (
         <>
           <div>Your last guess: {guess}</div>
-          <div>
-            HINT:{" "}
-            {guess > answer ? "DOWN" : guess < answer ? "UP" : "CORRECT!!!"}
-          </div>
+          <div>HINT: {generateHint(guess, answer)}</div>
         </>
       )}
     </>
