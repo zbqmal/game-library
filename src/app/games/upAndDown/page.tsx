@@ -1,5 +1,13 @@
-const UpAndDown = () => {
-  return <>UpAndDown</>;
-};
+"use client";
 
-export default UpAndDown;
+import { UpAndDownDescription } from "./components/UpAndDownDescription";
+import { UpAndDownGame } from "./components/UpAndDownGame";
+
+export default function UpAndDown() {
+  return (
+    <>
+      <UpAndDownDescription />
+      <UpAndDownGame />
+    </>
+  );
+}

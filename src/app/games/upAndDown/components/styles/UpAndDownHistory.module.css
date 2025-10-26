@@ -1,0 +1,55 @@
+.history {
+  width: 220px;
+}
+
+.historyTitle {
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+  color: #0b3b66;
+}
+
+.empty {
+  color: #7a98a8;
+  font-size: 0.9rem;
+}
+
+.histList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.histItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fbfdff;
+  border: 1px solid #eef6fb;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.guess {
+  font-weight: 700;
+  color: #183049;
+}
+
+.histBadge {
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.up {
+  background: linear-gradient(90deg, #2d9cdb, #1e78c7);
+}
+.down {
+  background: linear-gradient(90deg, #f05a5a, #e33b3b);
+}
+.correct {
+  background: linear-gradient(90deg, #3ad29f, #2bbf86);
+}
