@@ -1,0 +1,37 @@
+.inputArea {
+  flex: 1;
+  min-width: 220px;
+}
+
+.hint {
+  margin-top: 10px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.up {
+  background: linear-gradient(90deg, #2d9cdb, #1e78c7);
+}
+
+.down {
+  background: linear-gradient(90deg, #f05a5a, #e33b3b);
+}
+
+.correct {
+  background: linear-gradient(90deg, #3ad29f, #2bbf86);
+}
+
+.note {
+  color: #334e63;
+}
+
+.over {
+  color: #b33a3a;
+  font-weight: 600;
+}
