@@ -14,7 +14,7 @@ node_modules
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
@@ -48,3 +48,6 @@ prisma/migrations/
 # IDE
 .vscode
 .idea
+
+# Old yarn lock file (we use pnpm now)
+yarn.lock
