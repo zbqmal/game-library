@@ -4,7 +4,6 @@
   "private": true,
   "description": "Game Library - A monorepo with Next.js frontend, Fastify backend, and shared types",
   "scripts": {
-    "install": "pnpm install",
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter api dev",
