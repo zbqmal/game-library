@@ -1,0 +1,41 @@
+// Prisma schema for Game Library
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Game {
+  id          String   @id @default(cuid())
+  gameId      String   @unique // e.g., "up-and-down"
+  name        String
+  description String
+  difficulty  String   // "easy", "medium", "hard"
+  minPlayers  Int
+  maxPlayers  Int
+  thumbnail   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  scores      Score[]
+
+  @@map("games")
+}
+
+model Score {
+  id          String   @id @default(cuid())
+  gameId      String
+  game        Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
+  playerName  String
+  score       Int
+  completedAt DateTime @default(now())
+  metadata    Json?    // For game-specific data like attempts, time, etc.
+  createdAt   DateTime @default(now())
+
+  @@index([gameId, score])
+  @@map("scores")
+}

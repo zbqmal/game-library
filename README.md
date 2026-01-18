@@ -1,51 +1,161 @@
-# 🎮 Game-Library
+# 🎮 Game Library
 
-## 📌 Description
+A modern **monorepo** featuring a collection of simple and enjoyable games with a Next.js frontend, Fastify backend API, and shared TypeScript types.
 
-A **React** webpage featuring a collection of simple and enjoyable games that users can easily access and play.
+## 📐 Architecture
 
-## Games
+This project uses a monorepo structure with pnpm workspaces:
 
-### 🎲 Up and Down
+- **`/apps/web`** - Next.js frontend with TypeScript
+- **`/apps/api`** - Fastify backend API with TypeScript
+- **`/packages/shared`** - Shared TypeScript types and utilities
 
-- You have 5 chances to guess a random number between 0 and 100.
-- If you guess a lower or higher number than the answer, you will get a hint as "Up" or "Down" respectively.
+## 🚀 Getting Started
 
-# 🧑‍💻 ABOUT DEVELOPMENT
+### Prerequisites
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+- Node.js >= 18.0.0
+- pnpm >= 8.0.0
 
-## Getting Started
-
-First, run the development server:
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies for all workspaces
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Running Locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Run both frontend and backend concurrently:**
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Or run them separately:**
 
-## Learn More
+```bash
+# Run frontend only (http://localhost:3000)
+pnpm dev:web
 
-To learn more about Next.js, take a look at the following resources:
+# Run backend only (http://localhost:3001)
+pnpm dev:api
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Environment Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### Backend API & Database
 
-## Deploy on Vercel
+The API requires a PostgreSQL database. We recommend using [Supabase](https://supabase.com) for development and production.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Create a `.env` file in `apps/api/` based on `.env.example`:
+   ```bash
+   cd apps/api
+   cp .env.example .env
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. Set your `DATABASE_URL` in `apps/api/.env`:
+   ```
+   DATABASE_URL="postgresql://user:password@localhost:5432/game_library"
+   ```
+
+3. Run Prisma migrations:
+   ```bash
+   cd apps/api
+   pnpm prisma migrate dev
+   ```
+
+See `apps/api/prisma/README.md` for more details on database setup and migrations.
+
+## 🎲 Games
+
+### Up and Down
+- You have 5 chances to guess a random number between 0 and 100
+- Get hints as "Up" or "Down" based on your guess
+
+## 🛠️ Development Scripts
+
+```bash
+# Build all packages
+pnpm build
+
+# Lint all packages
+pnpm lint
+
+# Type check all packages
+pnpm typecheck
+
+# Run tests (placeholder)
+pnpm test
+
+# Format code with Prettier
+pnpm format
+```
+
+## 🏗️ Project Structure
+
+```
+game-library/
+├── apps/
+│   ├── web/           # Next.js frontend
+│   │   ├── pages/
+│   │   ├── components/
+│   │   └── styles/
+│   └── api/           # Fastify backend
+│       ├── src/
+│       │   ├── server.ts
+│       │   └── routes/
+│       └── prisma/
+│           └── schema.prisma
+├── packages/
+│   └── shared/        # Shared TypeScript types
+│       └── src/
+│           └── types.ts
+├── .github/
+│   └── workflows/     # GitHub Actions CI
+├── pnpm-workspace.yaml
+└── package.json
+```
+
+## 🚢 Deployment
+
+### Frontend (Vercel)
+
+The Next.js frontend (`apps/web`) can be deployed to [Vercel](https://vercel.com):
+
+1. Connect your GitHub repository to Vercel
+2. Set the root directory to `apps/web`
+3. Vercel will automatically detect Next.js and configure build settings
+
+### Backend (Render)
+
+The Fastify backend (`apps/api`) can be deployed to [Render](https://render.com):
+
+1. Create a new Web Service on Render
+2. Set the root directory to `apps/api`
+3. Set build command: `pnpm install && pnpm build`
+4. Set start command: `pnpm start`
+5. Add environment variable: `DATABASE_URL` (your Supabase or PostgreSQL connection string)
+
+### Database (Supabase)
+
+We recommend [Supabase](https://supabase.com) for managed PostgreSQL:
+
+1. Create a new project on Supabase
+2. Copy the connection string from Settings > Database
+3. Use this as your `DATABASE_URL` environment variable
+
+## 🧪 Testing
+
+Test infrastructure is set up but tests are currently placeholders. Contributions welcome!
+
+## 🤝 Contributing
+
+This is an initial scaffold. Future development should extend:
+- Additional game implementations
+- Real authentication/authorization
+- Comprehensive test coverage
+- Additional API endpoints as needed
+
+## 📝 License
+
+Private project.
