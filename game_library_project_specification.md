@@ -127,7 +127,7 @@ Each scoreboard entry includes:
 
 #### Reference
 
-- Original C++ implementation exists on GitHub (link to be provided)
+- Original C++ implementation exists on GitHub [STAIRS](https://github.com/zbqmal/stairs)
 - Use original logic as reference
 - If possible, **port or render the original logic directly** rather than rewriting
 
