@@ -1,0 +1,93 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import SearchBar from '../SearchBar';
+
+describe('SearchBar', () => {
+  it('renders with placeholder text', () => {
+    const mockOnSearch = vi.fn();
+    render(<SearchBar onSearch={mockOnSearch} placeholder="Search games..." />);
+    
+    const input = screen.getByPlaceholderText('Search games...');
+    expect(input).toBeInTheDocument();
+  });
+
+  it('calls onSearch with debounced value', async () => {
+    const mockOnSearch = vi.fn();
+    const user = userEvent.setup();
+    
+    render(<SearchBar onSearch={mockOnSearch} debounceMs={100} />);
+    
+    const input = screen.getByRole('textbox', { name: /search games/i });
+    
+    // Type "test"
+    await user.type(input, 'test');
+    
+    // Should not be called immediately
+    expect(mockOnSearch).not.toHaveBeenCalledWith('test');
+    
+    // Wait for debounce
+    await waitFor(() => {
+      expect(mockOnSearch).toHaveBeenCalledWith('test');
+    }, { timeout: 200 });
+  });
+
+  it('shows clear button when text is entered', async () => {
+    const mockOnSearch = vi.fn();
+    const user = userEvent.setup();
+    
+    render(<SearchBar onSearch={mockOnSearch} />);
+    
+    const input = screen.getByRole('textbox', { name: /search games/i });
+    
+    // Initially no clear button
+    expect(screen.queryByLabelText('Clear search')).not.toBeInTheDocument();
+    
+    // Type something
+    await user.type(input, 'test');
+    
+    // Clear button should appear
+    expect(screen.getByLabelText('Clear search')).toBeInTheDocument();
+  });
+
+  it('clears input when clear button is clicked', async () => {
+    const mockOnSearch = vi.fn();
+    const user = userEvent.setup();
+    
+    render(<SearchBar onSearch={mockOnSearch} debounceMs={50} />);
+    
+    const input = screen.getByRole('textbox', { name: /search games/i });
+    
+    // Type something
+    await user.type(input, 'test');
+    expect(input).toHaveValue('test');
+    
+    // Click clear button
+    const clearButton = screen.getByLabelText('Clear search');
+    await user.click(clearButton);
+    
+    // Input should be cleared
+    expect(input).toHaveValue('');
+    
+    // Should eventually call onSearch with empty string
+    await waitFor(() => {
+      expect(mockOnSearch).toHaveBeenCalledWith('');
+    });
+  });
+
+  it('displays current search query', async () => {
+    const mockOnSearch = vi.fn();
+    const user = userEvent.setup();
+    
+    render(<SearchBar onSearch={mockOnSearch} />);
+    
+    const input = screen.getByRole('textbox', { name: /search games/i });
+    
+    // Type something
+    await user.type(input, 'puzzle');
+    
+    // Should show what we're searching for
+    expect(screen.getByText(/Searching for:/)).toBeInTheDocument();
+    expect(screen.getByText('puzzle')).toBeInTheDocument();
+  });
+});
