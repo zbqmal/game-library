@@ -78,7 +78,7 @@ export default function NumberGuessPage() {
 
   return (
     <GameShell
-      title="Number Guessing Game"
+      title="Up And Down"
       description={`Guess the secret number between ${DEFAULT_CONFIG.minNumber} and ${DEFAULT_CONFIG.maxNumber}. You have ${DEFAULT_CONFIG.maxAttempts} attempts!`}
     >
       <div className="space-y-6">
@@ -117,7 +117,7 @@ export default function NumberGuessPage() {
                 onChange={(e) => setInputValue(e.target.value)}
                 min={DEFAULT_CONFIG.minNumber}
                 max={DEFAULT_CONFIG.maxNumber}
-                className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-semibold"
+                className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-semibold text-black dark:text-white"
                 placeholder={`${DEFAULT_CONFIG.minNumber} - ${DEFAULT_CONFIG.maxNumber}`}
                 autoFocus
                 required

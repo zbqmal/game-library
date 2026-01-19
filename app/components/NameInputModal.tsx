@@ -66,7 +66,7 @@ export default function NameInputModal({ isOpen, score, onSubmit, onClose }: Nam
               onChange={(e) => setName(e.target.value)}
               onKeyDown={handleKeyDown}
               maxLength={20}
-              className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg"
+              className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-black dark:text-white"
               placeholder="Enter your name"
               required
             />

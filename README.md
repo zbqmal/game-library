@@ -72,7 +72,8 @@ This project is being built incrementally in small PRs:
 
 - ✅ **Phase 1**: Project setup and basic structure
 - ✅ **Phase 2**: Homepage with game grid and search
-- 🚧 **Phase 3**: Individual game implementations (Number Guessing, Rock-Paper-Scissors)
+- ✅ **Phase 3**: Individual game implementations (Up And Down, Rock-Paper-Scissors)
+- 🚧 **Phase 3.1**: UI fixes and refinements
 - 📋 **Phase 4**: Stairs game implementation
 - 📋 **Phase 5**: Backend API setup
 - 📋 **Phase 6**: Database integration
@@ -136,10 +137,10 @@ This project is being built incrementally in small PRs:
 
 ### Phase 3: Individual Game Implementations
 
-**Goal**: Implement Number Guessing and Rock-Paper-Scissors games with frontend-only scoreboards using localStorage.
+**Goal**: Implement Up And Down and Rock-Paper-Scissors games with frontend-only scoreboards using localStorage.
 
 **Deliverables**:
-- Number Guessing game with configurable range and attempts
+- Up And Down game with configurable range and attempts
 - Rock-Paper-Scissors game with countdown animation and consecutive win tracking
 - Shared components: GameShell, Scoreboard, NameInputModal, Countdown
 - Scoreboard adapter with localStorage persistence (adapter pattern for easy backend migration)
@@ -147,7 +148,7 @@ This project is being built incrementally in small PRs:
 - Migration from Vitest to Jest (user preference)
 
 **Acceptance Criteria**:
-- ✅ Number Guess page is functional with UP/DOWN/CONGRATS messages and retry
+- ✅ Up And Down page is functional with UP/DOWN/CONGRATS messages and retry
 - ✅ RPS page tracks consecutive wins and persists Top-10 scores to localStorage
 - ✅ Scoreboard displays Top-10 scores from localStorage
 - ✅ All Jest tests pass with good coverage
@@ -172,7 +173,7 @@ npm run test:e2e
 **Playing the Games**:
 1. Start the dev server: `npm run dev`
 2. Navigate to http://localhost:3000
-3. Click on "Number Guessing" or "Rock-Paper-Scissors" tiles
+3. Click on "Up And Down" or "Rock-Paper-Scissors" tiles
 4. Play the games and check scoreboards (RPS only)
 
 **Branch**: `feature/games-phase3`
@@ -186,7 +187,7 @@ npm run test:e2e
 
 ### Planned Games
 
-1. **Number Guessing Game** - Guess the secret number with limited attempts
+1. **Up And Down** - Guess the secret number with limited attempts
 2. **Rock-Paper-Scissors** - Play against the computer for consecutive wins
 3. **Stairs Game** - Climb stairs and win mini-games for high scores
 

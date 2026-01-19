@@ -4,7 +4,7 @@ import {
   processGuess,
   DEFAULT_CONFIG,
   GameConfig,
-} from '../number-guess/gameLogic';
+} from '../up-and-down/gameLogic';
 
 describe('Number Guess Game Logic', () => {
   describe('generateSecretNumber', () => {
