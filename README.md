@@ -74,6 +74,62 @@ This project is being built incrementally in small PRs:
 - 📋 **Phase 5**: Database integration
 - 📋 **Phase 6**: Additional games
 
+### Phase 2: Homepage with Game Grid and Search
+
+**Goal**: Implement a functional homepage that displays a grid of available games with client-side search capabilities.
+
+**Deliverables**:
+- Game metadata source with initial game entries (Number Guessing, Rock-Paper-Scissors, Stairs)
+- Responsive game grid with thumbnail cards
+- Client-side fuzzy search using Fuse.js
+- Accessible, keyboard-navigable UI components
+- Unit tests for core components
+- E2E test setup with basic smoke tests
+
+**Acceptance Criteria**:
+- ✅ Homepage displays a responsive grid of game cards with thumbnails and titles
+- ✅ Search bar filters games in real-time with debouncing (200ms)
+- ✅ Game tiles are keyboard-accessible and clickable
+- ✅ Images lazy-load and have proper alt text
+- ✅ Scoreboard badge displays on games that support high scores
+- ✅ Unit tests pass for SearchBar and GameGrid components
+- ✅ E2E test verifies search filtering and navigation
+
+**Implementation Plan**:
+1. Add game metadata module (`app/data/games.ts`)
+2. Create reusable components:
+   - `GameTile.tsx` - Individual game card
+   - `GameGrid.tsx` - Responsive grid container
+   - `SearchBar.tsx` - Debounced search input
+3. Update homepage to integrate components
+4. Add placeholder images for games
+5. Implement unit tests using Vitest + React Testing Library
+6. Add E2E test with Playwright (or manual verification steps)
+
+**Recommended Technical Choices**:
+- **Search**: Fuse.js for fuzzy client-side search (with substring fallback)
+- **Metadata**: Local TypeScript module (no backend yet)
+- **Images**: WebP placeholders in `public/images/games/`
+- **Testing**: Vitest for unit tests, Playwright for E2E
+
+**Branch Naming**: `feature/homepage-grid-search`
+
+**PR Checklist**:
+- [ ] All components are TypeScript with proper types
+- [ ] Accessibility: Focus outlines, alt text, keyboard navigation
+- [ ] Images use lazy loading
+- [ ] Search is debounced (200ms)
+- [ ] Unit tests pass (`npm run test`)
+- [ ] E2E tests pass or manual verification documented
+- [ ] Build succeeds (`npm run build`)
+- [ ] Lint passes (`npm run lint`)
+- [ ] README updated with Phase 2 details
+
+**Notes for Future Work**:
+- Phase 3 will implement actual game pages at routes specified in metadata
+- Backend integration (Phase 4) will replace local metadata with API calls
+- Scoreboard functionality will be added in Phase 4-5
+
 ## Games
 
 ### Planned Games
