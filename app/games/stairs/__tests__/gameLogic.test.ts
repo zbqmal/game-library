@@ -8,7 +8,6 @@ import {
   continueGame,
   getFinalScore,
   shouldRecordScore,
-  StairsGameState,
 } from '../gameLogic';
 
 describe('STAIRS Game Logic', () => {

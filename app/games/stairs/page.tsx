@@ -177,7 +177,7 @@ export default function StairsPage() {
               GAME START
             </button>
             <p className="mt-4 text-lg text-gray-600">
-              You're at the top! Launch a mini-game to record your score.
+              You&apos;re at the top! Launch a mini-game to record your score.
             </p>
           </div>
         )}
@@ -288,6 +288,7 @@ function SimpleMiniGame({ onComplete }: { onComplete: (result: 'win' | 'lose') =
   };
 
   const handleChoice = (choice: string) => {
+    // eslint-disable-next-line react-hooks/purity
     const computerPick = choices[Math.floor(Math.random() * 3)];
     setPlayerChoice(choice);
     setComputerChoice(computerPick);
