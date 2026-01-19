@@ -13,11 +13,13 @@ const GAME_ID = 'rock-paper-scissors';
 export default function RockPaperScissorsPage() {
   const [gameState, setGameState] = useState<GameState>(() => initializeGame());
   const [showCountdown, setShowCountdown] = useState(false);
+  const [countdownKey, setCountdownKey] = useState(0);
   const [pendingChoice, setPendingChoice] = useState<Choice | null>(null);
   const [showNameModal, setShowNameModal] = useState(false);
 
   const handleChoice = (choice: Choice) => {
     setPendingChoice(choice);
+    setCountdownKey(prev => prev + 1);
     setShowCountdown(true);
   };
 
@@ -181,6 +183,7 @@ export default function RockPaperScissorsPage() {
 
         {/* Overlays - rendered as children within the game container */}
         <Countdown 
+          key={countdownKey}
           start={3}
           show={showCountdown}
           onComplete={handleCountdownComplete}

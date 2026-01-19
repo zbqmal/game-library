@@ -12,14 +12,6 @@ export default function Countdown({ start, show, onComplete }: CountdownProps) {
   const [count, setCount] = useState(start);
 
   useEffect(() => {
-    if (!show) {
-      return;
-    }
-
-    setCount(start);
-  }, [show, start]);
-
-  useEffect(() => {
     if (!show) return;
 
     if (count === 0) {
