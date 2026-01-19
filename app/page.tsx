@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Fuse from 'fuse.js';
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
@@ -14,16 +14,17 @@ export default function Home() {
     setSearchQuery(query);
   }, []);
 
+  // Memoize Fuse instance to avoid recreating on every render
+  const fuse = useMemo(() => {
+    return new Fuse(games, {
+      keys: ['title', 'description', 'tags'],
+      threshold: 0.3,
+      ignoreLocation: true,
+    });
+  }, []);
+
   const filteredGames = searchQuery
-    ? (() => {
-        // Use Fuse.js for fuzzy search
-        const fuse = new Fuse(games, {
-          keys: ['title', 'description', 'tags'],
-          threshold: 0.3,
-          ignoreLocation: true,
-        });
-        return fuse.search(searchQuery).map(result => result.item);
-      })()
+    ? fuse.search(searchQuery).map(result => result.item)
     : games;
 
   return (
