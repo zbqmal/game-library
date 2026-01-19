@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import GameGrid from '../GameGrid';
 import { Game } from '../../data/games';

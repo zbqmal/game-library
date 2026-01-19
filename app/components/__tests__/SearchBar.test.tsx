@@ -1,11 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SearchBar from '../SearchBar';
 
 describe('SearchBar', () => {
   it('renders with placeholder text', () => {
-    const mockOnSearch = vi.fn();
+    const mockOnSearch = jest.fn();
     render(<SearchBar onSearch={mockOnSearch} placeholder="Search games..." />);
     
     const input = screen.getByPlaceholderText('Search games...');
@@ -13,7 +12,7 @@ describe('SearchBar', () => {
   });
 
   it('calls onSearch with debounced value', async () => {
-    const mockOnSearch = vi.fn();
+    const mockOnSearch = jest.fn();
     const user = userEvent.setup();
     
     render(<SearchBar onSearch={mockOnSearch} debounceMs={100} />);
@@ -33,7 +32,7 @@ describe('SearchBar', () => {
   });
 
   it('shows clear button when text is entered', async () => {
-    const mockOnSearch = vi.fn();
+    const mockOnSearch = jest.fn();
     const user = userEvent.setup();
     
     render(<SearchBar onSearch={mockOnSearch} />);
@@ -51,7 +50,7 @@ describe('SearchBar', () => {
   });
 
   it('clears input when clear button is clicked', async () => {
-    const mockOnSearch = vi.fn();
+    const mockOnSearch = jest.fn();
     const user = userEvent.setup();
     
     render(<SearchBar onSearch={mockOnSearch} debounceMs={50} />);
@@ -76,7 +75,7 @@ describe('SearchBar', () => {
   });
 
   it('displays current search query', async () => {
-    const mockOnSearch = vi.fn();
+    const mockOnSearch = jest.fn();
     const user = userEvent.setup();
     
     render(<SearchBar onSearch={mockOnSearch} />);

@@ -49,6 +49,9 @@ npm run dev
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm test` - Run Jest tests with coverage
+- `npm run test:watch` - Run Jest in watch mode
+- `npm run test:e2e` - Run Playwright E2E tests
 
 ## Project Structure
 
@@ -68,11 +71,12 @@ game-library/
 This project is being built incrementally in small PRs:
 
 - ✅ **Phase 1**: Project setup and basic structure
-- 🚧 **Phase 2**: Homepage with game grid and search
-- 📋 **Phase 3**: Individual game implementations
-- 📋 **Phase 4**: Backend API setup
-- 📋 **Phase 5**: Database integration
-- 📋 **Phase 6**: Additional games
+- ✅ **Phase 2**: Homepage with game grid and search
+- 🚧 **Phase 3**: Individual game implementations (Number Guessing, Rock-Paper-Scissors)
+- 📋 **Phase 4**: Stairs game implementation
+- 📋 **Phase 5**: Backend API setup
+- 📋 **Phase 6**: Database integration
+- 📋 **Phase 7**: Additional games
 
 ### Phase 2: Homepage with Game Grid and Search
 
@@ -129,6 +133,54 @@ This project is being built incrementally in small PRs:
 - Phase 3 will implement actual game pages at routes specified in metadata
 - Backend integration (Phase 4) will replace local metadata with API calls
 - Scoreboard functionality will be added in Phase 4-5
+
+### Phase 3: Individual Game Implementations
+
+**Goal**: Implement Number Guessing and Rock-Paper-Scissors games with frontend-only scoreboards using localStorage.
+
+**Deliverables**:
+- Number Guessing game with configurable range and attempts
+- Rock-Paper-Scissors game with countdown animation and consecutive win tracking
+- Shared components: GameShell, Scoreboard, NameInputModal, Countdown
+- Scoreboard adapter with localStorage persistence (adapter pattern for easy backend migration)
+- Comprehensive Jest tests for game logic and components
+- Migration from Vitest to Jest (user preference)
+
+**Acceptance Criteria**:
+- ✅ Number Guess page is functional with UP/DOWN/CONGRATS messages and retry
+- ✅ RPS page tracks consecutive wins and persists Top-10 scores to localStorage
+- ✅ Scoreboard displays Top-10 scores from localStorage
+- ✅ All Jest tests pass with good coverage
+- ✅ Code passes linting and TypeScript compilation
+- ✅ Games are playable and match specifications
+
+**Testing**:
+```bash
+# Run all Jest tests
+npm test
+
+# Run Jest in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm test -- --coverage
+
+# Run E2E tests
+npm run test:e2e
+```
+
+**Playing the Games**:
+1. Start the dev server: `npm run dev`
+2. Navigate to http://localhost:3000
+3. Click on "Number Guessing" or "Rock-Paper-Scissors" tiles
+4. Play the games and check scoreboards (RPS only)
+
+**Branch**: `feature/games-phase3`
+
+**Notes**:
+- Stairs game will be implemented in a separate PR (Phase 4)
+- Scoreboard uses localStorage via an adapter pattern for easy backend migration
+- Jest replaced Vitest per user preference
 
 ## Games
 
