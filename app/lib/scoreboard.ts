@@ -8,9 +8,11 @@ export interface ScoreboardAdapter {
   getTopScores(gameId: string, limit?: number): ScoreEntry[];
   saveScore(gameId: string, entry: Omit<ScoreEntry, 'timestamp'>): void;
   clearScores(gameId: string): void;
+  isTopScore(gameId: string, score: number): boolean;
 }
 
 const STORAGE_PREFIX = 'game-library-scores-';
+const MAX_SCORES_TO_RETRIEVE = 1000; // Used when retrieving all scores before filtering
 
 class LocalStorageScoreboardAdapter implements ScoreboardAdapter {
   private getStorageKey(gameId: string): string {
@@ -49,7 +51,7 @@ class LocalStorageScoreboardAdapter implements ScoreboardAdapter {
 
     try {
       const key = this.getStorageKey(gameId);
-      const existingScores = this.getTopScores(gameId, 1000); // Get all scores
+      const existingScores = this.getTopScores(gameId, MAX_SCORES_TO_RETRIEVE); // Get all scores
       
       const newEntry: ScoreEntry = {
         ...entry,
