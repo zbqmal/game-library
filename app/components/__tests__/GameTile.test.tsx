@@ -1,4 +1,3 @@
-import { describe, it, expect } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import GameTile from '../GameTile';
 import { Game } from '../../data/games';

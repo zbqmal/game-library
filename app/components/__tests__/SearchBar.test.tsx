@@ -1,4 +1,3 @@
-import { describe, it, expect, jest } from '@jest/globals';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SearchBar from '../SearchBar';
