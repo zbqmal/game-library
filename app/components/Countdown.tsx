@@ -3,14 +3,25 @@
 import { useEffect, useState } from 'react';
 
 interface CountdownProps {
+  start: number;
+  show: boolean;
   onComplete: () => void;
-  duration?: number;
 }
 
-export default function Countdown({ onComplete, duration = 3 }: CountdownProps) {
-  const [count, setCount] = useState(duration);
+export default function Countdown({ start, show, onComplete }: CountdownProps) {
+  const [count, setCount] = useState(start);
 
   useEffect(() => {
+    if (!show) {
+      return;
+    }
+
+    setCount(start);
+  }, [show, start]);
+
+  useEffect(() => {
+    if (!show) return;
+
     if (count === 0) {
       onComplete();
       return;
@@ -21,14 +32,14 @@ export default function Countdown({ onComplete, duration = 3 }: CountdownProps) 
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [count, onComplete]);
+  }, [count, show, onComplete]);
 
-  if (count === 0) {
+  if (!show || count === 0) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 pointer-events-none">
       <div className="text-9xl font-bold text-white animate-pulse">
         {count}
       </div>

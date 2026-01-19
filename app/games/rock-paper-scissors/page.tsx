@@ -106,90 +106,93 @@ export default function RockPaperScissorsPage() {
   };
 
   return (
-    <>
-      <GameShell
-        title="Rock-Paper-Scissors"
-        description="Play against the computer and get as many consecutive wins as possible!"
-        scoreboard={<Scoreboard gameId={GAME_ID} />}
-      >
-        <div className="space-y-6">
-          {/* Score Display */}
-          <div className="bg-purple-50 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">Consecutive Wins</p>
-            <p className="text-4xl font-bold text-purple-600">{gameState.consecutiveWins}</p>
-          </div>
-
-          {/* Result Area */}
-          {gameState.playerChoice && gameState.computerChoice && (
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="grid grid-cols-3 gap-4 items-center mb-4">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">You</p>
-                  <div className="text-6xl">{getChoiceEmoji(gameState.playerChoice)}</div>
-                  <p className="text-lg font-semibold capitalize mt-2">{gameState.playerChoice}</p>
-                </div>
-                <div className="text-center text-4xl">VS</div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">Computer</p>
-                  <div className="text-6xl">{getChoiceEmoji(gameState.computerChoice)}</div>
-                  <p className="text-lg font-semibold capitalize mt-2">{gameState.computerChoice}</p>
-                </div>
-              </div>
-              {getOutcomeMessage()}
-            </div>
-          )}
-
-          {/* Choice Buttons */}
-          {!gameState.isGameOver && !showCountdown && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-3 text-center">
-                {gameState.playerChoice ? 'Make your next choice:' : 'Choose your move:'}
-              </h3>
-              <div className="grid grid-cols-3 gap-4">
-                {(['rock', 'paper', 'scissors'] as Choice[]).map((choice) => (
-                  <button
-                    key={choice}
-                    onClick={() => handleChoice(choice)}
-                    className="flex flex-col items-center justify-center p-6 bg-white border-4 border-purple-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all transform hover:scale-105 active:scale-95"
-                  >
-                    <div className="text-6xl mb-2">{getChoiceEmoji(choice)}</div>
-                    <p className="text-lg font-semibold capitalize">{choice}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Continue Button (after win or draw) */}
-          {!gameState.isGameOver && gameState.outcome && !showCountdown && (
-            <button
-              onClick={handleContinue}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
-            >
-              Continue Playing
-            </button>
-          )}
-
-          {/* Play Again Button */}
-          {gameState.isGameOver && (
-            <button
-              onClick={handleReset}
-              className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
-            >
-              Play Again
-            </button>
-          )}
+    <GameShell
+      title="Rock-Paper-Scissors"
+      description="Play against the computer and get as many consecutive wins as possible!"
+      scoreboard={<Scoreboard gameId={GAME_ID} />}
+    >
+      <div className="relative space-y-6">
+        {/* Score Display */}
+        <div className="bg-purple-50 rounded-lg p-4 text-center">
+          <p className="text-sm text-gray-600">Consecutive Wins</p>
+          <p className="text-4xl font-bold text-purple-600">{gameState.consecutiveWins}</p>
         </div>
-      </GameShell>
 
-      {showCountdown && <Countdown onComplete={handleCountdownComplete} />}
-      
-      <NameInputModal
-        isOpen={showNameModal}
-        score={gameState.finalScore}
-        onSubmit={handleSaveScore}
-        onClose={() => setShowNameModal(false)}
-      />
-    </>
+        {/* Result Area */}
+        {gameState.playerChoice && gameState.computerChoice && (
+          <div className="bg-gray-50 rounded-lg p-6">
+            <div className="grid grid-cols-3 gap-4 items-center mb-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-2">You</p>
+                <div className="text-6xl">{getChoiceEmoji(gameState.playerChoice)}</div>
+                <p className="text-lg font-semibold capitalize mt-2">{gameState.playerChoice}</p>
+              </div>
+              <div className="text-center text-4xl">VS</div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-2">Computer</p>
+                <div className="text-6xl">{getChoiceEmoji(gameState.computerChoice)}</div>
+                <p className="text-lg font-semibold capitalize mt-2">{gameState.computerChoice}</p>
+              </div>
+            </div>
+            {getOutcomeMessage()}
+          </div>
+        )}
+
+        {/* Choice Buttons */}
+        {!gameState.isGameOver && !showCountdown && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-3 text-center">
+              {gameState.playerChoice ? 'Make your next choice:' : 'Choose your move:'}
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              {(['rock', 'paper', 'scissors'] as Choice[]).map((choice) => (
+                <button
+                  key={choice}
+                  onClick={() => handleChoice(choice)}
+                  className="flex flex-col items-center justify-center p-6 bg-white border-4 border-purple-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all transform hover:scale-105 active:scale-95"
+                >
+                  <div className="text-6xl mb-2">{getChoiceEmoji(choice)}</div>
+                  <p className="text-lg font-semibold capitalize">{choice}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Continue Button (after win or draw) */}
+        {!gameState.isGameOver && gameState.outcome && !showCountdown && (
+          <button
+            onClick={handleContinue}
+            className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
+          >
+            Continue Playing
+          </button>
+        )}
+
+        {/* Play Again Button */}
+        {gameState.isGameOver && (
+          <button
+            onClick={handleReset}
+            className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
+          >
+            Play Again
+          </button>
+        )}
+
+        {/* Overlays - rendered as children within the game container */}
+        <Countdown 
+          start={3}
+          show={showCountdown}
+          onComplete={handleCountdownComplete}
+        />
+        
+        <NameInputModal
+          visible={showNameModal}
+          score={gameState.finalScore}
+          onSave={handleSaveScore}
+          onClose={() => setShowNameModal(false)}
+        />
+      </div>
+    </GameShell>
   );
 }
