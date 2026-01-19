@@ -1,12 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import GameShell from '@/app/components/GameShell';
-import { initializeGame, processGuess, GameState, DEFAULT_CONFIG } from './gameLogic';
+import { useState } from "react";
+import GameShell from "@/app/components/GameShell";
+import {
+  initializeGame,
+  processGuess,
+  GameState,
+  DEFAULT_CONFIG,
+} from "./gameLogic";
 
 export default function NumberGuessPage() {
   const [gameState, setGameState] = useState<GameState>(() => initializeGame());
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const handleGuess = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,40 +23,44 @@ export default function NumberGuessPage() {
 
     const newState = processGuess(gameState, guess, DEFAULT_CONFIG);
     setGameState(newState);
-    setInputValue('');
+    setInputValue("");
   };
 
   const handleReset = () => {
     setGameState(initializeGame());
-    setInputValue('');
+    setInputValue("");
   };
 
   const getMessage = () => {
-    if (gameState.gameStatus === 'won') {
+    if (gameState.gameStatus === "won") {
       return (
         <div className="text-center py-6">
           <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-3xl font-bold text-green-600 mb-2">Congratulations!</h2>
+          <h2 className="text-3xl font-bold text-green-600 mb-2">
+            Congratulations!
+          </h2>
           <p className="text-xl text-gray-700">
-            You guessed the number <span className="font-bold">{gameState.secretNumber}</span>!
+            You guessed the number{" "}
+            <span className="font-bold">{gameState.secretNumber}</span>!
           </p>
         </div>
       );
     }
 
-    if (gameState.gameStatus === 'lost') {
+    if (gameState.gameStatus === "lost") {
       return (
         <div className="text-center py-6">
           <div className="text-6xl mb-4">😢</div>
           <h2 className="text-3xl font-bold text-red-600 mb-2">Game Over!</h2>
           <p className="text-xl text-gray-700">
-            The secret number was <span className="font-bold">{gameState.secretNumber}</span>
+            The secret number was{" "}
+            <span className="font-bold">{gameState.secretNumber}</span>
           </p>
         </div>
       );
     }
 
-    if (gameState.lastResult === 'higher') {
+    if (gameState.lastResult === "higher") {
       return (
         <div className="text-center py-4">
           <div className="text-5xl mb-2">⬆️</div>
@@ -60,7 +69,7 @@ export default function NumberGuessPage() {
       );
     }
 
-    if (gameState.lastResult === 'lower') {
+    if (gameState.lastResult === "lower") {
       return (
         <div className="text-center py-4">
           <div className="text-5xl mb-2">⬇️</div>
@@ -87,7 +96,9 @@ export default function NumberGuessPage() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-600">Remaining Attempts</p>
-              <p className="text-3xl font-bold text-purple-600">{gameState.remainingAttempts}</p>
+              <p className="text-3xl font-bold text-purple-600">
+                {gameState.remainingAttempts}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Range</p>
@@ -104,10 +115,13 @@ export default function NumberGuessPage() {
         </div>
 
         {/* Input Form */}
-        {gameState.gameStatus === 'playing' && (
+        {gameState.gameStatus === "playing" && (
           <form onSubmit={handleGuess} className="space-y-4">
             <div>
-              <label htmlFor="guess-input" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label
+                htmlFor="guess-input"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
                 Enter your guess:
               </label>
               <input
@@ -117,7 +131,7 @@ export default function NumberGuessPage() {
                 onChange={(e) => setInputValue(e.target.value)}
                 min={DEFAULT_CONFIG.minNumber}
                 max={DEFAULT_CONFIG.maxNumber}
-                className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-semibold text-black dark:text-white"
+                className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-semibold text-black"
                 placeholder={`${DEFAULT_CONFIG.minNumber} - ${DEFAULT_CONFIG.maxNumber}`}
                 autoFocus
                 required
@@ -133,7 +147,7 @@ export default function NumberGuessPage() {
         )}
 
         {/* Reset Button */}
-        {gameState.gameStatus !== 'playing' && (
+        {gameState.gameStatus !== "playing" && (
           <button
             onClick={handleReset}
             className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
@@ -145,7 +159,10 @@ export default function NumberGuessPage() {
         {/* History */}
         {gameState.lastGuess !== null && (
           <div className="text-center text-sm text-gray-500">
-            <p>Last guess: <span className="font-semibold">{gameState.lastGuess}</span></p>
+            <p>
+              Last guess:{" "}
+              <span className="font-semibold">{gameState.lastGuess}</span>
+            </p>
           </div>
         )}
       </div>
