@@ -8,7 +8,7 @@ test.describe('Homepage', () => {
     await expect(page.getByRole('heading', { name: /game library/i })).toBeVisible();
 
     // Check that games are displayed
-    await expect(page.getByText('Number Guessing')).toBeVisible();
+    await expect(page.getByText('Up And Down')).toBeVisible();
     await expect(page.getByText('Rock-Paper-Scissors')).toBeVisible();
     await expect(page.getByText('Stairs')).toBeVisible();
 
@@ -29,8 +29,8 @@ test.describe('Homepage', () => {
     // Wait for debounce
     await page.waitForTimeout(300);
 
-    // Only Number Guessing should be visible
-    await expect(page.getByText('Number Guessing')).toBeVisible();
+    // Only Up And Down should be visible
+    await expect(page.getByText('Up And Down')).toBeVisible();
     
     // Other games should not be visible
     await expect(page.getByText('Rock-Paper-Scissors')).not.toBeVisible();
@@ -70,7 +70,7 @@ test.describe('Homepage', () => {
     await page.waitForTimeout(300);
     
     // All games should be visible again
-    await expect(page.getByText('Number Guessing')).toBeVisible();
+    await expect(page.getByText('Up And Down')).toBeVisible();
     await expect(page.getByText('Rock-Paper-Scissors')).toBeVisible();
     await expect(page.getByText('Stairs')).toBeVisible();
   });
@@ -78,11 +78,11 @@ test.describe('Homepage', () => {
   test('should navigate to game page when clicking a tile', async ({ page }) => {
     await page.goto('/');
 
-    // Click on Number Guessing game
-    await page.getByText('Number Guessing').first().click();
+    // Click on Up And Down game
+    await page.getByText('Up And Down').first().click();
 
     // Should navigate to the game route
-    await expect(page).toHaveURL('/games/number-guess');
+    await expect(page).toHaveURL('/games/up-and-down');
   });
 
   test('game tiles should have scoreboard badges', async ({ page }) => {
@@ -107,7 +107,7 @@ test.describe('Homepage', () => {
     
     // Only Stairs should be visible
     await expect(page.getByText('Stairs')).toBeVisible();
-    await expect(page.getByText('Number Guessing')).not.toBeVisible();
+    await expect(page.getByText('Up And Down')).not.toBeVisible();
     
     // Tab to game tile and press Enter
     await page.keyboard.press('Tab'); // Move to clear button

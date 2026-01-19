@@ -12,13 +12,13 @@ export interface Game {
 export const games: Game[] = [
   {
     id: "1",
-    title: "Number Guessing",
-    slug: "number-guess",
+    title: "Up And Down",
+    slug: "up-and-down",
     description: "Guess the secret number with limited attempts. Can you figure it out?",
-    thumbnail: "/images/games/number-guess.png",
+    thumbnail: "/images/games/up-and-down.png",
     tags: ["logic", "puzzle", "single-player"],
     hasScoreboard: true,
-    route: "/games/number-guess",
+    route: "/games/up-and-down",
   },
   {
     id: "2",
