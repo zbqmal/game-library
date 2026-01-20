@@ -44,3 +44,9 @@ next-env.d.ts
 /playwright-report/
 /playwright/.cache/
 /test-results/
+
+# backend
+/backend/node_modules
+/backend/dist
+/backend/scores.json
+coverage/

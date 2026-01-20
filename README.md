@@ -73,10 +73,10 @@ This project is being built incrementally in small PRs:
 - ✅ **Phase 1**: Project setup and basic structure
 - ✅ **Phase 2**: Homepage with game grid and search
 - ✅ **Phase 3**: Individual game implementations (Up And Down, Rock-Paper-Scissors)
-- 🚧 **Phase 3.1**: UI fixes and refinements
-- 📋 **Phase 4**: Stairs game implementation
-- 📋 **Phase 5**: Backend API setup
-- 📋 **Phase 6**: Database integration
+- ✅ **Phase 3.1**: UI fixes and refinements
+- 🚧 **Phase 4**: Backend API skeleton (scores endpoint + adapter)
+- 📋 **Phase 5**: Database integration and full backend migration
+- 📋 **Phase 6**: Stairs game implementation
 - 📋 **Phase 7**: Additional games
 
 ### Phase 2: Homepage with Game Grid and Search
@@ -179,9 +179,76 @@ npm run test:e2e
 **Branch**: `feature/games-phase3`
 
 **Notes**:
-- Stairs game will be implemented in a separate PR (Phase 4)
+- Stairs game will be implemented in a separate PR (Phase 6)
 - Scoreboard uses localStorage via an adapter pattern for easy backend migration
 - Jest replaced Vitest per user preference
+
+### Phase 4: Backend API Skeleton
+
+**Goal**: Provide a lightweight Node.js backend service (Fastify) that exposes endpoints for storing and retrieving game scores, plus a frontend adapter to call the API.
+
+**Deliverables**:
+- Backend API service with Fastify
+- Score storage and retrieval endpoints (GET /scores/:gameId/top10, POST /scores/:gameId)
+- JSON file-based persistence for Phase 4 (Phase 5 will add database)
+- Frontend API adapter implementing the same interface as localStorage adapter
+- Jest tests for backend routes
+- Comprehensive documentation
+
+**Backend Setup**:
+```bash
+cd backend
+npm install
+npm run dev  # Start backend on http://localhost:3001
+```
+
+**Backend Testing**:
+```bash
+cd backend
+npm test
+```
+
+**API Endpoints**:
+- `GET /health` - Health check
+- `GET /scores/:gameId/top10` - Get top 10 scores for a game
+- `POST /scores/:gameId` - Save a new score (body: `{ name: string, score: number }`)
+
+**Switching to API Adapter**:
+
+The frontend currently uses localStorage for scoreboard persistence. To switch to the API adapter:
+
+1. Start the backend server (see Backend Setup above)
+2. In your component, import the API adapter instead of the localStorage adapter:
+```typescript
+// Before (using localStorage):
+import { scoreboardAdapter } from '@/app/lib/scoreboard';
+
+// After (using API):
+import { apiScoreboardAdapter } from '@/app/lib/scoreboardApiAdapter';
+```
+
+3. Note: The API adapter methods are async, so you'll need to handle promises:
+```typescript
+// localStorage (synchronous):
+const scores = scoreboardAdapter.getTopScores(gameId);
+
+// API (asynchronous):
+const scores = await apiScoreboardAdapter.getTopScores(gameId);
+```
+
+**Acceptance Criteria**:
+- ✅ Backend runs locally and exposes score endpoints
+- ✅ Backend tests pass with good coverage
+- ✅ Frontend API adapter compiles and can be imported
+- ✅ Input validation (name max 50 chars, score >= 0)
+- ✅ Documentation includes setup and usage instructions
+
+**Branch**: `feature/backend-api`
+
+**Notes**:
+- Phase 4 uses simple JSON file storage; Phase 5 will add database integration
+- CORS is enabled for development
+- The API adapter is available but not connected to UI (requires async refactoring)
 
 ## Games
 
