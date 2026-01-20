@@ -73,8 +73,8 @@ This project is being built incrementally in small PRs:
 - ✅ **Phase 1**: Project setup and basic structure
 - ✅ **Phase 2**: Homepage with game grid and search
 - ✅ **Phase 3**: Individual game implementations (Up And Down, Rock-Paper-Scissors)
-- 🚧 **Phase 3.1**: UI fixes and refinements
-- 📋 **Phase 4**: Stairs game implementation
+- ✅ **Phase 3.1**: UI fixes and refinements
+- ✅ **Phase 4**: Stairs game implementation
 - 📋 **Phase 5**: Backend API setup
 - 📋 **Phase 6**: Database integration
 - 📋 **Phase 7**: Additional games
@@ -179,17 +179,56 @@ npm run test:e2e
 **Branch**: `feature/games-phase3`
 
 **Notes**:
-- Stairs game will be implemented in a separate PR (Phase 4)
 - Scoreboard uses localStorage via an adapter pattern for easy backend migration
 - Jest replaced Vitest per user preference
 
+### Phase 4: Stairs Game Implementation
+
+**Goal**: Port the STAIRS game from the original GBA implementation into the Game Library.
+
+**Deliverables**:
+- TypeScript port of STAIRS game logic (WASM compilation not feasible for GBA-specific C code)
+- Dice rolling mechanics with visual feedback
+- Stair progression and visualization
+- Mini-game integration (RPS initially, with placeholders for others)
+- Score calculation following original rules:
+  - If player loses first mini-game: final score = 0
+  - If player wins: record stair count as score
+  - Player can continue playing after winning
+- Scoreboard integration with localStorage
+- Comprehensive Jest unit tests (29 tests, 100% coverage on game logic)
+- E2E test with Playwright
+
+**Acceptance Criteria**:
+- ✅ STAIRS game page is functional and follows original game behavior
+- ✅ Dice rolling works correctly (1-6 values)
+- ✅ Player climbs stairs based on dice roll
+- ✅ "GAME START" button appears when reaching top (5+ stairs)
+- ✅ Random mini-game launches (4 types: RPS, Treasure Hunt, Paroma, Swimming Race)
+- ✅ Score rules are correctly implemented (0 on first loss, else highest stair count)
+- ✅ Player can continue playing after winning a mini-game
+- ✅ Scoreboard displays Top-10 scores and allows name entry
+- ✅ All tests pass (85 total including 29 new STAIRS tests)
+- ✅ Code passes linting
+- ✅ Visual stairs display shows progress
+- ✅ Responsive design works on all screen sizes
+
+**Branch**: `feature/games-stairs`
+
+**Notes**:
+- Original STAIRS game: https://github.com/zbqmal/STAIRS (GBA game written in C)
+- WASM compilation was evaluated but not feasible due to GBA hardware dependencies
+- TypeScript port maintains original game rules and behavior
+- RPS mini-game is fully functional; others have demo buttons for testing
+- Future work: Implement remaining mini-games (Treasure Hunt, Paroma, Swimming Race)
+
 ## Games
 
-### Planned Games
+### Available Games
 
 1. **Up And Down** - Guess the secret number with limited attempts
 2. **Rock-Paper-Scissors** - Play against the computer for consecutive wins
-3. **Stairs Game** - Climb stairs and win mini-games for high scores
+3. **Stairs** - Roll dice, climb stairs, and win mini-games for high scores
 
 ## Contributing
 
