@@ -89,7 +89,7 @@ export default function RockPaperScissorsPage() {
         <div className="text-center py-4">
           <div className="text-5xl mb-2">😢</div>
           <p className="text-2xl font-bold text-red-600">You Lose!</p>
-          <p className="text-lg text-gray-600 mt-2">
+          <p className="text-lg text-gray-900 mt-2">
             Final Score: {gameState.finalScore} consecutive wins
           </p>
         </div>
