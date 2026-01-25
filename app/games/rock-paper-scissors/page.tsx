@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import GameShell from '@/app/components/GameShell';
-import Scoreboard from '@/app/components/Scoreboard';
-import NameInputModal from '@/app/components/NameInputModal';
-import Countdown from '@/app/components/Countdown';
-import { initializeGame, processRound, GameState, Choice } from '../rps/gameLogic';
-import { scoreboardAdapter } from '@/app/lib/scoreboard';
+import { useState } from "react";
+import GameShell from "@/app/components/GameShell";
+import Scoreboard from "@/app/components/Scoreboard";
+import NameInputModal from "@/app/components/NameInputModal";
+import Countdown from "@/app/components/Countdown";
+import { initializeGame, processRound, GameState, Choice } from "./gameLogic";
+import { scoreboardAdapter } from "@/app/lib/scoreboard";
 
-const GAME_ID = 'rock-paper-scissors';
+const GAME_ID = "rock-paper-scissors";
 
 export default function RockPaperScissorsPage() {
   const [gameState, setGameState] = useState<GameState>(() => initializeGame());
@@ -19,7 +19,7 @@ export default function RockPaperScissorsPage() {
 
   const handleChoice = (choice: Choice) => {
     setPendingChoice(choice);
-    setCountdownKey(prev => prev + 1);
+    setCountdownKey((prev) => prev + 1);
     setShowCountdown(true);
   };
 
@@ -32,7 +32,10 @@ export default function RockPaperScissorsPage() {
 
       // Check if game is over and score qualifies for top 10
       if (newState.isGameOver && newState.finalScore > 0) {
-        const isTop10 = scoreboardAdapter.isTopScore(GAME_ID, newState.finalScore);
+        const isTop10 = scoreboardAdapter.isTopScore(
+          GAME_ID,
+          newState.finalScore,
+        );
         if (isTop10) {
           setShowNameModal(true);
         }
@@ -45,10 +48,12 @@ export default function RockPaperScissorsPage() {
       name,
       score: gameState.finalScore,
     });
-    
+
     // Dispatch custom event to update scoreboard
-    window.dispatchEvent(new CustomEvent('scoreboardUpdated', { detail: { gameId: GAME_ID } }));
-    
+    window.dispatchEvent(
+      new CustomEvent("scoreboardUpdated", { detail: { gameId: GAME_ID } }),
+    );
+
     setShowNameModal(false);
   };
 
@@ -68,11 +73,11 @@ export default function RockPaperScissorsPage() {
   };
 
   const getChoiceEmoji = (choice: Choice | null) => {
-    if (!choice) return '❓';
+    if (!choice) return "❓";
     const emojis: Record<Choice, string> = {
-      rock: '✊',
-      paper: '✋',
-      scissors: '✌️',
+      rock: "✊",
+      paper: "✋",
+      scissors: "✌️",
     };
     return emojis[choice];
   };
@@ -80,7 +85,7 @@ export default function RockPaperScissorsPage() {
   const getOutcomeMessage = () => {
     if (!gameState.outcome) return null;
 
-    if (gameState.outcome === 'win') {
+    if (gameState.outcome === "win") {
       return (
         <div className="text-center py-4">
           <div className="text-5xl mb-2">🎉</div>
@@ -89,12 +94,14 @@ export default function RockPaperScissorsPage() {
       );
     }
 
-    if (gameState.outcome === 'lose') {
+    if (gameState.outcome === "lose") {
       return (
         <div className="text-center py-4">
           <div className="text-5xl mb-2">😢</div>
           <p className="text-2xl font-bold text-red-600">You Lose!</p>
-          <p className="text-lg text-gray-600 mt-2">Final Score: {gameState.finalScore} consecutive wins</p>
+          <p className="text-lg text-gray-600 mt-2">
+            Final Score: {gameState.finalScore} consecutive wins
+          </p>
         </div>
       );
     }
@@ -117,7 +124,9 @@ export default function RockPaperScissorsPage() {
         {/* Score Display */}
         <div className="bg-purple-50 rounded-lg p-4 text-center">
           <p className="text-sm text-gray-600">Consecutive Wins</p>
-          <p className="text-4xl font-bold text-purple-600">{gameState.consecutiveWins}</p>
+          <p className="text-4xl font-bold text-purple-600">
+            {gameState.consecutiveWins}
+          </p>
         </div>
 
         {/* Result Area */}
@@ -126,14 +135,22 @@ export default function RockPaperScissorsPage() {
             <div className="grid grid-cols-3 gap-4 items-center mb-4">
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">You</p>
-                <div className="text-6xl">{getChoiceEmoji(gameState.playerChoice)}</div>
-                <p className="text-lg font-semibold capitalize mt-2">{gameState.playerChoice}</p>
+                <div className="text-6xl">
+                  {getChoiceEmoji(gameState.playerChoice)}
+                </div>
+                <p className="text-lg font-semibold capitalize mt-2">
+                  {gameState.playerChoice}
+                </p>
               </div>
               <div className="text-center text-4xl">VS</div>
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">Computer</p>
-                <div className="text-6xl">{getChoiceEmoji(gameState.computerChoice)}</div>
-                <p className="text-lg font-semibold capitalize mt-2">{gameState.computerChoice}</p>
+                <div className="text-6xl">
+                  {getChoiceEmoji(gameState.computerChoice)}
+                </div>
+                <p className="text-lg font-semibold capitalize mt-2">
+                  {gameState.computerChoice}
+                </p>
               </div>
             </div>
             {getOutcomeMessage()}
@@ -144,10 +161,12 @@ export default function RockPaperScissorsPage() {
         {!gameState.isGameOver && !showCountdown && (
           <div>
             <h3 className="text-lg font-semibold text-gray-700 mb-3 text-center">
-              {gameState.playerChoice ? 'Make your next choice:' : 'Choose your move:'}
+              {gameState.playerChoice
+                ? "Make your next choice:"
+                : "Choose your move:"}
             </h3>
             <div className="grid grid-cols-3 gap-4">
-              {(['rock', 'paper', 'scissors'] as Choice[]).map((choice) => (
+              {(["rock", "paper", "scissors"] as Choice[]).map((choice) => (
                 <button
                   key={choice}
                   onClick={() => handleChoice(choice)}
@@ -182,13 +201,13 @@ export default function RockPaperScissorsPage() {
         )}
 
         {/* Overlays - rendered as children within the game container */}
-        <Countdown 
+        <Countdown
           key={countdownKey}
           start={3}
           show={showCountdown}
           onComplete={handleCountdownComplete}
         />
-        
+
         <NameInputModal
           visible={showNameModal}
           score={gameState.finalScore}
