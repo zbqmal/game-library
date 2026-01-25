@@ -2,6 +2,10 @@
 
 A web platform hosting a collection of small, casual games where users can play and compete for high scores.
 
+## Demo
+
+- Live deployment: https://game-library-joonohjoon.vercel.app/
+
 ## Features
 
 - 🎮 Collection of fun mini-games
@@ -26,17 +30,20 @@ A web platform hosting a collection of small, casual games where users can play 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/zbqmal/game-library.git
 cd game-library
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -84,6 +91,7 @@ This project is being built incrementally in small PRs:
 **Goal**: Implement a functional homepage that displays a grid of available games with client-side search capabilities.
 
 **Deliverables**:
+
 - Game metadata source with initial game entries (Number Guessing, Rock-Paper-Scissors, Stairs)
 - Responsive game grid with thumbnail cards
 - Client-side fuzzy search using Fuse.js
@@ -92,6 +100,7 @@ This project is being built incrementally in small PRs:
 - E2E test setup with basic smoke tests
 
 **Acceptance Criteria**:
+
 - ✅ Homepage displays a responsive grid of game cards with thumbnails and titles
 - ✅ Search bar filters games in real-time with debouncing (200ms)
 - ✅ Game tiles are keyboard-accessible and clickable
@@ -101,6 +110,7 @@ This project is being built incrementally in small PRs:
 - ✅ E2E test verifies search filtering and navigation
 
 **Implementation Plan**:
+
 1. Add game metadata module (`app/data/games.ts`)
 2. Create reusable components:
    - `GameTile.tsx` - Individual game card
@@ -112,6 +122,7 @@ This project is being built incrementally in small PRs:
 6. Add E2E test with Playwright (or manual verification steps)
 
 **Recommended Technical Choices**:
+
 - **Search**: Fuse.js for fuzzy client-side search (with substring fallback)
 - **Metadata**: Local TypeScript module (no backend yet)
 - **Images**: WebP placeholders in `public/images/games/`
@@ -120,6 +131,7 @@ This project is being built incrementally in small PRs:
 **Branch Naming**: `feature/homepage-grid-search`
 
 **PR Checklist**:
+
 - [ ] All components are TypeScript with proper types
 - [ ] Accessibility: Focus outlines, alt text, keyboard navigation
 - [ ] Images use lazy loading
@@ -131,6 +143,7 @@ This project is being built incrementally in small PRs:
 - [ ] README updated with Phase 2 details
 
 **Notes for Future Work**:
+
 - Phase 3 will implement actual game pages at routes specified in metadata
 - Backend integration (Phase 4) will replace local metadata with API calls
 - Scoreboard functionality will be added in Phase 4-5
@@ -140,6 +153,7 @@ This project is being built incrementally in small PRs:
 **Goal**: Implement Up And Down and Rock-Paper-Scissors games with frontend-only scoreboards using localStorage.
 
 **Deliverables**:
+
 - Up And Down game with configurable range and attempts
 - Rock-Paper-Scissors game with countdown animation and consecutive win tracking
 - Shared components: GameShell, Scoreboard, NameInputModal, Countdown
@@ -148,6 +162,7 @@ This project is being built incrementally in small PRs:
 - Migration from Vitest to Jest (user preference)
 
 **Acceptance Criteria**:
+
 - ✅ Up And Down page is functional with UP/DOWN/CONGRATS messages and retry
 - ✅ RPS page tracks consecutive wins and persists Top-10 scores to localStorage
 - ✅ Scoreboard displays Top-10 scores from localStorage
@@ -156,6 +171,7 @@ This project is being built incrementally in small PRs:
 - ✅ Games are playable and match specifications
 
 **Testing**:
+
 ```bash
 # Run all Jest tests
 npm test
@@ -171,6 +187,7 @@ npm run test:e2e
 ```
 
 **Playing the Games**:
+
 1. Start the dev server: `npm run dev`
 2. Navigate to http://localhost:3000
 3. Click on "Up And Down" or "Rock-Paper-Scissors" tiles
@@ -179,6 +196,7 @@ npm run test:e2e
 **Branch**: `feature/games-phase3`
 
 **Notes**:
+
 - Stairs game will be implemented in a separate PR (Phase 4)
 - Scoreboard uses localStorage via an adapter pattern for easy backend migration
 - Jest replaced Vitest per user preference
