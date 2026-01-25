@@ -14,7 +14,7 @@ export const games: Game[] = [
     id: "1",
     title: "Up And Down",
     slug: "up-and-down",
-    description: "Guess the secret number with limited attempts. Can you figure it out?",
+    description: "A configurable number guessing game! Set your own difficulty by choosing the number range and attempts.",
     thumbnail: "/images/games/up-and-down.png",
     tags: ["logic", "puzzle", "single-player"],
     hasScoreboard: true,

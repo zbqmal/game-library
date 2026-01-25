@@ -4,9 +4,22 @@ import {
   processGuess,
   DEFAULT_CONFIG,
   GameConfig,
+  SAFE_LIMITS,
 } from '../up-and-down/gameLogic';
 
 describe('Number Guess Game Logic', () => {
+  describe('SAFE_LIMITS', () => {
+    it('has reasonable safe limits defined', () => {
+      expect(SAFE_LIMITS.maxNumber).toBe(10000);
+      expect(SAFE_LIMITS.maxAttempts).toBe(100);
+    });
+
+    it('safe limits are greater than default config', () => {
+      expect(SAFE_LIMITS.maxNumber).toBeGreaterThan(DEFAULT_CONFIG.maxNumber);
+      expect(SAFE_LIMITS.maxAttempts).toBeGreaterThan(DEFAULT_CONFIG.maxAttempts);
+    });
+  });
+
   describe('generateSecretNumber', () => {
     it('generates a number within the specified range', () => {
       for (let i = 0; i < 100; i++) {
