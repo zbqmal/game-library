@@ -113,7 +113,7 @@ export default function RockPaperScissorsPage() {
       <div className="relative space-y-6 min-h-[600px]">
         {/* Score Display */}
         <div className="bg-purple-50 rounded-lg p-4 text-center">
-          <p className="text-sm text-black font-medium">Consecutive Wins</p>
+          <p className="text-sm text-gray-900 font-medium">Consecutive Wins</p>
           <p className="text-4xl font-bold text-purple-600">
             {gameState.consecutiveWins}
           </p>
@@ -124,7 +124,7 @@ export default function RockPaperScissorsPage() {
           <div className="bg-gray-50 rounded-lg p-6">
             <div className="grid grid-cols-3 gap-4 items-center mb-4">
               <div className="text-center">
-                <p className="text-sm text-black font-medium mb-2">You</p>
+                <p className="text-sm text-gray-900 font-medium mb-2">You</p>
                 <div className="text-6xl">
                   {getChoiceEmoji(gameState.playerChoice)}
                 </div>
@@ -134,7 +134,7 @@ export default function RockPaperScissorsPage() {
               </div>
               <div className="text-center text-4xl">VS</div>
               <div className="text-center">
-                <p className="text-sm text-black font-medium mb-2">Computer</p>
+                <p className="text-sm text-gray-900 font-medium mb-2">Computer</p>
                 <div className="text-6xl">
                   {getChoiceEmoji(gameState.computerChoice)}
                 </div>
@@ -150,7 +150,7 @@ export default function RockPaperScissorsPage() {
         {/* Choice Buttons */}
         {!gameState.isGameOver && !showCountdown && (
           <div>
-            <h3 className="text-lg font-semibold text-black mb-3 text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3 text-center">
               {gameState.playerChoice
                 ? "Make your next choice:"
                 : "Choose your move:"}
