@@ -2,6 +2,10 @@
 
 A web platform hosting a collection of small, casual games where users can play and compete for high scores.
 
+## Demo
+
+- Live deployment (Rock-Paper-Scissors): https://game-library-joonohjoon.vercel.app/games/rock-paper-scissors
+
 ## Features
 
 - 🎮 Collection of fun mini-games
