@@ -30,14 +30,4 @@ export const games: Game[] = [
     hasScoreboard: true,
     route: "/games/rock-paper-scissors",
   },
-  {
-    id: "3",
-    title: "Stairs",
-    slug: "stairs",
-    description: "Climb stairs and win mini-games to achieve the highest score possible!",
-    thumbnail: "/images/games/stairs.png",
-    tags: ["arcade", "challenge", "mini-games"],
-    hasScoreboard: true,
-    route: "/games/stairs",
-  },
 ];

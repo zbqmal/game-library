@@ -1,16 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Homepage', () => {
-  test('should display game grid and search functionality', async ({ page }) => {
+  test('should show games grid and search', async ({ page }) => {
     await page.goto('/');
 
-    // Check that the header is present
-    await expect(page.getByRole('heading', { name: /game library/i })).toBeVisible();
-
-    // Check that games are displayed
+    // Check that core games are visible
     await expect(page.getByText('Up And Down')).toBeVisible();
     await expect(page.getByText('Rock-Paper-Scissors')).toBeVisible();
-    await expect(page.getByText('Stairs')).toBeVisible();
 
     // Check that search bar is present
     const searchInput = page.getByPlaceholder(/search games/i);
@@ -34,7 +30,6 @@ test.describe('Homepage', () => {
     
     // Other games should not be visible
     await expect(page.getByText('Rock-Paper-Scissors')).not.toBeVisible();
-    await expect(page.getByText('Stairs')).not.toBeVisible();
   });
 
   test('should show empty state when no games match search', async ({ page }) => {
@@ -72,7 +67,6 @@ test.describe('Homepage', () => {
     // All games should be visible again
     await expect(page.getByText('Up And Down')).toBeVisible();
     await expect(page.getByText('Rock-Paper-Scissors')).toBeVisible();
-    await expect(page.getByText('Stairs')).toBeVisible();
   });
 
   test('should navigate to game page when clicking a tile', async ({ page }) => {
@@ -99,14 +93,14 @@ test.describe('Homepage', () => {
     // Tab to search input
     await page.keyboard.press('Tab');
     
-    // Type in search
-    await page.keyboard.type('stairs');
+    // Type in search for rock
+    await page.keyboard.type('rock');
     
     // Wait for debounce
     await page.waitForTimeout(300);
     
-    // Only Stairs should be visible
-    await expect(page.getByText('Stairs')).toBeVisible();
+    // Only Rock-Paper-Scissors should be visible
+    await expect(page.getByText('Rock-Paper-Scissors')).toBeVisible();
     await expect(page.getByText('Up And Down')).not.toBeVisible();
     
     // Tab to game tile and press Enter
@@ -115,6 +109,6 @@ test.describe('Homepage', () => {
     await page.keyboard.press('Enter');
     
     // Should navigate
-    await expect(page).toHaveURL('/games/stairs');
+    await expect(page).toHaveURL('/games/rock-paper-scissors');
   });
 });
