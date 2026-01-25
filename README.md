@@ -81,7 +81,6 @@ This project is being built incrementally in small PRs:
 - ✅ **Phase 2**: Homepage with game grid and search
 - ✅ **Phase 3**: Individual game implementations (Up And Down, Rock-Paper-Scissors)
 - 🚧 **Phase 3.1**: UI fixes and refinements
-- 📋 **Phase 4**: Stairs game implementation
 - 📋 **Phase 5**: Backend API setup
 - 📋 **Phase 6**: Database integration
 - 📋 **Phase 7**: Additional games
@@ -92,7 +91,7 @@ This project is being built incrementally in small PRs:
 
 **Deliverables**:
 
-- Game metadata source with initial game entries (Number Guessing, Rock-Paper-Scissors, Stairs)
+- Game metadata source with initial game entries (Number Guessing, Rock-Paper-Scissors)
 - Responsive game grid with thumbnail cards
 - Client-side fuzzy search using Fuse.js
 - Accessible, keyboard-navigable UI components
@@ -145,8 +144,8 @@ This project is being built incrementally in small PRs:
 **Notes for Future Work**:
 
 - Phase 3 will implement actual game pages at routes specified in metadata
-- Backend integration (Phase 4) will replace local metadata with API calls
-- Scoreboard functionality will be added in Phase 4-5
+- Backend integration (Phase 5) will replace local metadata with API calls
+- Scoreboard functionality will be added in Phase 5-6
 
 ### Phase 3: Individual Game Implementations
 
@@ -197,7 +196,6 @@ npm run test:e2e
 
 **Notes**:
 
-- Stairs game will be implemented in a separate PR (Phase 4)
 - Scoreboard uses localStorage via an adapter pattern for easy backend migration
 - Jest replaced Vitest per user preference
 
@@ -207,7 +205,6 @@ npm run test:e2e
 
 1. **Up And Down** - Guess the secret number with limited attempts
 2. **Rock-Paper-Scissors** - Play against the computer for consecutive wins
-3. **Stairs Game** - Climb stairs and win mini-games for high scores
 
 ## Contributing
 

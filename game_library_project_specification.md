@@ -123,44 +123,7 @@ Each scoreboard entry includes:
 
 ---
 
-### 2. Stairs Game
-
-#### Reference
-
-- Original C++ implementation exists on GitHub [STAIRS](https://github.com/zbqmal/stairs)
-- Use original logic as reference
-- If possible, **port or render the original logic directly** rather than rewriting
-
-#### Gameplay
-
-- Player rolls a dice
-- Dice result determines how many stairs the player climbs
-- Number of stairs climbed = potential score
-
-Once the player reaches the top:
-
-- A **GAME START** button appears
-- Clicking it launches a **random mini-game**
-
-#### Rules
-
-- If the player **wins** the random game:
-  - Stair count is recorded as the score
-- If the player **loses the first game**:
-  - Score becomes **0**, even if stairs were climbed
-
-#### Scoreboard
-
-- This game **requires a scoreboard**
-
-#### Random Game Pool
-
-- Random Game 1: (to be defined)
-- Additional games can be added later
-
----
-
-### 3. Rock–Paper–Scissors (vs Computer)
+### 2. Rock–Paper–Scissors (vs Computer)
 
 #### Gameplay
 
