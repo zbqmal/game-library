@@ -16,6 +16,15 @@ export default function NumberGuessPage() {
   const [config, setConfig] = useState<GameConfig>(DEFAULT_CONFIG);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [inputValue, setInputValue] = useState("");
+  const [minNumberInput, setMinNumberInput] = useState(
+    String(DEFAULT_CONFIG.minNumber),
+  );
+  const [maxNumberInput, setMaxNumberInput] = useState(
+    String(DEFAULT_CONFIG.maxNumber),
+  );
+  const [maxAttemptsInput, setMaxAttemptsInput] = useState(
+    String(DEFAULT_CONFIG.maxAttempts),
+  );
 
   const handleStartGame = () => {
     setGameState(initializeGame(config));
@@ -25,7 +34,7 @@ export default function NumberGuessPage() {
   const handleGuess = (e: React.FormEvent) => {
     e.preventDefault();
     if (!gameState) return;
-    
+
     const guess = parseInt(inputValue, 10);
 
     if (isNaN(guess)) {
@@ -45,7 +54,7 @@ export default function NumberGuessPage() {
 
   const getMessage = () => {
     if (!gameState) return null;
-    
+
     if (gameState.gameStatus === "won") {
       return (
         <div className="text-center py-6">
@@ -111,7 +120,8 @@ export default function NumberGuessPage() {
               Configure Your Game
             </h2>
             <p className="text-center text-gray-600 mb-6">
-              Customize the difficulty by setting your preferred range and number of attempts
+              Customize the difficulty by setting your preferred range and
+              number of attempts
             </p>
 
             <div className="space-y-4">
@@ -126,16 +136,23 @@ export default function NumberGuessPage() {
                 <input
                   id="min-number"
                   type="number"
-                  value={config.minNumber}
+                  value={minNumberInput}
                   onChange={(e) => {
+                    setMinNumberInput(e.target.value);
                     const value = parseInt(e.target.value, 10);
-                    if (!isNaN(value) && value >= 1 && value < config.maxNumber && value <= SAFE_LIMITS.maxNumber - 1) {
+                    if (
+                      !isNaN(value) &&
+                      value >= 1 &&
+                      value < config.maxNumber &&
+                      value <= SAFE_LIMITS.maxNumber - 1
+                    ) {
                       setConfig({ ...config, minNumber: value });
                     }
                   }}
                   min={1}
                   max={SAFE_LIMITS.maxNumber - 1}
                   className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-semibold text-black"
+                  placeholder="1"
                 />
               </div>
 
@@ -145,21 +162,28 @@ export default function NumberGuessPage() {
                   htmlFor="max-number"
                   className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                  Maximum Number ({config.minNumber + 1} - {SAFE_LIMITS.maxNumber}):
+                  Maximum Number ({config.minNumber + 1} -{" "}
+                  {SAFE_LIMITS.maxNumber}):
                 </label>
                 <input
                   id="max-number"
                   type="number"
-                  value={config.maxNumber}
+                  value={maxNumberInput}
                   onChange={(e) => {
+                    setMaxNumberInput(e.target.value);
                     const value = parseInt(e.target.value, 10);
-                    if (!isNaN(value) && value > config.minNumber && value <= SAFE_LIMITS.maxNumber) {
+                    if (
+                      !isNaN(value) &&
+                      value > config.minNumber &&
+                      value <= SAFE_LIMITS.maxNumber
+                    ) {
                       setConfig({ ...config, maxNumber: value });
                     }
                   }}
                   min={config.minNumber + 1}
                   max={SAFE_LIMITS.maxNumber}
                   className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-semibold text-black"
+                  placeholder="100"
                 />
               </div>
 
@@ -174,16 +198,22 @@ export default function NumberGuessPage() {
                 <input
                   id="max-attempts"
                   type="number"
-                  value={config.maxAttempts}
+                  value={maxAttemptsInput}
                   onChange={(e) => {
+                    setMaxAttemptsInput(e.target.value);
                     const value = parseInt(e.target.value, 10);
-                    if (!isNaN(value) && value >= 1 && value <= SAFE_LIMITS.maxAttempts) {
+                    if (
+                      !isNaN(value) &&
+                      value >= 1 &&
+                      value <= SAFE_LIMITS.maxAttempts
+                    ) {
                       setConfig({ ...config, maxAttempts: value });
                     }
                   }}
                   min={1}
                   max={SAFE_LIMITS.maxAttempts}
                   className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-semibold text-black"
+                  placeholder="5"
                 />
               </div>
             </div>
