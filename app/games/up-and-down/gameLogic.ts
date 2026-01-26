@@ -18,6 +18,11 @@ export const DEFAULT_CONFIG: GameConfig = {
   maxAttempts: 5,
 };
 
+export const SAFE_LIMITS = {
+  maxNumber: 10000,
+  maxAttempts: 100,
+};
+
 export function generateSecretNumber(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
