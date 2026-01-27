@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useMemo } from "react";
 import Fuse from "fuse.js";
-import Header from "./components/Header";
-import SearchBar from "./components/SearchBar";
-import GameGrid from "./components/GameGrid";
+import Header from "./components/common/Header";
+import SearchBar from "./components/common/SearchBar";
+import GameGrid from "./components/common/GameGrid";
 import { games } from "./data/games";
 
 export default function Home() {
@@ -34,7 +34,6 @@ export default function Home() {
       <Header />
 
       <main className="container mx-auto px-4 py-12">
-        {/* Welcome Section */}
         <div className="text-center mb-12">
           <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-8">
             Enjoy a collection of fun mini-games and challenge yourself to beat
@@ -43,8 +42,6 @@ export default function Home() {
 
           <SearchBar onSearch={handleSearch} />
         </div>
-
-        {/* Game Grid */}
         <GameGrid games={filteredGames} />
       </main>
 

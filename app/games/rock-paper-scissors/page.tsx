@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import GameShell from "@/app/components/GameShell";
-import Scoreboard from "@/app/components/Scoreboard";
-import NameInputModal from "@/app/components/NameInputModal";
-import Countdown from "@/app/components/Countdown";
+import GameShell from "@/app/components/common/GameShell";
+import Scoreboard from "@/app/components/common/Scoreboard";
+import NameInputModal from "@/app/components/common/NameInputModal";
+import Countdown from "@/app/components/games/rockPaperScissors/Countdown";
 import { initializeGame, processRound, GameState, Choice } from "./gameLogic";
 import { scoreboardAdapter } from "@/app/lib/scoreboard";
 
@@ -134,7 +134,9 @@ export default function RockPaperScissorsPage() {
               </div>
               <div className="text-center text-4xl">VS</div>
               <div className="text-center">
-                <p className="text-sm text-gray-900 font-medium mb-2">Computer</p>
+                <p className="text-sm text-gray-900 font-medium mb-2">
+                  Computer
+                </p>
                 <div className="text-6xl">
                   {getChoiceEmoji(gameState.computerChoice)}
                 </div>
