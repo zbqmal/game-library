@@ -3,9 +3,136 @@ import {
   uncoverTile,
   GameState,
   TileState,
+  validatePlayerCount,
+  validateGridSize,
+  validateGameConfig,
+  GameConfig,
 } from "../gameLogic";
 
 describe("Treasure Hunt Game Logic", () => {
+  describe("validateGridSize", () => {
+    it("returns true for valid grid sizes (3-6)", () => {
+      expect(validateGridSize(3)).toBe(true);
+      expect(validateGridSize(4)).toBe(true);
+      expect(validateGridSize(5)).toBe(true);
+      expect(validateGridSize(6)).toBe(true);
+    });
+
+    it("returns false for grid size below minimum (< 3)", () => {
+      expect(validateGridSize(2)).toBe(false);
+      expect(validateGridSize(1)).toBe(false);
+      expect(validateGridSize(0)).toBe(false);
+      expect(validateGridSize(-1)).toBe(false);
+    });
+
+    it("returns false for grid size above maximum (> 6)", () => {
+      expect(validateGridSize(7)).toBe(false);
+      expect(validateGridSize(10)).toBe(false);
+      expect(validateGridSize(100)).toBe(false);
+    });
+  });
+
+  describe("validatePlayerCount", () => {
+    it("returns true for valid player count (1-6, within half tiles limit)", () => {
+      expect(validatePlayerCount(1, 9)).toBe(true);
+      expect(validatePlayerCount(2, 9)).toBe(true);
+      expect(validatePlayerCount(3, 9)).toBe(true);
+      expect(validatePlayerCount(4, 9)).toBe(true);
+      expect(validatePlayerCount(4, 16)).toBe(true);
+      expect(validatePlayerCount(6, 36)).toBe(true);
+    });
+
+    it("returns false for player count exceeding half of tiles", () => {
+      expect(validatePlayerCount(5, 9)).toBe(false); // 5 > 9/2
+      expect(validatePlayerCount(6, 9)).toBe(false); // 6 > 9/2
+      expect(validatePlayerCount(9, 16)).toBe(false); // 9 > 16/2
+    });
+
+    it("returns false for player count above absolute maximum (> 6)", () => {
+      expect(validatePlayerCount(7, 36)).toBe(false);
+      expect(validatePlayerCount(10, 36)).toBe(false);
+    });
+
+    it("returns false for player count below minimum (< 1)", () => {
+      expect(validatePlayerCount(0, 9)).toBe(false);
+      expect(validatePlayerCount(-1, 9)).toBe(false);
+    });
+
+    it("handles edge case: exactly half of tiles", () => {
+      expect(validatePlayerCount(4, 9)).toBe(true); // 4 < 9/2 = 4.5
+      expect(validatePlayerCount(5, 9)).toBe(false); // 5 > 9/2 = 4.5
+    });
+  });
+
+  describe("validateGameConfig", () => {
+    it("returns valid for correct configuration", () => {
+      const config: GameConfig = {
+        playerCount: 2,
+        playerNames: ['Alice', 'Bob'],
+        gridSize: 3,
+      };
+      const result = validateGameConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it("returns error for invalid grid size", () => {
+      const config: GameConfig = {
+        playerCount: 2,
+        playerNames: ['Alice', 'Bob'],
+        gridSize: 2,
+      };
+      const result = validateGameConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Grid size must be between 3 and 6');
+    });
+
+    it("returns error for too many players", () => {
+      const config: GameConfig = {
+        playerCount: 5,
+        playerNames: ['A', 'B', 'C', 'D', 'E'],
+        gridSize: 3, // 9 tiles, max 4 players
+      };
+      const result = validateGameConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('Player count must be between 1 and 4');
+    });
+
+    it("returns error for mismatched player names count", () => {
+      const config: GameConfig = {
+        playerCount: 3,
+        playerNames: ['Alice', 'Bob'], // Only 2 names for 3 players
+        gridSize: 3,
+      };
+      const result = validateGameConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Number of player names must match player count');
+    });
+
+    it("validates max players for different grid sizes", () => {
+      // 3x3 = 9 tiles, max 4 players
+      expect(validateGameConfig({
+        playerCount: 4,
+        playerNames: ['A', 'B', 'C', 'D'],
+        gridSize: 3,
+      }).valid).toBe(true);
+
+      // 4x4 = 16 tiles, max 6 players (absolute max)
+      expect(validateGameConfig({
+        playerCount: 6,
+        playerNames: ['A', 'B', 'C', 'D', 'E', 'F'],
+        gridSize: 4,
+      }).valid).toBe(true);
+
+      // 6x6 = 36 tiles, max 6 players (absolute max)
+      expect(validateGameConfig({
+        playerCount: 6,
+        playerNames: ['A', 'B', 'C', 'D', 'E', 'F'],
+        gridSize: 6,
+      }).valid).toBe(true);
+    });
+  });
+
   describe("initializeGame", () => {
     it("returns initial game state with correct structure", () => {
       const state = initializeGame();
@@ -15,6 +142,86 @@ describe("Treasure Hunt Game Logic", () => {
       expect(state).toHaveProperty("currentPlayer");
       expect(state).toHaveProperty("winner");
       expect(state).toHaveProperty("isGameOver");
+      expect(state).toHaveProperty("playerCount");
+      expect(state).toHaveProperty("playerNames");
+      expect(state).toHaveProperty("gridSize");
+    });
+
+    it("initializes with default 2 players and 3x3 grid when no config provided", () => {
+      const state = initializeGame();
+
+      expect(state.tiles).toHaveLength(9);
+      expect(state.playerCount).toBe(2);
+      expect(state.playerNames).toEqual(['Player 1', 'Player 2']);
+      expect(state.gridSize).toBe(3);
+      expect(state.tiles.every((tile) => tile === "covered")).toBe(true);
+    });
+
+    it("accepts custom configuration with player count and names", () => {
+      const config: GameConfig = {
+        playerCount: 3,
+        playerNames: ['Alice', 'Bob', 'Charlie'],
+        gridSize: 4,
+      };
+      const state = initializeGame(config);
+
+      expect(state.playerCount).toBe(3);
+      expect(state.playerNames).toEqual(['Alice', 'Bob', 'Charlie']);
+      expect(state.gridSize).toBe(4);
+      expect(state.tiles).toHaveLength(16);
+    });
+
+    it("creates correct number of tiles for different grid sizes", () => {
+      const config3x3: GameConfig = {
+        playerCount: 2,
+        playerNames: ['P1', 'P2'],
+        gridSize: 3,
+      };
+      expect(initializeGame(config3x3).tiles).toHaveLength(9);
+
+      const config4x4: GameConfig = {
+        playerCount: 3,
+        playerNames: ['P1', 'P2', 'P3'],
+        gridSize: 4,
+      };
+      expect(initializeGame(config4x4).tiles).toHaveLength(16);
+
+      const config6x6: GameConfig = {
+        playerCount: 6,
+        playerNames: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
+        gridSize: 6,
+      };
+      expect(initializeGame(config6x6).tiles).toHaveLength(36);
+    });
+
+    it("throws error for invalid configuration", () => {
+      const invalidConfig: GameConfig = {
+        playerCount: 10, // Too many players
+        playerNames: Array(10).fill('Player'),
+        gridSize: 3,
+      };
+
+      expect(() => initializeGame(invalidConfig)).toThrow();
+    });
+
+    it("throws error for grid size below minimum", () => {
+      const invalidConfig: GameConfig = {
+        playerCount: 1,
+        playerNames: ['Player 1'],
+        gridSize: 2, // Below minimum
+      };
+
+      expect(() => initializeGame(invalidConfig)).toThrow('Grid size must be between 3 and 6');
+    });
+
+    it("throws error for player count exceeding half of tiles", () => {
+      const invalidConfig: GameConfig = {
+        playerCount: 5, // More than 9/2 = 4.5
+        playerNames: ['P1', 'P2', 'P3', 'P4', 'P5'],
+        gridSize: 3,
+      };
+
+      expect(() => initializeGame(invalidConfig)).toThrow();
     });
 
     it("initializes with 9 covered tiles", () => {
@@ -29,6 +236,26 @@ describe("Treasure Hunt Game Logic", () => {
 
       expect(state.treasurePosition).toBeGreaterThanOrEqual(0);
       expect(state.treasurePosition).toBeLessThanOrEqual(8);
+    });
+
+    it("sets treasure position within bounds for different grid sizes", () => {
+      const config4x4: GameConfig = {
+        playerCount: 2,
+        playerNames: ['P1', 'P2'],
+        gridSize: 4,
+      };
+      const state4x4 = initializeGame(config4x4);
+      expect(state4x4.treasurePosition).toBeGreaterThanOrEqual(0);
+      expect(state4x4.treasurePosition).toBeLessThanOrEqual(15);
+
+      const config6x6: GameConfig = {
+        playerCount: 3,
+        playerNames: ['P1', 'P2', 'P3'],
+        gridSize: 6,
+      };
+      const state6x6 = initializeGame(config6x6);
+      expect(state6x6.treasurePosition).toBeGreaterThanOrEqual(0);
+      expect(state6x6.treasurePosition).toBeLessThanOrEqual(35);
     });
 
     it("starts with player 1", () => {
@@ -81,6 +308,9 @@ describe("Treasure Hunt Game Logic", () => {
         currentPlayer: 1,
         winner: null,
         isGameOver: false,
+        playerCount: 2,
+        playerNames: ['Player 1', 'Player 2'],
+        gridSize: 3,
       };
     });
 
@@ -270,6 +500,154 @@ describe("Treasure Hunt Game Logic", () => {
         const finalState = uncoverTile(state, 5);
         expect(finalState.tiles[5]).toBe("covered");
         expect(finalState).toEqual(state);
+      });
+    });
+
+    describe("multi-player support", () => {
+      it("cycles through 3 players correctly", () => {
+        const state3Players: GameState = {
+          tiles: Array(9).fill("covered"),
+          treasurePosition: 8,
+          currentPlayer: 1,
+          winner: null,
+          isGameOver: false,
+          playerCount: 3,
+          playerNames: ['Alice', 'Bob', 'Charlie'],
+          gridSize: 3,
+        };
+
+        // Player 1 -> Player 2
+        let newState = uncoverTile(state3Players, 0);
+        expect(newState.currentPlayer).toBe(2);
+
+        // Player 2 -> Player 3
+        newState = uncoverTile(newState, 1);
+        expect(newState.currentPlayer).toBe(3);
+
+        // Player 3 -> Player 1 (cycles back)
+        newState = uncoverTile(newState, 2);
+        expect(newState.currentPlayer).toBe(1);
+      });
+
+      it("cycles through 4 players correctly", () => {
+        const state4Players: GameState = {
+          tiles: Array(16).fill("covered"),
+          treasurePosition: 15,
+          currentPlayer: 1,
+          winner: null,
+          isGameOver: false,
+          playerCount: 4,
+          playerNames: ['P1', 'P2', 'P3', 'P4'],
+          gridSize: 4,
+        };
+
+        let state = state4Players;
+        
+        // Player 1 -> 2 -> 3 -> 4 -> 1
+        state = uncoverTile(state, 0);
+        expect(state.currentPlayer).toBe(2);
+        
+        state = uncoverTile(state, 1);
+        expect(state.currentPlayer).toBe(3);
+        
+        state = uncoverTile(state, 2);
+        expect(state.currentPlayer).toBe(4);
+        
+        state = uncoverTile(state, 3);
+        expect(state.currentPlayer).toBe(1);
+      });
+
+      it("cycles through 6 players correctly", () => {
+        const state6Players: GameState = {
+          tiles: Array(36).fill("covered"),
+          treasurePosition: 35,
+          currentPlayer: 1,
+          winner: null,
+          isGameOver: false,
+          playerCount: 6,
+          playerNames: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
+          gridSize: 6,
+        };
+
+        let state = state6Players;
+        
+        // Test cycling through all 6 players
+        for (let i = 1; i <= 6; i++) {
+          expect(state.currentPlayer).toBe(i as any);
+          state = uncoverTile(state, i - 1);
+        }
+        
+        // Should cycle back to player 1
+        expect(state.currentPlayer).toBe(1);
+      });
+
+      it("sets correct winner in multi-player game", () => {
+        const state3Players: GameState = {
+          tiles: Array(9).fill("covered"),
+          treasurePosition: 2,
+          currentPlayer: 1,
+          winner: null,
+          isGameOver: false,
+          playerCount: 3,
+          playerNames: ['Alice', 'Bob', 'Charlie'],
+          gridSize: 3,
+        };
+
+        // Player 1 uncovers empty
+        let state = uncoverTile(state3Players, 0);
+        expect(state.currentPlayer).toBe(2);
+
+        // Player 2 uncovers empty
+        state = uncoverTile(state, 1);
+        expect(state.currentPlayer).toBe(3);
+
+        // Player 3 finds treasure
+        state = uncoverTile(state, 2);
+        expect(state.winner).toBe(3);
+        expect(state.isGameOver).toBe(true);
+      });
+    });
+
+    describe("different grid sizes", () => {
+      it("handles 4x4 grid correctly", () => {
+        const state4x4: GameState = {
+          tiles: Array(16).fill("covered"),
+          treasurePosition: 10,
+          currentPlayer: 1,
+          winner: null,
+          isGameOver: false,
+          playerCount: 2,
+          playerNames: ['P1', 'P2'],
+          gridSize: 4,
+        };
+
+        const newState = uncoverTile(state4x4, 10);
+        expect(newState.tiles[10]).toBe("uncovered-treasure");
+        expect(newState.winner).toBe(1);
+        expect(newState.isGameOver).toBe(true);
+      });
+
+      it("handles 6x6 grid correctly", () => {
+        const state6x6: GameState = {
+          tiles: Array(36).fill("covered"),
+          treasurePosition: 35,
+          currentPlayer: 1,
+          winner: null,
+          isGameOver: false,
+          playerCount: 3,
+          playerNames: ['P1', 'P2', 'P3'],
+          gridSize: 6,
+        };
+
+        // Uncover non-treasure tile
+        let state = uncoverTile(state6x6, 0);
+        expect(state.tiles[0]).toBe("uncovered-empty");
+        expect(state.currentPlayer).toBe(2);
+
+        // Uncover treasure tile
+        state = uncoverTile(state, 35);
+        expect(state.tiles[35]).toBe("uncovered-treasure");
+        expect(state.winner).toBe(2);
       });
     });
   });

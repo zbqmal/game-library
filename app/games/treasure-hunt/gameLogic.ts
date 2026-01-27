@@ -1,5 +1,11 @@
 export type TileState = 'covered' | 'uncovered-empty' | 'uncovered-treasure';
-export type PlayerTurn = 1 | 2;
+export type PlayerTurn = 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface GameConfig {
+  playerCount: number;
+  playerNames: string[];
+  gridSize: number; // e.g., 3 for 3x3, 4 for 4x4
+}
 
 export interface GameState {
   tiles: TileState[];
@@ -7,20 +13,103 @@ export interface GameState {
   currentPlayer: PlayerTurn;
   winner: PlayerTurn | null;
   isGameOver: boolean;
+  playerCount: number;
+  playerNames: string[];
+  gridSize: number;
+}
+
+/**
+ * Validate player count against constraints
+ */
+export function validatePlayerCount(playerCount: number, totalTiles: number): boolean {
+  // Player count must be at least 1
+  if (playerCount < 1) {
+    return false;
+  }
+  
+  // Absolute maximum is 6 players
+  if (playerCount > 6) {
+    return false;
+  }
+  
+  // Player count must not exceed half of total tiles
+  if (playerCount > totalTiles / 2) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Validate grid size against constraints
+ */
+export function validateGridSize(gridSize: number): boolean {
+  // Minimum grid size is 3 (3x3 = 9 tiles)
+  if (gridSize < 3) {
+    return false;
+  }
+  
+  // Maximum grid size is 6 (6x6 = 36 tiles)
+  if (gridSize > 6) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Validate game configuration
+ */
+export function validateGameConfig(config: GameConfig): { valid: boolean; error?: string } {
+  const totalTiles = config.gridSize * config.gridSize;
+  
+  if (!validateGridSize(config.gridSize)) {
+    return { valid: false, error: 'Grid size must be between 3 and 6' };
+  }
+  
+  if (!validatePlayerCount(config.playerCount, totalTiles)) {
+    const maxPlayers = Math.min(6, Math.floor(totalTiles / 2));
+    return { valid: false, error: `Player count must be between 1 and ${maxPlayers} for a ${config.gridSize}x${config.gridSize} grid` };
+  }
+  
+  if (config.playerNames.length !== config.playerCount) {
+    return { valid: false, error: 'Number of player names must match player count' };
+  }
+  
+  return { valid: true };
 }
 
 /**
  * Initialize a new game with random treasure placement
  */
-export function initializeGame(): GameState {
-  const treasurePosition = Math.floor(Math.random() * 9);
+export function initializeGame(config?: GameConfig): GameState {
+  // Default configuration for backward compatibility
+  const defaultConfig: GameConfig = {
+    playerCount: 2,
+    playerNames: ['Player 1', 'Player 2'],
+    gridSize: 3,
+  };
+  
+  const gameConfig = config || defaultConfig;
+  
+  // Validate configuration
+  const validation = validateGameConfig(gameConfig);
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+  
+  const totalTiles = gameConfig.gridSize * gameConfig.gridSize;
+  const treasurePosition = Math.floor(Math.random() * totalTiles);
   
   return {
-    tiles: Array(9).fill('covered'),
+    tiles: Array(totalTiles).fill('covered'),
     treasurePosition,
     currentPlayer: 1,
     winner: null,
     isGameOver: false,
+    playerCount: gameConfig.playerCount,
+    playerNames: gameConfig.playerNames,
+    gridSize: gameConfig.gridSize,
   };
 }
 
@@ -49,8 +138,8 @@ export function uncoverTile(state: GameState, position: number): GameState {
     };
   }
 
-  // Switch to next player
-  const nextPlayer: PlayerTurn = state.currentPlayer === 1 ? 2 : 1;
+  // Switch to next player (cycling through all players)
+  const nextPlayer = (state.currentPlayer % state.playerCount) + 1 as PlayerTurn;
 
   return {
     ...state,
