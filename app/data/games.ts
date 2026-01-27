@@ -32,4 +32,15 @@ export const games: Game[] = [
     hasScoreboard: true,
     route: "/games/rock-paper-scissors",
   },
+  {
+    id: "3",
+    title: "Treasure Hunt",
+    slug: "treasure-hunt",
+    description:
+      "Two players take turns uncovering tiles to find the hidden treasure!",
+    thumbnail: "/images/games/treasure-hunt.png",
+    tags: ["two-player", "strategy", "quick"],
+    hasScoreboard: false,
+    route: "/games/treasure-hunt",
+  },
 ];
