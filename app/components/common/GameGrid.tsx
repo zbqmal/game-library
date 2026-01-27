@@ -1,5 +1,5 @@
-import { Game } from '../data/games';
-import GameTile from './GameTile';
+import { Game } from "../../data/games";
+import GameTile from "./GameTile";
 
 interface GameGridProps {
   games: Game[];

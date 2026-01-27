@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import GameShell from "@/app/components/GameShell";
+import GameShell from "@/app/components/common/GameShell";
 import {
   initializeGame,
   processGuess,

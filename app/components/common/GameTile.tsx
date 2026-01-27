@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { Game } from '../data/games';
+import Link from "next/link";
+import Image from "next/image";
+import { Game } from "../../data/games";
 
 interface GameTileProps {
   game: Game;
