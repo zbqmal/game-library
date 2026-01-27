@@ -25,19 +25,27 @@ jest.mock("@/app/components/common/GameShell", () => {
 });
 
 describe("TreasureHuntPage", () => {
-  it("renders the game title and description", () => {
+  // Helper function to start a game with default configuration
+  const startGame = () => {
+    const startButton = screen.getByText("Start Game");
+    fireEvent.click(startButton);
+  };
+
+  it("renders the game title and configuration screen", () => {
     render(<TreasureHuntPage />);
 
     expect(screen.getByText("Treasure Hunt")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Two players take turns uncovering tiles to find the hidden treasure!",
+        "Configure your game and start the hunt for treasure!",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByText("Start Game")).toBeInTheDocument();
   });
 
-  it("renders 9 tiles initially", () => {
+  it("renders 9 tiles after starting game", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button").filter((button) => {
       return button.textContent?.includes("🌳");
@@ -46,8 +54,9 @@ describe("TreasureHuntPage", () => {
     expect(tiles.length).toBe(9);
   });
 
-  it("displays Player 1's turn initially", () => {
+  it("displays Player 1's turn initially after starting game", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     expect(screen.getByText("Player 1's Turn")).toBeInTheDocument();
   });
@@ -56,11 +65,12 @@ describe("TreasureHuntPage", () => {
     render(<TreasureHuntPage />);
 
     expect(screen.getByText("Game Rules:")).toBeInTheDocument();
-    expect(screen.getByText(/Two players take turns clicking tiles/)).toBeInTheDocument();
+    expect(screen.getByText(/Players take turns clicking tiles/)).toBeInTheDocument();
   });
 
   it("uncovers a tile when clicked", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button").filter((button) => {
       return button.textContent?.includes("🌳");
@@ -80,6 +90,7 @@ describe("TreasureHuntPage", () => {
 
   it("switches player turn after uncovering a non-treasure tile", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button");
 
@@ -99,6 +110,7 @@ describe("TreasureHuntPage", () => {
 
   it("displays winner when treasure is found", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button");
 
@@ -116,6 +128,7 @@ describe("TreasureHuntPage", () => {
 
   it("displays treasure emoji when found", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button");
 
@@ -128,8 +141,9 @@ describe("TreasureHuntPage", () => {
     expect(screen.getByText("💎")).toBeInTheDocument();
   });
 
-  it("shows Play Again button when game is over", () => {
+  it("shows New Game button when game is over", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button");
 
@@ -138,11 +152,12 @@ describe("TreasureHuntPage", () => {
       fireEvent.click(tiles[i]);
     }
 
-    expect(screen.getByText("Play Again")).toBeInTheDocument();
+    expect(screen.getByText("New Game")).toBeInTheDocument();
   });
 
-  it("resets game when Play Again is clicked", () => {
+  it("resets game when New Game is clicked", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button");
 
@@ -151,21 +166,18 @@ describe("TreasureHuntPage", () => {
       fireEvent.click(tiles[i]);
     }
 
-    // Click Play Again
-    const playAgainButton = screen.getByText("Play Again");
-    fireEvent.click(playAgainButton);
+    // Click New Game
+    const newGameButton = screen.getByText("New Game");
+    fireEvent.click(newGameButton);
 
-    // All tiles should be covered again
-    const coveredTiles = screen.getAllByRole("button").filter((button) => {
-      return button.textContent?.includes("🌳");
-    });
-
-    expect(coveredTiles.length).toBe(9);
-    expect(screen.getByText("Player 1's Turn")).toBeInTheDocument();
+    // Should go back to configuration screen
+    expect(screen.getByText("Start Game")).toBeInTheDocument();
+    expect(screen.getByText("Game Configuration")).toBeInTheDocument();
   });
 
   it("prevents clicking on already uncovered tiles", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button");
 
@@ -180,13 +192,14 @@ describe("TreasureHuntPage", () => {
     fireEvent.click(tiles[0]);
 
     // Player should not have changed (unless game ended)
-    if (!screen.queryByText(/Wins!/)) {
-      expect(screen.getByText(currentPlayer!)).toBeInTheDocument();
+    if (!screen.queryByText(/Wins!/) && currentPlayer) {
+      expect(screen.getByText(currentPlayer)).toBeInTheDocument();
     }
   });
 
   it("disables all tiles when game is over", () => {
     render(<TreasureHuntPage />);
+    startGame();
 
     const tiles = screen.getAllByRole("button");
 
@@ -195,9 +208,13 @@ describe("TreasureHuntPage", () => {
       fireEvent.click(tiles[i]);
     }
 
-    // All tiles should be disabled (except Play Again button)
-    const gameTiles = tiles.filter(
-      (button) => button.textContent !== "Play Again",
+    // All game tiles should be disabled (get only the grid tiles, not New Game button)
+    const gameTiles = screen.getAllByRole("button").filter(
+      (button) => button.textContent !== "New Game" && (
+        button.textContent?.includes("🌳") ||
+        button.textContent?.includes("💎") ||
+        button.textContent?.includes("🕳️")
+      ),
     );
     
     gameTiles.forEach((tile) => {
