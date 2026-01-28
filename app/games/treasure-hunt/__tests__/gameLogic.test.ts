@@ -6,6 +6,10 @@ import {
   validatePlayerCount,
   validateGridSize,
   validateGameConfig,
+  validatePlayerName,
+  validatePlayerNames,
+  getDefaultPlayerName,
+  normalizePlayerNames,
   GameConfig,
 } from "../gameLogic";
 
@@ -33,13 +37,18 @@ describe("Treasure Hunt Game Logic", () => {
   });
 
   describe("validatePlayerCount", () => {
-    it("returns true for valid player count (1-6, within half tiles limit)", () => {
-      expect(validatePlayerCount(1, 9)).toBe(true);
+    it("returns true for valid player count (2-6, within half tiles limit)", () => {
       expect(validatePlayerCount(2, 9)).toBe(true);
       expect(validatePlayerCount(3, 9)).toBe(true);
       expect(validatePlayerCount(4, 9)).toBe(true);
       expect(validatePlayerCount(4, 16)).toBe(true);
       expect(validatePlayerCount(6, 36)).toBe(true);
+    });
+
+    it("returns false for player count below minimum (< 2)", () => {
+      expect(validatePlayerCount(1, 9)).toBe(false);
+      expect(validatePlayerCount(0, 9)).toBe(false);
+      expect(validatePlayerCount(-1, 9)).toBe(false);
     });
 
     it("returns false for player count exceeding half of tiles", () => {
@@ -53,11 +62,6 @@ describe("Treasure Hunt Game Logic", () => {
       expect(validatePlayerCount(10, 36)).toBe(false);
     });
 
-    it("returns false for player count below minimum (< 1)", () => {
-      expect(validatePlayerCount(0, 9)).toBe(false);
-      expect(validatePlayerCount(-1, 9)).toBe(false);
-    });
-
     it("handles edge case: exactly half of tiles", () => {
       expect(validatePlayerCount(4, 9)).toBe(true); // 4 < 9/2 = 4.5
       expect(validatePlayerCount(5, 9)).toBe(false); // 5 > 9/2 = 4.5
@@ -68,7 +72,7 @@ describe("Treasure Hunt Game Logic", () => {
     it("returns valid for correct configuration", () => {
       const config: GameConfig = {
         playerCount: 2,
-        playerNames: ['Alice', 'Bob'],
+        playerNames: ["Alice", "Bob"],
         gridSize: 3,
       };
       const result = validateGameConfig(config);
@@ -79,57 +83,197 @@ describe("Treasure Hunt Game Logic", () => {
     it("returns error for invalid grid size", () => {
       const config: GameConfig = {
         playerCount: 2,
-        playerNames: ['Alice', 'Bob'],
+        playerNames: ["Alice", "Bob"],
         gridSize: 2,
       };
       const result = validateGameConfig(config);
       expect(result.valid).toBe(false);
-      expect(result.error).toBe('Grid size must be between 3 and 6');
+      expect(result.error).toBe("Grid size must be between 3 and 6");
     });
 
     it("returns error for too many players", () => {
       const config: GameConfig = {
         playerCount: 5,
-        playerNames: ['A', 'B', 'C', 'D', 'E'],
+        playerNames: ["A", "B", "C", "D", "E"],
         gridSize: 3, // 9 tiles, max 4 players
       };
       const result = validateGameConfig(config);
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('Player count must be between 1 and 4');
+      expect(result.error).toContain("Player count must be between 2 and 4");
     });
 
     it("returns error for mismatched player names count", () => {
       const config: GameConfig = {
         playerCount: 3,
-        playerNames: ['Alice', 'Bob'], // Only 2 names for 3 players
+        playerNames: ["Alice", "Bob"], // Only 2 names for 3 players
         gridSize: 3,
       };
       const result = validateGameConfig(config);
       expect(result.valid).toBe(false);
-      expect(result.error).toBe('Number of player names must match player count');
+      expect(result.error).toBe(
+        "Number of player names must match player count",
+      );
     });
 
     it("validates max players for different grid sizes", () => {
       // 3x3 = 9 tiles, max 4 players
-      expect(validateGameConfig({
-        playerCount: 4,
-        playerNames: ['A', 'B', 'C', 'D'],
-        gridSize: 3,
-      }).valid).toBe(true);
+      expect(
+        validateGameConfig({
+          playerCount: 4,
+          playerNames: ["A", "B", "C", "D"],
+          gridSize: 3,
+        }).valid,
+      ).toBe(true);
 
       // 4x4 = 16 tiles, max 6 players (absolute max)
-      expect(validateGameConfig({
-        playerCount: 6,
-        playerNames: ['A', 'B', 'C', 'D', 'E', 'F'],
-        gridSize: 4,
-      }).valid).toBe(true);
+      expect(
+        validateGameConfig({
+          playerCount: 6,
+          playerNames: ["A", "B", "C", "D", "E", "F"],
+          gridSize: 4,
+        }).valid,
+      ).toBe(true);
 
       // 6x6 = 36 tiles, max 6 players (absolute max)
-      expect(validateGameConfig({
-        playerCount: 6,
-        playerNames: ['A', 'B', 'C', 'D', 'E', 'F'],
-        gridSize: 6,
-      }).valid).toBe(true);
+      expect(
+        validateGameConfig({
+          playerCount: 6,
+          playerNames: ["A", "B", "C", "D", "E", "F"],
+          gridSize: 6,
+        }).valid,
+      ).toBe(true);
+    });
+  });
+
+  describe("validatePlayerName", () => {
+    it("returns true for names within maximum length (20 characters)", () => {
+      expect(validatePlayerName("Alice")).toBe(true);
+      expect(validatePlayerName("Bob")).toBe(true);
+      expect(validatePlayerName("A")).toBe(true);
+      expect(validatePlayerName("VeryLongPlayerName123")).toBe(false); // 21 chars
+      expect(validatePlayerName("VeryLongPlayerName12")).toBe(true); // 20 chars (max)
+    });
+
+    it("returns false for names exceeding maximum length", () => {
+      expect(validatePlayerName("This is a very long player name")).toBe(false);
+      expect(validatePlayerName("X".repeat(21))).toBe(false);
+    });
+
+    it("allows empty strings", () => {
+      expect(validatePlayerName("")).toBe(true);
+    });
+
+    it("allows names with special characters within limit", () => {
+      expect(validatePlayerName("Player@123")).toBe(true);
+      expect(validatePlayerName("Jane-Doe")).toBe(true);
+      expect(validatePlayerName("Player_#1")).toBe(true);
+    });
+
+    it("allows whitespace within limit", () => {
+      expect(validatePlayerName("Player One")).toBe(true);
+      expect(validatePlayerName("John Doe Player")).toBe(true);
+    });
+  });
+
+  describe("validatePlayerNames", () => {
+    it("returns true when all names are valid", () => {
+      expect(validatePlayerNames(["Alice", "Bob"])).toBe(true);
+      expect(validatePlayerNames(["P1", "P2", "P3"])).toBe(true);
+      expect(validatePlayerNames(["A", ""])).toBe(true); // Empty is valid
+    });
+
+    it("returns false when any name exceeds maximum length", () => {
+      expect(validatePlayerNames(["Alice", "VeryLongPlayerName123"])).toBe(
+        false,
+      );
+      expect(validatePlayerNames(["X".repeat(21)])).toBe(false);
+    });
+
+    it("returns true for empty array", () => {
+      expect(validatePlayerNames([])).toBe(true);
+    });
+
+    it("returns true for single name", () => {
+      expect(validatePlayerNames(["Player"])).toBe(true);
+    });
+
+    it("returns true for array with six names (maximum)", () => {
+      expect(validatePlayerNames(["P1", "P2", "P3", "P4", "P5", "P6"])).toBe(
+        true,
+      );
+    });
+
+    it("returns false if any of many names is invalid", () => {
+      expect(
+        validatePlayerNames(["P1", "P2", "P3", "X".repeat(21), "P5", "P6"]),
+      ).toBe(false);
+    });
+  });
+
+  describe("getDefaultPlayerName", () => {
+    it("returns correct default name for given index", () => {
+      expect(getDefaultPlayerName(0)).toBe("Player 1");
+      expect(getDefaultPlayerName(1)).toBe("Player 2");
+      expect(getDefaultPlayerName(2)).toBe("Player 3");
+      expect(getDefaultPlayerName(5)).toBe("Player 6");
+    });
+
+    it("works for any positive index", () => {
+      expect(getDefaultPlayerName(10)).toBe("Player 11");
+      expect(getDefaultPlayerName(99)).toBe("Player 100");
+    });
+  });
+
+  describe("normalizePlayerNames", () => {
+    it("assigns default names to empty strings", () => {
+      const result = normalizePlayerNames(["", ""]);
+      expect(result).toEqual(["Player 1", "Player 2"]);
+    });
+
+    it("preserves non-empty names", () => {
+      const result = normalizePlayerNames(["Alice", "Bob"]);
+      expect(result).toEqual(["Alice", "Bob"]);
+    });
+
+    it("assigns defaults only to empty names", () => {
+      const result = normalizePlayerNames(["Alice", "", "Charlie"]);
+      expect(result).toEqual(["Alice", "Player 2", "Charlie"]);
+    });
+
+    it("handles names with only whitespace", () => {
+      const result = normalizePlayerNames(["Alice", "   ", "Charlie"]);
+      expect(result).toEqual(["Alice", "Player 2", "Charlie"]);
+    });
+
+    it("preserves tab and newline as whitespace", () => {
+      const result = normalizePlayerNames(["\t", "\n", "Valid"]);
+      expect(result).toEqual(["Player 1", "Player 2", "Valid"]);
+    });
+
+    it("works with six players", () => {
+      const result = normalizePlayerNames(["", "Bob", "", "Dave", "", ""]);
+      expect(result).toEqual([
+        "Player 1",
+        "Bob",
+        "Player 3",
+        "Dave",
+        "Player 5",
+        "Player 6",
+      ]);
+    });
+
+    it("handles all empty array", () => {
+      const result = normalizePlayerNames(Array(4).fill(""));
+      expect(result).toEqual(["Player 1", "Player 2", "Player 3", "Player 4"]);
+    });
+
+    it("returns new array without mutating input", () => {
+      const original = ["Alice", "", "Charlie"];
+      const result = normalizePlayerNames(original);
+
+      expect(original).toEqual(["Alice", "", "Charlie"]);
+      expect(result).toEqual(["Alice", "Player 2", "Charlie"]);
+      expect(result).not.toBe(original);
     });
   });
 
@@ -152,7 +296,7 @@ describe("Treasure Hunt Game Logic", () => {
 
       expect(state.tiles).toHaveLength(9);
       expect(state.playerCount).toBe(2);
-      expect(state.playerNames).toEqual(['Player 1', 'Player 2']);
+      expect(state.playerNames).toEqual(["Player 1", "Player 2"]);
       expect(state.gridSize).toBe(3);
       expect(state.tiles.every((tile) => tile === "covered")).toBe(true);
     });
@@ -160,13 +304,13 @@ describe("Treasure Hunt Game Logic", () => {
     it("accepts custom configuration with player count and names", () => {
       const config: GameConfig = {
         playerCount: 3,
-        playerNames: ['Alice', 'Bob', 'Charlie'],
+        playerNames: ["Alice", "Bob", "Charlie"],
         gridSize: 4,
       };
       const state = initializeGame(config);
 
       expect(state.playerCount).toBe(3);
-      expect(state.playerNames).toEqual(['Alice', 'Bob', 'Charlie']);
+      expect(state.playerNames).toEqual(["Alice", "Bob", "Charlie"]);
       expect(state.gridSize).toBe(4);
       expect(state.tiles).toHaveLength(16);
     });
@@ -174,21 +318,21 @@ describe("Treasure Hunt Game Logic", () => {
     it("creates correct number of tiles for different grid sizes", () => {
       const config3x3: GameConfig = {
         playerCount: 2,
-        playerNames: ['P1', 'P2'],
+        playerNames: ["P1", "P2"],
         gridSize: 3,
       };
       expect(initializeGame(config3x3).tiles).toHaveLength(9);
 
       const config4x4: GameConfig = {
         playerCount: 3,
-        playerNames: ['P1', 'P2', 'P3'],
+        playerNames: ["P1", "P2", "P3"],
         gridSize: 4,
       };
       expect(initializeGame(config4x4).tiles).toHaveLength(16);
 
       const config6x6: GameConfig = {
         playerCount: 6,
-        playerNames: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
+        playerNames: ["P1", "P2", "P3", "P4", "P5", "P6"],
         gridSize: 6,
       };
       expect(initializeGame(config6x6).tiles).toHaveLength(36);
@@ -197,7 +341,7 @@ describe("Treasure Hunt Game Logic", () => {
     it("throws error for invalid configuration", () => {
       const invalidConfig: GameConfig = {
         playerCount: 10, // Too many players
-        playerNames: Array(10).fill('Player'),
+        playerNames: Array(10).fill("Player"),
         gridSize: 3,
       };
 
@@ -207,17 +351,19 @@ describe("Treasure Hunt Game Logic", () => {
     it("throws error for grid size below minimum", () => {
       const invalidConfig: GameConfig = {
         playerCount: 1,
-        playerNames: ['Player 1'],
+        playerNames: ["Player 1"],
         gridSize: 2, // Below minimum
       };
 
-      expect(() => initializeGame(invalidConfig)).toThrow('Grid size must be between 3 and 6');
+      expect(() => initializeGame(invalidConfig)).toThrow(
+        "Grid size must be between 3 and 6",
+      );
     });
 
     it("throws error for player count exceeding half of tiles", () => {
       const invalidConfig: GameConfig = {
         playerCount: 5, // More than 9/2 = 4.5
-        playerNames: ['P1', 'P2', 'P3', 'P4', 'P5'],
+        playerNames: ["P1", "P2", "P3", "P4", "P5"],
         gridSize: 3,
       };
 
@@ -241,7 +387,7 @@ describe("Treasure Hunt Game Logic", () => {
     it("sets treasure position within bounds for different grid sizes", () => {
       const config4x4: GameConfig = {
         playerCount: 2,
-        playerNames: ['P1', 'P2'],
+        playerNames: ["P1", "P2"],
         gridSize: 4,
       };
       const state4x4 = initializeGame(config4x4);
@@ -250,7 +396,7 @@ describe("Treasure Hunt Game Logic", () => {
 
       const config6x6: GameConfig = {
         playerCount: 3,
-        playerNames: ['P1', 'P2', 'P3'],
+        playerNames: ["P1", "P2", "P3"],
         gridSize: 6,
       };
       const state6x6 = initializeGame(config6x6);
@@ -309,14 +455,14 @@ describe("Treasure Hunt Game Logic", () => {
         winner: null,
         isGameOver: false,
         playerCount: 2,
-        playerNames: ['Player 1', 'Player 2'],
+        playerNames: ["Player 1", "Player 2"],
         gridSize: 3,
       };
     });
 
     it("does not mutate the original state", () => {
       const stateCopy = JSON.parse(JSON.stringify(initialState));
-      
+
       uncoverTile(initialState, 0);
 
       expect(initialState).toEqual(stateCopy);
@@ -512,7 +658,7 @@ describe("Treasure Hunt Game Logic", () => {
           winner: null,
           isGameOver: false,
           playerCount: 3,
-          playerNames: ['Alice', 'Bob', 'Charlie'],
+          playerNames: ["Alice", "Bob", "Charlie"],
           gridSize: 3,
         };
 
@@ -537,22 +683,22 @@ describe("Treasure Hunt Game Logic", () => {
           winner: null,
           isGameOver: false,
           playerCount: 4,
-          playerNames: ['P1', 'P2', 'P3', 'P4'],
+          playerNames: ["P1", "P2", "P3", "P4"],
           gridSize: 4,
         };
 
         let state = state4Players;
-        
+
         // Player 1 -> 2 -> 3 -> 4 -> 1
         state = uncoverTile(state, 0);
         expect(state.currentPlayer).toBe(2);
-        
+
         state = uncoverTile(state, 1);
         expect(state.currentPlayer).toBe(3);
-        
+
         state = uncoverTile(state, 2);
         expect(state.currentPlayer).toBe(4);
-        
+
         state = uncoverTile(state, 3);
         expect(state.currentPlayer).toBe(1);
       });
@@ -565,18 +711,18 @@ describe("Treasure Hunt Game Logic", () => {
           winner: null,
           isGameOver: false,
           playerCount: 6,
-          playerNames: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
+          playerNames: ["P1", "P2", "P3", "P4", "P5", "P6"],
           gridSize: 6,
         };
 
         let state = state6Players;
-        
+
         // Test cycling through all 6 players
         for (let i = 1; i <= 6; i++) {
           expect(state.currentPlayer).toBe(i as any);
           state = uncoverTile(state, i - 1);
         }
-        
+
         // Should cycle back to player 1
         expect(state.currentPlayer).toBe(1);
       });
@@ -589,7 +735,7 @@ describe("Treasure Hunt Game Logic", () => {
           winner: null,
           isGameOver: false,
           playerCount: 3,
-          playerNames: ['Alice', 'Bob', 'Charlie'],
+          playerNames: ["Alice", "Bob", "Charlie"],
           gridSize: 3,
         };
 
@@ -617,7 +763,7 @@ describe("Treasure Hunt Game Logic", () => {
           winner: null,
           isGameOver: false,
           playerCount: 2,
-          playerNames: ['P1', 'P2'],
+          playerNames: ["P1", "P2"],
           gridSize: 4,
         };
 
@@ -635,7 +781,7 @@ describe("Treasure Hunt Game Logic", () => {
           winner: null,
           isGameOver: false,
           playerCount: 3,
-          playerNames: ['P1', 'P2', 'P3'],
+          playerNames: ["P1", "P2", "P3"],
           gridSize: 6,
         };
 

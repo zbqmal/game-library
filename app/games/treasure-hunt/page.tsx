@@ -2,44 +2,87 @@
 
 import { useState } from "react";
 import GameShell from "@/app/components/common/GameShell";
-import { initializeGame, uncoverTile, GameState, GameConfig, validateGameConfig } from "./gameLogic";
+import {
+  initializeGame,
+  uncoverTile,
+  GameState,
+  GameConfig,
+  validateGameConfig,
+} from "./gameLogic";
 
 export default function TreasureHuntPage() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerCount, setPlayerCount] = useState(2);
   const [gridSize, setGridSize] = useState(3);
-  const [playerNames, setPlayerNames] = useState<string[]>(['Player 1', 'Player 2']);
-  const [configError, setConfigError] = useState<string>('');
+  const [playerNames, setPlayerNames] = useState<string[]>([
+    "Player 1",
+    "Player 2",
+  ]);
+  const [configError, setConfigError] = useState<string>("");
 
-  const handlePlayerCountChange = (count: number) => {
-    setPlayerCount(count);
-    // Adjust player names array to match count
-    const newNames = Array(count).fill(null).map((_, i) => 
-      playerNames[i] || `Player ${i + 1}`
-    );
-    setPlayerNames(newNames);
+  const maxPlayers = Math.min(6, Math.floor((gridSize * gridSize) / 2));
+  const isValidPlayerCount =
+    playerCount >= 2 && playerCount <= 6 && playerCount <= maxPlayers;
+  const isValidPlayerNames =
+    playerNames.length === playerCount &&
+    playerNames.every((name) => name.trim().length <= 20);
+  const isFormValid = isValidPlayerCount && isValidPlayerNames;
+
+  const handlePlayerCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Allow empty string for user to delete and retype
+    if (value === "") {
+      setPlayerCount(0);
+      setPlayerNames([]);
+      return;
+    }
+
+    // Parse to remove leading zeros and ensure clean number
+    const parsedCount = parseInt(value, 10);
+    if (isNaN(parsedCount) || parsedCount < 0) return;
+
+    // Set the count without clamping - let validation handle out-of-range values
+    setPlayerCount(parsedCount);
+    // Force the input to display the normalized value without leading zeros
+    e.currentTarget.value = String(parsedCount);
+
+    // Only adjust player names if count is valid (prevents creating too many DOM elements)
+    if (parsedCount >= 2 && parsedCount <= 6 && parsedCount <= maxPlayers) {
+      const newNames = Array(parsedCount)
+        .fill(null)
+        .map((_, i) => playerNames[i] || `Player ${i + 1}`);
+      setPlayerNames(newNames);
+    }
   };
 
   const handlePlayerNameChange = (index: number, name: string) => {
+    // Enforce max length of 20 characters
+    const truncatedName = name.slice(0, 20);
     const newNames = [...playerNames];
-    newNames[index] = name;
+    newNames[index] = truncatedName;
     setPlayerNames(newNames);
   };
 
   const handleStartGame = () => {
+    // Assign default names to empty entries
+    const finalNames = playerNames.map((name, i) =>
+      name.trim() === "" ? `Player ${i + 1}` : name,
+    );
+
     const config: GameConfig = {
       playerCount,
-      playerNames,
+      playerNames: finalNames,
       gridSize,
     };
 
     const validation = validateGameConfig(config);
     if (!validation.valid) {
-      setConfigError(validation.error || 'Invalid configuration');
+      setConfigError(validation.error || "Invalid configuration");
       return;
     }
 
-    setConfigError('');
+    setConfigError("");
     setGameState(initializeGame(config));
   };
 
@@ -51,46 +94,41 @@ export default function TreasureHuntPage() {
 
   const handleReset = () => {
     setGameState(null);
-    setConfigError('');
+    setConfigError("");
   };
 
   const getTileContent = (index: number) => {
     if (!gameState) return null;
     const tileState = gameState.tiles[index];
-    
-    if (tileState === 'covered') {
+
+    if (tileState === "covered") {
       // Show shrub for covered tiles
-      return (
-        <div className="text-6xl">🌳</div>
-      );
+      return <div className="text-6xl">🌳</div>;
     }
-    
-    if (tileState === 'uncovered-treasure') {
+
+    if (tileState === "uncovered-treasure") {
       // Show treasure
-      return (
-        <div className="text-6xl">💎</div>
-      );
+      return <div className="text-6xl">💎</div>;
     }
-    
+
     // Empty uncovered tile
-    return (
-      <div className="text-6xl opacity-30">🕳️</div>
-    );
+    return <div className="text-6xl opacity-30">🕳️</div>;
   };
 
   const getTileClassName = (index: number) => {
-    if (!gameState) return '';
+    if (!gameState) return "";
     const tileState = gameState.tiles[index];
-    const baseClasses = "aspect-square flex items-center justify-center rounded-lg transition-all";
-    
-    if (tileState === 'covered') {
+    const baseClasses =
+      "aspect-square flex items-center justify-center rounded-lg transition-all";
+
+    if (tileState === "covered") {
       return `${baseClasses} bg-green-100 border-4 border-green-400 hover:border-green-600 hover:bg-green-200 cursor-pointer active:scale-95`;
     }
-    
-    if (tileState === 'uncovered-treasure') {
+
+    if (tileState === "uncovered-treasure") {
       return `${baseClasses} bg-yellow-100 border-4 border-yellow-400`;
     }
-    
+
     // Empty uncovered
     return `${baseClasses} bg-gray-100 border-4 border-gray-300`;
   };
@@ -109,7 +147,8 @@ export default function TreasureHuntPage() {
       );
     }
 
-    const currentPlayerName = gameState.playerNames[gameState.currentPlayer - 1];
+    const currentPlayerName =
+      gameState.playerNames[gameState.currentPlayer - 1];
     return (
       <div className="text-center py-4">
         <p className="text-xl font-semibold text-gray-900">
@@ -124,8 +163,6 @@ export default function TreasureHuntPage() {
 
   // Configuration screen
   if (!gameState) {
-    const maxPlayers = Math.min(6, Math.floor((gridSize * gridSize) / 2));
-    
     return (
       <GameShell
         title="Treasure Hunt"
@@ -134,7 +171,7 @@ export default function TreasureHuntPage() {
         <div className="space-y-6 max-w-lg mx-auto">
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold mb-4">Game Configuration</h3>
-            
+
             {/* Grid Size Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -147,8 +184,8 @@ export default function TreasureHuntPage() {
                     onClick={() => setGridSize(size)}
                     className={`py-2 px-4 rounded-lg border-2 transition-colors ${
                       gridSize === size
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
                     {size}×{size}
@@ -163,36 +200,57 @@ export default function TreasureHuntPage() {
             {/* Player Count Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Number of Players (max {maxPlayers})
+                Number of Players (2-{maxPlayers})
               </label>
               <input
                 type="number"
-                min="1"
-                max={maxPlayers}
+                max="6"
                 value={playerCount}
-                onChange={(e) => handlePlayerCountChange(parseInt(e.target.value) || 1)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => handlePlayerCountChange(e)}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  isValidPlayerCount && playerCount > 0
+                    ? "border-gray-300 focus:ring-blue-500"
+                    : "border-red-300 focus:ring-red-500"
+                }`}
               />
+              {playerCount > 0 && !isValidPlayerCount && (
+                <p className="text-xs text-red-600 mt-1">
+                  Must be between 2 and {maxPlayers}
+                </p>
+              )}
             </div>
 
-            {/* Player Names */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Player Names
-              </label>
-              <div className="space-y-2">
-                {playerNames.map((name, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={name}
-                    onChange={(e) => handlePlayerNameChange(index, e.target.value)}
-                    placeholder={`Player ${index + 1}`}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                ))}
+            {/* Player Names - Only show when player count is valid */}
+            {isValidPlayerCount && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Player Names (max 20 characters each)
+                </label>
+                <div className="space-y-2">
+                  {playerNames.map((name, index) => (
+                    <div key={index}>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) =>
+                          handlePlayerNameChange(index, e.target.value)
+                        }
+                        placeholder={`Player ${index + 1}`}
+                        maxLength={20}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                          name.trim().length <= 20
+                            ? "border-gray-300 focus:ring-blue-500"
+                            : "border-red-300 focus:ring-red-500"
+                        }`}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {name.length}/20 characters
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Error Message */}
             {configError && (
@@ -204,7 +262,12 @@ export default function TreasureHuntPage() {
             {/* Start Game Button */}
             <button
               onClick={handleStartGame}
-              className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
+              disabled={!isFormValid}
+              className={`w-full py-3 rounded-lg transition-colors font-semibold text-lg ${
+                isFormValid
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Start Game
             </button>
@@ -233,12 +296,10 @@ export default function TreasureHuntPage() {
     >
       <div className="space-y-6">
         {/* Status Message */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          {getStatusMessage()}
-        </div>
+        <div className="bg-blue-50 rounded-lg p-4">{getStatusMessage()}</div>
 
         {/* Game Grid */}
-        <div 
+        <div
           className={`grid gap-4 max-w-2xl mx-auto`}
           style={{
             gridTemplateColumns: `repeat(${gameState.gridSize}, minmax(0, 1fr))`,
@@ -248,7 +309,9 @@ export default function TreasureHuntPage() {
             <button
               key={index}
               onClick={() => handleTileClick(index)}
-              disabled={gameState.tiles[index] !== 'covered' || gameState.isGameOver}
+              disabled={
+                gameState.tiles[index] !== "covered" || gameState.isGameOver
+              }
               className={getTileClassName(index)}
             >
               {getTileContent(index)}
@@ -270,10 +333,12 @@ export default function TreasureHuntPage() {
         <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
           <div className="flex justify-between items-center">
             <div>
-              <span className="font-semibold">Grid:</span> {gameState.gridSize}×{gameState.gridSize}
+              <span className="font-semibold">Grid:</span> {gameState.gridSize}×
+              {gameState.gridSize}
             </div>
             <div>
-              <span className="font-semibold">Players:</span> {gameState.playerCount}
+              <span className="font-semibold">Players:</span>{" "}
+              {gameState.playerCount}
             </div>
           </div>
         </div>

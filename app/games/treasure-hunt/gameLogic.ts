@@ -1,4 +1,4 @@
-export type TileState = 'covered' | 'uncovered-empty' | 'uncovered-treasure';
+export type TileState = "covered" | "uncovered-empty" | "uncovered-treasure";
 export type PlayerTurn = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface GameConfig {
@@ -20,24 +20,59 @@ export interface GameState {
 
 /**
  * Validate player count against constraints
+ * Now enforces 2-6 players range
  */
-export function validatePlayerCount(playerCount: number, totalTiles: number): boolean {
-  // Player count must be at least 1
-  if (playerCount < 1) {
+export function validatePlayerCount(
+  playerCount: number,
+  totalTiles: number,
+): boolean {
+  // Player count must be at least 2
+  if (playerCount < 2) {
     return false;
   }
-  
+
   // Absolute maximum is 6 players
   if (playerCount > 6) {
     return false;
   }
-  
+
   // Player count must not exceed half of total tiles
   if (playerCount > totalTiles / 2) {
     return false;
   }
-  
+
   return true;
+}
+
+/**
+ * Validate a single player name
+ * Maximum length: 20 characters
+ */
+export function validatePlayerName(name: string): boolean {
+  return name.length <= 20;
+}
+
+/**
+ * Validate all player names
+ */
+export function validatePlayerNames(names: string[]): boolean {
+  return names.every(validatePlayerName);
+}
+
+/**
+ * Get default player name for a given index
+ */
+export function getDefaultPlayerName(index: number): string {
+  return `Player ${index + 1}`;
+}
+
+/**
+ * Normalize player names: assign defaults to empty names
+ */
+export function normalizePlayerNames(names: string[]): string[] {
+  return names.map((name, index) =>
+    name.trim() === "" ? getDefaultPlayerName(index) : name,
+  );
 }
 
 /**
@@ -48,34 +83,50 @@ export function validateGridSize(gridSize: number): boolean {
   if (gridSize < 3) {
     return false;
   }
-  
+
   // Maximum grid size is 6 (6x6 = 36 tiles)
   if (gridSize > 6) {
     return false;
   }
-  
+
   return true;
 }
 
 /**
  * Validate game configuration
  */
-export function validateGameConfig(config: GameConfig): { valid: boolean; error?: string } {
+export function validateGameConfig(config: GameConfig): {
+  valid: boolean;
+  error?: string;
+} {
   const totalTiles = config.gridSize * config.gridSize;
-  
+
   if (!validateGridSize(config.gridSize)) {
-    return { valid: false, error: 'Grid size must be between 3 and 6' };
+    return { valid: false, error: "Grid size must be between 3 and 6" };
   }
-  
+
   if (!validatePlayerCount(config.playerCount, totalTiles)) {
     const maxPlayers = Math.min(6, Math.floor(totalTiles / 2));
-    return { valid: false, error: `Player count must be between 1 and ${maxPlayers} for a ${config.gridSize}x${config.gridSize} grid` };
+    return {
+      valid: false,
+      error: `Player count must be between 2 and ${maxPlayers} for a ${config.gridSize}x${config.gridSize} grid`,
+    };
   }
-  
+
   if (config.playerNames.length !== config.playerCount) {
-    return { valid: false, error: 'Number of player names must match player count' };
+    return {
+      valid: false,
+      error: "Number of player names must match player count",
+    };
   }
-  
+
+  if (!validatePlayerNames(config.playerNames)) {
+    return {
+      valid: false,
+      error: "Each player name must not exceed 20 characters",
+    };
+  }
+
   return { valid: true };
 }
 
@@ -86,23 +137,23 @@ export function initializeGame(config?: GameConfig): GameState {
   // Default configuration for backward compatibility
   const defaultConfig: GameConfig = {
     playerCount: 2,
-    playerNames: ['Player 1', 'Player 2'],
+    playerNames: ["Player 1", "Player 2"],
     gridSize: 3,
   };
-  
+
   const gameConfig = config || defaultConfig;
-  
+
   // Validate configuration
   const validation = validateGameConfig(gameConfig);
   if (!validation.valid) {
     throw new Error(validation.error);
   }
-  
+
   const totalTiles = gameConfig.gridSize * gameConfig.gridSize;
   const treasurePosition = Math.floor(Math.random() * totalTiles);
-  
+
   return {
-    tiles: Array(totalTiles).fill('covered'),
+    tiles: Array(totalTiles).fill("covered"),
     treasurePosition,
     currentPlayer: 1,
     winner: null,
@@ -118,15 +169,15 @@ export function initializeGame(config?: GameConfig): GameState {
  */
 export function uncoverTile(state: GameState, position: number): GameState {
   // Don't allow uncovering if game is over or tile is already uncovered
-  if (state.isGameOver || state.tiles[position] !== 'covered') {
+  if (state.isGameOver || state.tiles[position] !== "covered") {
     return state;
   }
 
   const newTiles = [...state.tiles];
   const isTreasure = position === state.treasurePosition;
-  
+
   // Update tile state
-  newTiles[position] = isTreasure ? 'uncovered-treasure' : 'uncovered-empty';
+  newTiles[position] = isTreasure ? "uncovered-treasure" : "uncovered-empty";
 
   if (isTreasure) {
     // Current player wins
@@ -139,7 +190,8 @@ export function uncoverTile(state: GameState, position: number): GameState {
   }
 
   // Switch to next player (cycling through all players)
-  const nextPlayer = (state.currentPlayer % state.playerCount) + 1 as PlayerTurn;
+  const nextPlayer = ((state.currentPlayer % state.playerCount) +
+    1) as PlayerTurn;
 
   return {
     ...state,
