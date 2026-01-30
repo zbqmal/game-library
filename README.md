@@ -59,6 +59,31 @@ Play the classic game against the computer and build consecutive wins for high s
 - 🔍 Real-time game search
 - ⌨️ Keyboard accessible
 
+## Development
+
+### Running Tests
+
+```bash
+yarn test          # Run all unit tests with coverage
+yarn test:watch    # Run tests in watch mode
+yarn test:e2e      # Run end-to-end tests
+```
+
+### Continuous Integration
+
+This project includes a GitHub Actions workflow that automatically runs all unit tests on every pull request. 
+
+**To make this workflow required for PR merges:**
+
+1. Go to your repository Settings on GitHub
+2. Navigate to "Branches" in the left sidebar
+3. Add or edit a branch protection rule for your main branch
+4. Enable "Require status checks to pass before merging"
+5. Search for and select the "test" status check
+6. Save your changes
+
+Once configured, all PRs must pass the test suite before they can be merged.
+
 ## License
 
 MIT
