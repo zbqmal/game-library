@@ -43,4 +43,15 @@ export const games: Game[] = [
     hasScoreboard: false,
     route: "/games/treasure-hunt",
   },
+  {
+    id: "4",
+    title: "47",
+    slug: "47",
+    description:
+      "A timing challenge! Stop the timer at exactly 47.0 seconds. The timer fades out after 3 seconds.",
+    thumbnail: "/images/games/47.png",
+    tags: ["timing", "challenge", "single-player"],
+    hasScoreboard: false,
+    route: "/games/47",
+  },
 ];
