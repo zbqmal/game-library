@@ -191,7 +191,7 @@ describe("FortySevenPage", () => {
 
       await waitFor(() => {
         expect(screen.queryByText(/Timer running.../)).not.toBeInTheDocument();
-        expect(screen.getByText(/Time's Up!/)).toBeInTheDocument();
+        expect(screen.getByText(/Your Result/)).toBeInTheDocument();
       });
     });
 
@@ -271,7 +271,7 @@ describe("FortySevenPage", () => {
 
       await waitFor(() => {
         // Should show some result
-        expect(screen.getByText(/Time's Up!|Perfect!/)).toBeInTheDocument();
+        expect(screen.getByText(/Your Result|Perfect!/)).toBeInTheDocument();
       });
     });
   });

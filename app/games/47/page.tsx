@@ -30,13 +30,13 @@ export default function FortySevenPage() {
       };
 
       animationFrameRef.current = requestAnimationFrame(updateLoop);
-
-      return () => {
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-        }
-      };
     }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
   }, [gameState.gameStatus]);
 
   // Timer fade-out effect
@@ -45,13 +45,13 @@ export default function FortySevenPage() {
       fadeTimeoutRef.current = setTimeout(() => {
         setGameState((prevState) => ({ ...prevState, timerVisible: false }));
       }, FADE_OUT_DURATION);
-
-      return () => {
-        if (fadeTimeoutRef.current) {
-          clearTimeout(fadeTimeoutRef.current);
-        }
-      };
     }
+
+    return () => {
+      if (fadeTimeoutRef.current) {
+        clearTimeout(fadeTimeoutRef.current);
+      }
+    };
   }, [gameState.gameStatus, gameState.timerVisible]);
 
   const handleStart = () => {
@@ -98,7 +98,7 @@ export default function FortySevenPage() {
         <div className="text-center space-y-6">
           {/* Timer Display with fade-out */}
           <div
-            className={`bg-purple-50 rounded-lg p-8 transition-opacity duration-3000 ${
+            className={`bg-purple-50 rounded-lg p-8 transition-opacity ${
               gameState.timerVisible ? "opacity-100" : "opacity-0"
             }`}
             style={{
@@ -144,7 +144,7 @@ export default function FortySevenPage() {
               <>
                 <div className="text-6xl mb-4">⏱️</div>
                 <h2 className="text-3xl font-bold text-purple-800 mb-4">
-                  Time&apos;s Up!
+                  Your Result
                 </h2>
                 <p className="text-xl text-gray-700 mb-2">
                   You stopped at {formatTime(gameState.finalTime)} seconds
