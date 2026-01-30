@@ -79,7 +79,7 @@ This project includes a GitHub Actions workflow that automatically runs all unit
 2. Navigate to "Branches" in the left sidebar
 3. Add or edit a branch protection rule for your main branch
 4. Enable "Require status checks to pass before merging"
-5. Search for and select the "test" status check
+5. Search for and select "test" (the full name will be "Run Unit Tests / test")
 6. Save your changes
 
 Once configured, all PRs must pass the test suite before they can be merged.
