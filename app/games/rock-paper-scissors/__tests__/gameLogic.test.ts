@@ -193,15 +193,14 @@ describe("Rock-Paper-Scissors Game Logic", () => {
         attempts++;
       }
 
-      const winsBeforeLoss = state.consecutiveWins;
-
       // Now keep playing until we lose
       attempts = 0;
       while (attempts < 1000) {
+        const winsBeforeThisRound = state.consecutiveWins;
         state = processRound(state, "rock");
         if (state.outcome === "lose") {
           expect(state.isGameOver).toBe(true);
-          expect(state.finalScore).toBe(winsBeforeLoss);
+          expect(state.finalScore).toBe(winsBeforeThisRound);
           return;
         }
         attempts++;
