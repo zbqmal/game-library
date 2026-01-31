@@ -54,4 +54,15 @@ export const games: Game[] = [
     hasScoreboard: false,
     route: "/games/47",
   },
+  {
+    id: "5",
+    title: "Twenty Questions",
+    slug: "twenty-questions",
+    description:
+      "I'm thinking of a noun. Ask yes/no questions or make guesses to figure it out in 20 attempts!",
+    thumbnail: "/images/games/twenty-questions.png",
+    tags: ["logic", "puzzle", "single-player", "word-game"],
+    hasScoreboard: false,
+    route: "/games/twenty-questions",
+  },
 ];
