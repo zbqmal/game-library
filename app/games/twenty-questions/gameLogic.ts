@@ -88,7 +88,7 @@ class SimulatedAIService implements AIService {
     
     // Check for living/animal questions
     if (lowerQuestion.includes('living') || lowerQuestion.includes('alive')) {
-      const livingThings = ['elephant', 'penguin', 'jaguar', 'butterfly', 'sunflower', 'dragon'];
+      const livingThings = ['elephant', 'penguin', 'jaguar', 'butterfly', 'sunflower'];
       return livingThings.includes(lowerAnswer) ? 'Yes' : 'No';
     }
     
@@ -106,12 +106,12 @@ class SimulatedAIService implements AIService {
     
     // Check for natural vs man-made
     if (lowerQuestion.includes('natural') || lowerQuestion.includes('nature')) {
-      const natural = ['elephant', 'mountain', 'ocean', 'rainbow', 'sunflower', 'waterfall', 'penguin', 'butterfly', 'volcano', 'iceberg', 'jaguar', 'forest', 'galaxy', 'lemon'];
+      const natural = ['elephant', 'mountain', 'ocean', 'rainbow', 'sunflower', 'waterfall', 'penguin', 'butterfly', 'volcano', 'iceberg', 'jaguar', 'forest', 'galaxy', 'lemon', 'diamond'];
       return natural.includes(lowerAnswer) ? 'Yes' : 'No';
     }
     
     if (lowerQuestion.includes('man-made') || lowerQuestion.includes('manmade') || lowerQuestion.includes('artificial')) {
-      const manMade = ['pizza', 'guitar', 'computer', 'airplane', 'diamond', 'basketball', 'camera', 'lighthouse', 'telescope', 'bicycle', 'castle', 'harmonica', 'keyboard', 'microscope', 'chocolate'];
+      const manMade = ['pizza', 'guitar', 'computer', 'airplane', 'basketball', 'camera', 'lighthouse', 'telescope', 'bicycle', 'castle', 'harmonica', 'keyboard', 'microscope', 'chocolate', 'dragon'];
       return manMade.includes(lowerAnswer) ? 'Yes' : 'No';
     }
     
