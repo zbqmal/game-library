@@ -44,3 +44,8 @@ next-env.d.ts
 /playwright-report/
 /playwright/.cache/
 /test-results/
+
+# capacitor (mobile)
+/android/
+/ios/
+/.capacitor/

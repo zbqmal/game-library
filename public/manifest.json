@@ -1,0 +1,48 @@
+{
+  "name": "Game Library",
+  "short_name": "Game Library",
+  "description": "Collection of fun casual games - play Up And Down, Rock-Paper-Scissors, and more!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "shortcuts": [
+    {
+      "name": "Play Rock-Paper-Scissors",
+      "short_name": "RPS",
+      "description": "Play Rock-Paper-Scissors game",
+      "url": "/games/rock-paper-scissors",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Play Up And Down",
+      "short_name": "Up & Down",
+      "description": "Play the number guessing game",
+      "url": "/games/up-and-down",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

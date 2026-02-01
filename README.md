@@ -59,6 +59,21 @@ Play the classic game against the computer and build consecutive wins for high s
 - 🔍 Real-time game search
 - ⌨️ Keyboard accessible
 
+## Mobile Deployment
+
+Want to deploy this app to **Google Play Store** or **Apple App Store**?
+
+📱 **[Quick Start Guide](./QUICK_START_MOBILE.md)** - Get your app on mobile in 3-4 hours
+
+📚 **[Complete Mobile Deployment Guide](./MOBILE_DEPLOYMENT.md)** - Comprehensive documentation covering:
+- Capacitor (recommended - web wrapper)
+- React Native (native performance)
+- PWA (no app store needed)
+- Store submission process
+- CI/CD for mobile builds
+
+**Cost**: $25 (Google Play) + $99/year (Apple Developer)
+
 ## Development
 
 ### Running Tests

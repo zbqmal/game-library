@@ -6,11 +6,17 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:mobile": "next build && npx cap sync",
     "start": "next start",
     "lint": "eslint",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "mobile:sync": "npx cap sync",
+    "mobile:android": "npx cap open android",
+    "mobile:ios": "npx cap open ios",
+    "mobile:run:android": "npx cap run android",
+    "mobile:run:ios": "npx cap run ios"
   },
   "dependencies": {
     "@testing-library/user-event": "^14.6.1",
