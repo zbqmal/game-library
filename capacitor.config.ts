@@ -1,6 +1,9 @@
-import { CapacitorConfig } from '@capacitor/cli';
+// Capacitor Configuration
+// Install Capacitor packages before using: npm install @capacitor/core @capacitor/cli
+// This file is only needed if deploying to mobile app stores
+// See MOBILE_DEPLOYMENT.md for complete setup instructions
 
-const config: CapacitorConfig = {
+const config = {
   appId: 'com.zbqmal.gamelibrary',
   appName: 'Game Library',
   webDir: 'out',
