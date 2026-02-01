@@ -113,7 +113,7 @@ jobs:
             -workspace App.xcworkspace \
             -scheme App \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -destination 'platform=iOS Simulator,name=iPhone 14' \
             -derivedDataPath build \
             build
             

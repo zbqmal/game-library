@@ -1,6 +1,6 @@
 # Mobile Deployment Guide for Game Library
 
-This guide provides comprehensive instructions for deploying the Game Library web application to Google Play Store and Apple AppStore.
+This guide provides comprehensive instructions for deploying the Game Library web application to Google Play Store and Apple App Store.
 
 ## Overview
 
