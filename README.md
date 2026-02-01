@@ -53,7 +53,7 @@ Play the classic game against the computer and build consecutive wins for high s
 
 ### Treasure Hunt
 
-Two players take turns uncovering tiles to find the hidden treasure on a grid.
+Players take turns uncovering tiles to find the hidden treasure on a grid.
 
 **How to Play**:
 
