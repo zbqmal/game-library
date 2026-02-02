@@ -51,6 +51,42 @@ Play the classic game against the computer and build consecutive wins for high s
 - Top 10 scoreboard with name entry
 - localStorage-based persistence
 
+### Treasure Hunt
+
+Players take turns uncovering tiles to find the hidden treasure on a grid.
+
+**How to Play**:
+
+1. Configure your game (2-6 players, 3x3 to 6x6 grid)
+2. Customize player names (optional)
+3. Players take turns clicking tiles to uncover them
+4. The player who finds the treasure wins!
+
+**Features**:
+
+- Multiplayer support (2-6 players)
+- Configurable grid sizes (3x3 to 6x6)
+- Custom player names (up to 20 characters)
+- Turn-based gameplay
+
+### 47
+
+A timing challenge where you must stop the timer at exactly 47.0 seconds!
+
+**How to Play**:
+
+1. Click "Start" to begin the timer
+2. The timer will be visible for 3 seconds, then fade out
+3. Click "Stop" when you think 47.0 seconds have elapsed
+4. Try to get as close to exactly 47.0 seconds as possible
+
+**Features**:
+
+- Precise timing measurement
+- Timer fade-out for added challenge
+- Immediate feedback showing your exact time
+- Simple, focused gameplay
+
 ## Features
 
 - 🎮 Multiple fun mini-games
