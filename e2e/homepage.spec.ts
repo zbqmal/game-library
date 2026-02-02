@@ -79,12 +79,16 @@ test.describe('Homepage', () => {
     await expect(page).toHaveURL('/games/up-and-down');
   });
 
-  test('game tiles should have scoreboard badges', async ({ page }) => {
+  test('game tiles should have scoreboard badges when supported', async ({ page }) => {
     await page.goto('/');
 
-    // All our games have scoreboards, so check for the badge
-    const scoreboardBadges = page.getByText('Scoreboard');
-    await expect(scoreboardBadges.first()).toBeVisible();
+    // Rock-Paper-Scissors has a scoreboard
+    const rpsCard = page.locator('[href="/games/rock-paper-scissors"]').first();
+    await expect(rpsCard.getByText('Scoreboard')).toBeVisible();
+    
+    // Up And Down should not have a scoreboard badge
+    const upAndDownCard = page.locator('[href="/games/up-and-down"]').first();
+    await expect(upAndDownCard.getByText('Scoreboard')).not.toBeVisible();
   });
 
   test('should be keyboard accessible', async ({ page }) => {

@@ -18,7 +18,7 @@ export const games: Game[] = [
       "Guess the secret number with limited attempts. Can you figure it out?",
     thumbnail: "/images/games/up-and-down.png",
     tags: ["logic", "puzzle", "single-player"],
-    hasScoreboard: true,
+    hasScoreboard: false,
     route: "/games/up-and-down",
   },
   {
