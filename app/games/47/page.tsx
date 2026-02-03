@@ -13,9 +13,7 @@ import {
   isExactMatch,
   GameState,
   Difficulty,
-  getTargetTime,
   formatTargetTime,
-  TARGET_TIME,
   FADE_OUT_DURATION,
 } from "./gameLogic";
 

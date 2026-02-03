@@ -8,7 +8,6 @@ import {
   formatDifference,
   isExactMatch,
   GameState,
-  Difficulty,
   getTargetTime,
   formatTargetTime,
   TARGET_TIME,
