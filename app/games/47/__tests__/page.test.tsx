@@ -68,32 +68,61 @@ describe("FortySevenPage", () => {
       ).toBeInTheDocument();
     });
 
-    it("should display the initial state with start button", () => {
+    it("should display the difficulty selection screen initially", () => {
       render(<FortySevenPage />);
 
-      expect(screen.getByText("Ready to Play?")).toBeInTheDocument();
+      expect(screen.getByText("Select Difficulty")).toBeInTheDocument();
+      expect(screen.getByText("Choose your target time:")).toBeInTheDocument();
       expect(
-        screen.getByText(/Stop the timer at exactly.*seconds to win!/),
+        screen.getByRole("button", { name: /EASY.*Target: 0:47/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Start Timer/ }),
+        screen.getByRole("button", { name: /MEDIUM.*Target: 1:47/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /HARD.*Target: 2:47/i }),
       ).toBeInTheDocument();
     });
 
-    it("should display instructions about timer fade-out", () => {
-      render(<FortySevenPage />);
-
-      expect(
-        screen.getByText(
-          /The timer will fade out after 3 seconds, so you'll need to rely on your internal sense of time/,
-        ),
-      ).toBeInTheDocument();
-    });
-
-    it("should show timer emoji", () => {
+    it("should show timer emoji on difficulty selection", () => {
       render(<FortySevenPage />);
 
       expect(screen.getByText("⏱️")).toBeInTheDocument();
+    });
+  });
+
+  describe("Difficulty Selection", () => {
+    it("should show ready to play screen after selecting EASY", async () => {
+      const user = userEvent.setup({ delay: null });
+      render(<FortySevenPage />);
+
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
+
+      expect(screen.getByText("Ready to Play?")).toBeInTheDocument();
+      expect(screen.getByText(/Difficulty: EASY/)).toBeInTheDocument();
+      expect(screen.getByText(/Target: 0:47/)).toBeInTheDocument();
+    });
+
+    it("should show ready to play screen after selecting MEDIUM", async () => {
+      const user = userEvent.setup({ delay: null });
+      render(<FortySevenPage />);
+
+      await user.click(screen.getByRole("button", { name: /MEDIUM.*Target: 1:47/i }));
+
+      expect(screen.getByText("Ready to Play?")).toBeInTheDocument();
+      expect(screen.getByText(/Difficulty: MEDIUM/)).toBeInTheDocument();
+      expect(screen.getByText(/Target: 1:47/)).toBeInTheDocument();
+    });
+
+    it("should show ready to play screen after selecting HARD", async () => {
+      const user = userEvent.setup({ delay: null });
+      render(<FortySevenPage />);
+
+      await user.click(screen.getByRole("button", { name: /HARD.*Target: 2:47/i }));
+
+      expect(screen.getByText("Ready to Play?")).toBeInTheDocument();
+      expect(screen.getByText(/Difficulty: HARD/)).toBeInTheDocument();
+      expect(screen.getByText(/Target: 2:47/)).toBeInTheDocument();
     });
   });
 
@@ -101,6 +130,9 @@ describe("FortySevenPage", () => {
     it("should transition to running state when start button is clicked", async () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
+
+      // Select difficulty first
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
 
       const startButton = screen.getByRole("button", { name: /Start Timer/ });
       await user.click(startButton);
@@ -113,6 +145,7 @@ describe("FortySevenPage", () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
 
       expect(screen.getByText(/\d+\.\d{2}s/)).toBeInTheDocument();
@@ -122,6 +155,7 @@ describe("FortySevenPage", () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
 
       expect(
@@ -135,6 +169,7 @@ describe("FortySevenPage", () => {
 
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
 
       expect(startTimerSpy).toHaveBeenCalled();
@@ -148,6 +183,7 @@ describe("FortySevenPage", () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
 
       const timerDisplay = screen.getByText(/Timer running.../).previousElementSibling;
@@ -159,6 +195,7 @@ describe("FortySevenPage", () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
 
       const timerDisplay = screen.getByText(/Timer running.../).previousElementSibling;
@@ -181,6 +218,7 @@ describe("FortySevenPage", () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
       
       await waitFor(() => {
@@ -199,6 +237,7 @@ describe("FortySevenPage", () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
 
       await waitFor(() => {
@@ -218,6 +257,7 @@ describe("FortySevenPage", () => {
 
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
       
       await waitFor(() => {
@@ -235,11 +275,12 @@ describe("FortySevenPage", () => {
   });
 
   describe("Result Display - Non-exact Match", () => {
-    it("should display difference when not exactly 47.0", async () => {
+    it("should display difference when not exactly at target", async () => {
       const user = userEvent.setup({ delay: null });
 
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
       
       await waitFor(() => {
@@ -261,6 +302,7 @@ describe("FortySevenPage", () => {
 
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
       
       await waitFor(() => {
@@ -281,6 +323,7 @@ describe("FortySevenPage", () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
       
       await waitFor(() => {
@@ -296,10 +339,11 @@ describe("FortySevenPage", () => {
       });
     });
 
-    it("should reset to initial state when play again is clicked", async () => {
+    it("should reset to difficulty selection when play again is clicked", async () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
 
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
       await user.click(screen.getByRole("button", { name: /Start Timer/ }));
       
       await waitFor(() => {
@@ -317,9 +361,9 @@ describe("FortySevenPage", () => {
       await user.click(screen.getByRole("button", { name: /Play Again/ }));
 
       await waitFor(() => {
-        expect(screen.getByText("Ready to Play?")).toBeInTheDocument();
+        expect(screen.getByText("Select Difficulty")).toBeInTheDocument();
         expect(
-          screen.getByRole("button", { name: /Start Timer/ }),
+          screen.getByRole("button", { name: /EASY.*Target: 0:47/i }),
         ).toBeInTheDocument();
       });
     });
@@ -330,13 +374,21 @@ describe("FortySevenPage", () => {
       render(<FortySevenPage />);
 
       expect(
-        screen.getByRole("button", { name: /Start Timer/ }),
+        screen.getByRole("button", { name: /EASY.*Target: 0:47/i }),
       ).toBeInTheDocument();
     });
 
     it("should maintain button accessibility throughout game flow", async () => {
       const user = userEvent.setup({ delay: null });
       render(<FortySevenPage />);
+
+      // Difficulty selection state
+      expect(
+        screen.getByRole("button", { name: /EASY.*Target: 0:47/i }),
+      ).toBeInTheDocument();
+
+      // Select difficulty
+      await user.click(screen.getByRole("button", { name: /EASY.*Target: 0:47/i }));
 
       // Initial state
       expect(

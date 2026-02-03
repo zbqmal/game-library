@@ -8,6 +8,8 @@ import {
   formatDifference,
   isExactMatch,
   GameState,
+  getTargetTime,
+  formatTargetTime,
   TARGET_TIME,
   FADE_OUT_DURATION,
 } from "../gameLogic";
@@ -23,8 +25,36 @@ describe("gameLogic - 47 Game", () => {
     });
   });
 
+  describe("getTargetTime", () => {
+    it("should return 47.0 for EASY difficulty", () => {
+      expect(getTargetTime('EASY')).toBe(47.0);
+    });
+
+    it("should return 107.0 for MEDIUM difficulty", () => {
+      expect(getTargetTime('MEDIUM')).toBe(107.0);
+    });
+
+    it("should return 167.0 for HARD difficulty", () => {
+      expect(getTargetTime('HARD')).toBe(167.0);
+    });
+  });
+
+  describe("formatTargetTime", () => {
+    it("should format EASY difficulty as 0:47", () => {
+      expect(formatTargetTime('EASY')).toBe('0:47');
+    });
+
+    it("should format MEDIUM difficulty as 1:47", () => {
+      expect(formatTargetTime('MEDIUM')).toBe('1:47');
+    });
+
+    it("should format HARD difficulty as 2:47", () => {
+      expect(formatTargetTime('HARD')).toBe('2:47');
+    });
+  });
+
   describe("initializeGame", () => {
-    it("should return initial game state", () => {
+    it("should return initial game state with null difficulty", () => {
       const state = initializeGame();
 
       expect(state.startTime).toBeNull();
@@ -32,6 +62,18 @@ describe("gameLogic - 47 Game", () => {
       expect(state.gameStatus).toBe("initial");
       expect(state.finalTime).toBeNull();
       expect(state.timerVisible).toBe(true);
+      expect(state.difficulty).toBeNull();
+    });
+
+    it("should return initial game state with specified difficulty", () => {
+      const state = initializeGame('MEDIUM');
+
+      expect(state.startTime).toBeNull();
+      expect(state.currentTime).toBe(0);
+      expect(state.gameStatus).toBe("initial");
+      expect(state.finalTime).toBeNull();
+      expect(state.timerVisible).toBe(true);
+      expect(state.difficulty).toBe('MEDIUM');
     });
 
     it("should always return a new object", () => {
@@ -227,28 +269,38 @@ describe("gameLogic - 47 Game", () => {
   });
 
   describe("calculateDifference", () => {
-    it("should return positive difference when time is over target", () => {
-      const difference = calculateDifference(50.5);
+    it("should return positive difference when time is over target for EASY", () => {
+      const difference = calculateDifference(50.5, 'EASY');
       expect(difference).toBe(3.5);
     });
 
-    it("should return negative difference when time is under target", () => {
-      const difference = calculateDifference(40.0);
+    it("should return negative difference when time is under target for EASY", () => {
+      const difference = calculateDifference(40.0, 'EASY');
       expect(difference).toBe(-7.0);
     });
 
-    it("should return zero when time matches target exactly", () => {
-      const difference = calculateDifference(47.0);
+    it("should return zero when time matches target exactly for EASY", () => {
+      const difference = calculateDifference(47.0, 'EASY');
       expect(difference).toBe(0);
     });
 
+    it("should calculate correctly for MEDIUM difficulty", () => {
+      const difference = calculateDifference(110.0, 'MEDIUM');
+      expect(difference).toBe(3.0);
+    });
+
+    it("should calculate correctly for HARD difficulty", () => {
+      const difference = calculateDifference(170.0, 'HARD');
+      expect(difference).toBe(3.0);
+    });
+
     it("should handle decimal seconds correctly", () => {
-      const difference = calculateDifference(47.25);
+      const difference = calculateDifference(47.25, 'EASY');
       expect(difference).toBeCloseTo(0.25, 2);
     });
 
     it("should handle very small differences", () => {
-      const difference = calculateDifference(47.01);
+      const difference = calculateDifference(47.01, 'EASY');
       expect(difference).toBeCloseTo(0.01, 2);
     });
   });
@@ -300,37 +352,48 @@ describe("gameLogic - 47 Game", () => {
   });
 
   describe("isExactMatch", () => {
-    it("should return true for exactly 47.0", () => {
-      expect(isExactMatch(47.0)).toBe(true);
+    it("should return true for exactly 47.0 with EASY difficulty", () => {
+      expect(isExactMatch(47.0, 'EASY')).toBe(true);
     });
 
-    it("should return true for values very close to 47.0", () => {
-      expect(isExactMatch(47.005)).toBe(true);
-      expect(isExactMatch(46.995)).toBe(true);
+    it("should return true for values very close to 47.0 with EASY", () => {
+      expect(isExactMatch(47.005, 'EASY')).toBe(true);
+      expect(isExactMatch(46.995, 'EASY')).toBe(true);
     });
 
-    it("should return false for values outside tolerance", () => {
-      expect(isExactMatch(47.02)).toBe(false);
-      expect(isExactMatch(46.98)).toBe(false);
+    it("should return false for values outside tolerance with EASY", () => {
+      expect(isExactMatch(47.02, 'EASY')).toBe(false);
+      expect(isExactMatch(46.98, 'EASY')).toBe(false);
+    });
+
+    it("should return true for exact match with MEDIUM difficulty", () => {
+      expect(isExactMatch(107.0, 'MEDIUM')).toBe(true);
+      expect(isExactMatch(107.005, 'MEDIUM')).toBe(true);
+    });
+
+    it("should return true for exact match with HARD difficulty", () => {
+      expect(isExactMatch(167.0, 'HARD')).toBe(true);
+      expect(isExactMatch(167.005, 'HARD')).toBe(true);
     });
 
     it("should return false for significantly different values", () => {
-      expect(isExactMatch(50.0)).toBe(false);
-      expect(isExactMatch(40.0)).toBe(false);
+      expect(isExactMatch(50.0, 'EASY')).toBe(false);
+      expect(isExactMatch(40.0, 'EASY')).toBe(false);
     });
 
     it("should handle edge cases near boundaries", () => {
-      expect(isExactMatch(47.009)).toBe(true); // Just within 0.01
-      expect(isExactMatch(47.011)).toBe(false); // Just outside 0.01
-      expect(isExactMatch(46.991)).toBe(true); // Just within 0.01
-      expect(isExactMatch(46.989)).toBe(false); // Just outside 0.01
+      expect(isExactMatch(47.009, 'EASY')).toBe(true); // Just within 0.01
+      expect(isExactMatch(47.011, 'EASY')).toBe(false); // Just outside 0.01
+      expect(isExactMatch(46.991, 'EASY')).toBe(true); // Just within 0.01
+      expect(isExactMatch(46.989, 'EASY')).toBe(false); // Just outside 0.01
     });
   });
 
   describe("integration", () => {
-    it("should support full game flow from start to stop", () => {
-      let state = initializeGame();
+    it("should support full game flow from start to stop with difficulty", () => {
+      let state = initializeGame('EASY');
       expect(state.gameStatus).toBe("initial");
+      expect(state.difficulty).toBe('EASY');
 
       // Start the timer
       state = startTimer(state);
@@ -352,22 +415,31 @@ describe("gameLogic - 47 Game", () => {
       expect(state.finalTime).toBeGreaterThan(46);
     });
 
-    it("should calculate and format results correctly", () => {
+    it("should calculate and format results correctly for EASY", () => {
       const finalTime = 48.5;
-      const difference = calculateDifference(finalTime);
+      const difference = calculateDifference(finalTime, 'EASY');
 
       expect(difference).toBe(1.5);
       expect(formatTime(finalTime)).toBe("48.50");
       expect(formatDifference(difference)).toBe("+1.50s");
-      expect(isExactMatch(finalTime)).toBe(false);
+      expect(isExactMatch(finalTime, 'EASY')).toBe(false);
     });
 
-    it("should handle winning scenario", () => {
+    it("should handle winning scenario for EASY", () => {
       const finalTime = 47.0;
-      const difference = calculateDifference(finalTime);
+      const difference = calculateDifference(finalTime, 'EASY');
 
       expect(difference).toBe(0);
-      expect(isExactMatch(finalTime)).toBe(true);
+      expect(isExactMatch(finalTime, 'EASY')).toBe(true);
+      expect(formatDifference(difference)).toBe("+0.00s");
+    });
+
+    it("should handle winning scenario for MEDIUM", () => {
+      const finalTime = 107.0;
+      const difference = calculateDifference(finalTime, 'MEDIUM');
+
+      expect(difference).toBe(0);
+      expect(isExactMatch(finalTime, 'MEDIUM')).toBe(true);
       expect(formatDifference(difference)).toBe("+0.00s");
     });
   });

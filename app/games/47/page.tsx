@@ -12,11 +12,13 @@ import {
   formatDifference,
   isExactMatch,
   GameState,
-  TARGET_TIME,
+  Difficulty,
+  formatTargetTime,
   FADE_OUT_DURATION,
 } from "./gameLogic";
 
 export default function FortySevenPage() {
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [gameState, setGameState] = useState<GameState>(initializeGame());
   const animationFrameRef = useRef<number | null>(null);
   const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -63,11 +65,57 @@ export default function FortySevenPage() {
   };
 
   const handleReset = () => {
+    setDifficulty(null);
     setGameState(initializeGame());
   };
 
+  const handleDifficultySelect = (selectedDifficulty: Difficulty) => {
+    setDifficulty(selectedDifficulty);
+    setGameState(initializeGame(selectedDifficulty));
+  };
+
   const renderContent = () => {
-    if (gameState.gameStatus === "initial") {
+    // Show difficulty selection first
+    if (difficulty === null) {
+      return (
+        <div className="text-center space-y-6">
+          <div className="bg-purple-50 rounded-lg p-8">
+            <div className="text-6xl mb-4">⏱️</div>
+            <h2 className="text-2xl font-bold text-purple-800 mb-4">
+              Select Difficulty
+            </h2>
+            <p className="text-gray-700 mb-6">
+              Choose your target time:
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => handleDifficultySelect('EASY')}
+                className="w-full py-4 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors font-semibold text-lg border-2 border-green-300"
+              >
+                <div className="text-xl font-bold">EASY</div>
+                <div className="text-sm">Target: 0:47</div>
+              </button>
+              <button
+                onClick={() => handleDifficultySelect('MEDIUM')}
+                className="w-full py-4 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors font-semibold text-lg border-2 border-yellow-300"
+              >
+                <div className="text-xl font-bold">MEDIUM</div>
+                <div className="text-sm">Target: 1:47</div>
+              </button>
+              <button
+                onClick={() => handleDifficultySelect('HARD')}
+                className="w-full py-4 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors font-semibold text-lg border-2 border-red-300"
+              >
+                <div className="text-xl font-bold">HARD</div>
+                <div className="text-sm">Target: 2:47</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (gameState.gameStatus === "initial" && difficulty !== null) {
       return (
         <div className="text-center space-y-6">
           <div className="bg-purple-50 rounded-lg p-8">
@@ -75,8 +123,16 @@ export default function FortySevenPage() {
             <h2 className="text-2xl font-bold text-purple-800 mb-4">
               Ready to Play?
             </h2>
+            <div className="mb-4 p-3 bg-purple-100 rounded-lg">
+              <p className="text-sm text-purple-700 font-semibold">
+                Difficulty: {difficulty}
+              </p>
+              <p className="text-lg font-bold text-purple-900">
+                Target: {formatTargetTime(difficulty)}
+              </p>
+            </div>
             <p className="text-gray-700 mb-6">
-              Stop the timer at exactly {TARGET_TIME} seconds to win!
+              Stop the timer at exactly {formatTargetTime(difficulty)} to win!
             </p>
             <p className="text-sm text-gray-600 mb-6">
               The timer will fade out after 3 seconds, so you&apos;ll need to
@@ -122,9 +178,9 @@ export default function FortySevenPage() {
       );
     }
 
-    if (gameState.gameStatus === "stopped" && gameState.finalTime !== null) {
-      const difference = calculateDifference(gameState.finalTime);
-      const isWin = isExactMatch(gameState.finalTime);
+    if (gameState.gameStatus === "stopped" && gameState.finalTime !== null && difficulty !== null) {
+      const difference = calculateDifference(gameState.finalTime, difficulty);
+      const isWin = isExactMatch(gameState.finalTime, difficulty);
 
       return (
         <div className="text-center space-y-6">
