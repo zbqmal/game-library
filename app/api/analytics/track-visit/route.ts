@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { sanitizePageName } from '@/app/lib/utils';
+import { sanitizePageName, getCurrentDateEST, shouldResetDailyCount } from '@/app/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,16 +27,35 @@ export async function POST(request: NextRequest) {
     // Sanitize page name to ensure it's a valid field name
     const sanitizedPage = sanitizePageName(page);
 
-    // Update visit count in Firestore
+    // Update visit count in Firestore with daily reset logic
     const analyticsRef = db.collection('analytics').doc('pageVisits');
+    const doc = await analyticsRef.get();
+    const data = doc.data();
     
-    await analyticsRef.set(
-      {
-        [sanitizedPage]: FieldValue.increment(1),
-        lastUpdated: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+    const currentDate = getCurrentDateEST();
+    const lastResetDate = data?.lastResetDate;
+    
+    // Check if we need to reset the count for a new day
+    if (shouldResetDailyCount(lastResetDate)) {
+      // Reset count for new day
+      await analyticsRef.set(
+        {
+          [sanitizedPage]: 1,
+          lastResetDate: currentDate,
+          lastUpdated: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } else {
+      // Increment count for same day
+      await analyticsRef.set(
+        {
+          [sanitizedPage]: FieldValue.increment(1),
+          lastUpdated: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
 
     return NextResponse.json(
       { success: true, message: 'Visit tracked successfully' },

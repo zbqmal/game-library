@@ -95,7 +95,7 @@ A timing challenge where you must stop the timer at exactly 47.0 seconds!
 - 📱 Responsive design
 - 🔍 Real-time game search
 - ⌨️ Keyboard accessible
-- 📊 Page visit tracking with Firebase Firestore
+- 📊 Daily visit tracking with Firebase Firestore (resets at 00:00:00 EST)
 
 ## Development
 
@@ -115,6 +115,18 @@ A timing challenge where you must stop the timer at exactly 47.0 seconds!
    - Note: The app will work without Firebase credentials, but visit tracking will not function
 
 4. Run the development server: `npm run dev` or `yarn dev`
+
+### Visit Count Feature
+
+The homepage displays a daily visit counter that automatically resets at 00:00:00 EST (Eastern Standard Time) every day. This feature uses Firebase Firestore to track and persist visit counts.
+
+**How it works:**
+- Each time the homepage is loaded, a visit is recorded
+- The counter displays the total number of visits for the current day (EST timezone)
+- At midnight EST (00:00:00), the counter automatically resets to zero for the new day
+- Visit data is stored in Firebase Firestore under the `analytics/pageVisits` document
+
+**Note:** The visit counter will not function without proper Firebase credentials configured. See the Firebase setup section above for configuration instructions.
 
 ### Running Tests
 
