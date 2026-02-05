@@ -179,6 +179,8 @@ describe("Scoreboard", () => {
       expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
     });
 
+    const callCountBefore = mockScoreboardAdapter.getTopScores.mock.calls.length;
+
     // Dispatch event with different gameId
     await act(async () => {
       const event = new CustomEvent("scoreboardUpdated", {
@@ -187,11 +189,8 @@ describe("Scoreboard", () => {
       window.dispatchEvent(event);
     });
 
-    // Wait a bit to ensure no extra calls
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    // Should still be called only once
-    expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
+    // Should still be called only once (no additional calls)
+    expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(callCountBefore);
   });
 
   it("cleans up event listener on unmount", () => {

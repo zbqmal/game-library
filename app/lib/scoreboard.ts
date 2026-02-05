@@ -11,9 +11,6 @@ export interface ScoreboardAdapter {
   isTopScore(gameId: string, score: number): Promise<boolean>;
 }
 
-const STORAGE_PREFIX = 'game-library-scores-';
-const MAX_SCORES_TO_RETRIEVE = 1000; // Used when retrieving all scores before filtering
-
 class FirestoreScoreboardAdapter implements ScoreboardAdapter {
   async getTopScores(gameId: string, limit: number = 10): Promise<ScoreEntry[]> {
     try {

@@ -40,10 +40,12 @@ export async function GET(request: NextRequest) {
 
     const scores = snapshot.docs.map(doc => {
       const data = doc.data();
+      // Firestore Timestamp has toMillis() method that returns milliseconds since epoch
+      const timestampMs = data.timestamp?.toMillis ? data.timestamp.toMillis() : Date.now();
       return {
         name: data.name,
         score: data.score,
-        timestamp: data.timestamp?._seconds ? data.timestamp._seconds * 1000 : Date.now(),
+        timestamp: timestampMs,
       };
     });
 

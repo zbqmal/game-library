@@ -11,8 +11,7 @@ https://game-library-joonohjoon.vercel.app/
 - **Frontend**: Next.js 16, React 19, TypeScript
 - **Styling**: Tailwind CSS 4
 - **Search**: Fuse.js for client-side fuzzy search
-- **Storage**: localStorage for game scoreboards
-- **Analytics**: Firebase Firestore for visit tracking
+- **Storage**: Firebase Firestore for game scoreboards and analytics
 - **Testing**: Jest, React Testing Library, Playwright
 
 ## Games
