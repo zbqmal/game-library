@@ -16,6 +16,7 @@ jest.mock('@/lib/firebase-admin', () => ({
 // Mock utils
 jest.mock('@/app/lib/utils', () => ({
   sanitizePageName: jest.fn((page: string) => page.replace(/[^a-zA-Z0-9_-]/g, '_')),
+  getCurrentDateEST: jest.fn(() => '2026-02-05'),
   shouldResetDailyCount: jest.fn((lastResetDate: string | undefined) => {
     if (!lastResetDate) return true;
     return lastResetDate !== '2026-02-05';
@@ -24,6 +25,7 @@ jest.mock('@/app/lib/utils', () => ({
 
 describe('GET /api/analytics/get-visits', () => {
   let mockGet: jest.Mock;
+  let mockSet: jest.Mock;
   let mockDoc: jest.Mock;
   let mockCollection: jest.Mock;
 
@@ -31,8 +33,10 @@ describe('GET /api/analytics/get-visits', () => {
     jest.clearAllMocks();
     
     mockGet = jest.fn();
+    mockSet = jest.fn().mockResolvedValue(undefined);
     mockDoc = jest.fn(() => ({
       get: mockGet,
+      set: mockSet,
     }));
     mockCollection = jest.fn(() => ({
       doc: mockDoc,
@@ -100,6 +104,13 @@ describe('GET /api/analytics/get-visits', () => {
     expect(response.status).toBe(200);
     expect(data.page).toBe('home');
     expect(data.visits).toBe(0);
+    // Verify that the document was reset
+    expect(mockSet).toHaveBeenCalledWith(
+      {
+        lastResetDate: '2026-02-05',
+      },
+      { merge: false }
+    );
   });
 
   it('returns current visit count when same day', async () => {

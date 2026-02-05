@@ -118,7 +118,7 @@ describe('POST /api/analytics/track-visit', () => {
         lastResetDate: '2026-02-05',
         lastUpdated: expect.anything(),
       },
-      { merge: true }
+      { merge: false } // Changed to false to reset all page counts
     );
   });
 
@@ -172,7 +172,7 @@ describe('POST /api/analytics/track-visit', () => {
         lastResetDate: '2026-02-05',
         lastUpdated: expect.anything(),
       },
-      { merge: true }
+      { merge: false } // Changed to false to reset all page counts
     );
   });
 

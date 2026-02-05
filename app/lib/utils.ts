@@ -8,12 +8,13 @@ export function sanitizePageName(page: string): string {
 }
 
 /**
- * Gets the current date in EST timezone formatted as YYYY-MM-DD
- * @returns Current date string in EST timezone
+ * Gets the current date in EST/EDT timezone formatted as YYYY-MM-DD
+ * Uses America/New_York timezone which automatically handles EST (UTC-5) and EDT (UTC-4)
+ * @returns Current date string in EST/EDT timezone
  */
 export function getCurrentDateEST(): string {
   const now = new Date();
-  // Convert to EST (UTC-5)
+  // Convert to America/New_York timezone (handles EST/EDT automatically)
   const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
   
   const year = estDate.getFullYear();

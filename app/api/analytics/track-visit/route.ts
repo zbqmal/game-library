@@ -37,14 +37,14 @@ export async function POST(request: NextRequest) {
     
     // Check if we need to reset the count for a new day
     if (shouldResetDailyCount(lastResetDate)) {
-      // Reset count for new day
+      // Reset all page counts for new day and set current page to 1
       await analyticsRef.set(
         {
           [sanitizedPage]: 1,
           lastResetDate: currentDate,
           lastUpdated: FieldValue.serverTimestamp(),
         },
-        { merge: true }
+        { merge: false } // Replace entire document to clear all old page counts
       );
     } else {
       // Increment count for same day
