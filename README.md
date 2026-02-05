@@ -12,6 +12,7 @@ https://game-library-joonohjoon.vercel.app/
 - **Styling**: Tailwind CSS 4
 - **Search**: Fuse.js for client-side fuzzy search
 - **Storage**: localStorage for game scoreboards
+- **Analytics**: Firebase Firestore for visit tracking
 - **Testing**: Jest, React Testing Library, Playwright
 
 ## Games
@@ -94,8 +95,26 @@ A timing challenge where you must stop the timer at exactly 47.0 seconds!
 - 📱 Responsive design
 - 🔍 Real-time game search
 - ⌨️ Keyboard accessible
+- 📊 Page visit tracking with Firebase Firestore
 
 ## Development
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies: `npm install` or `yarn install`
+3. (Optional) Configure Firebase for visit tracking:
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Generate a service account key
+   - Create a `.env.local` file in the root directory with:
+     ```
+     FIREBASE_PROJECT_ID=your-project-id
+     FIREBASE_CLIENT_EMAIL=your-client-email
+     FIREBASE_PRIVATE_KEY="your-private-key"
+     ```
+   - Note: The app will work without Firebase credentials, but visit tracking will not function
+
+4. Run the development server: `npm run dev` or `yarn dev`
 
 ### Running Tests
 
