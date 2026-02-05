@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
-import { sanitizePageName } from '@/app/lib/utils';
+import { sanitizePageName, shouldResetDailyCount, getCurrentDateEST } from '@/app/lib/utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,6 +38,26 @@ export async function GET(request: NextRequest) {
     }
 
     const data = doc.data();
+    const lastResetDate = data?.lastResetDate;
+    
+    // Check if we need to reset the count for a new day
+    if (shouldResetDailyCount(lastResetDate)) {
+      // Reset all page counts for the new day
+      const currentDate = getCurrentDateEST();
+      await analyticsRef.set(
+        {
+          lastResetDate: currentDate,
+        },
+        { merge: false } // Replace entire document to clear all old page counts
+      );
+      
+      // Return 0 visits since it's a new day and we just reset
+      return NextResponse.json(
+        { page: sanitizedPage, visits: 0 },
+        { status: 200 }
+      );
+    }
+    
     const visits = data?.[sanitizedPage] || 0;
 
     return NextResponse.json(
