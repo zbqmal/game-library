@@ -8,22 +8,36 @@ import GameGrid from "./components/common/GameGrid";
 import VisitCounter from "./components/common/VisitCounter";
 import { games } from "./data/games";
 
+let lastTrackedPage: string | null = null;
+let lastTrackedAt = 0;
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Track page visit on mount
   useEffect(() => {
+    const pageName = "home";
+
+    // Prevent double tracking in React Strict Mode (dev) which mounts twice
+    const now = Date.now();
+    if (lastTrackedPage === pageName && now - lastTrackedAt < 1000) {
+      return;
+    }
+
+    lastTrackedPage = pageName;
+    lastTrackedAt = now;
+
     const trackVisit = async () => {
       try {
-        await fetch('/api/analytics/track-visit', {
-          method: 'POST',
+        await fetch("/api/analytics/track-visit", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ page: 'home' }),
+          body: JSON.stringify({ page: pageName }),
         });
       } catch (error) {
-        console.error('Failed to track visit:', error);
+        console.error("Failed to track visit:", error);
       }
     };
 
@@ -61,7 +75,7 @@ export default function Home() {
           </p>
 
           <SearchBar onSearch={handleSearch} />
-          
+
           <div className="mt-4 flex justify-center">
             <VisitCounter page="home" />
           </div>
