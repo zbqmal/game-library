@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { sanitizePageName } from '@/app/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Sanitize page name to ensure it's a valid field name
-    const sanitizedPage = page.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sanitizedPage = sanitizePageName(page);
 
     // Update visit count in Firestore
     const analyticsRef = db.collection('analytics').doc('pageVisits');

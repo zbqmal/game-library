@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { sanitizePageName } from '@/app/lib/utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,16 +15,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const page = searchParams.get('page');
 
-    // Validate request parameters
-    if (!page || typeof page !== 'string') {
+    // Validate request parameters - searchParams.get returns string | null
+    if (!page) {
       return NextResponse.json(
-        { error: 'Invalid request: page parameter is required and must be a string' },
+        { error: 'Invalid request: page parameter is required' },
         { status: 400 }
       );
     }
 
     // Sanitize page name to match what we use in tracking
-    const sanitizedPage = page.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sanitizedPage = sanitizePageName(page);
 
     // Get visit count from Firestore
     const analyticsRef = db.collection('analytics').doc('pageVisits');
