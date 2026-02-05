@@ -23,7 +23,7 @@ export default function RockPaperScissorsPage() {
     setShowCountdown(true);
   };
 
-  const handleCountdownComplete = () => {
+  const handleCountdownComplete = async () => {
     setShowCountdown(false);
     if (pendingChoice) {
       const newState = processRound(gameState, pendingChoice);
@@ -32,7 +32,7 @@ export default function RockPaperScissorsPage() {
 
       // Check if game is over and score qualifies for top 10
       if (newState.isGameOver && newState.finalScore > 0) {
-        const isTop10 = scoreboardAdapter.isTopScore(
+        const isTop10 = await scoreboardAdapter.isTopScore(
           GAME_ID,
           newState.finalScore,
         );
@@ -43,8 +43,8 @@ export default function RockPaperScissorsPage() {
     }
   };
 
-  const handleSaveScore = (name: string) => {
-    scoreboardAdapter.saveScore(GAME_ID, {
+  const handleSaveScore = async (name: string) => {
+    await scoreboardAdapter.saveScore(GAME_ID, {
       name,
       score: gameState.finalScore,
     });

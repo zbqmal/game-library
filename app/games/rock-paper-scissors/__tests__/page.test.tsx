@@ -84,8 +84,8 @@ describe("RockPaperScissorsPage", () => {
     // Create fresh mock for Math.random in each test
     mockMathRandom = jest.spyOn(global.Math, "random");
     mockMathRandom.mockReturnValue(0.5); // Default value
-    (scoreboardAdapter.isTopScore as jest.Mock).mockReturnValue(false);
-    (scoreboardAdapter.saveScore as jest.Mock).mockImplementation(() => {});
+    (scoreboardAdapter.isTopScore as jest.Mock).mockResolvedValue(false);
+    (scoreboardAdapter.saveScore as jest.Mock).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -297,7 +297,7 @@ describe("RockPaperScissorsPage", () => {
     // 3. Score qualifies for top 10 (isTopScore returns true)
     // The core logic is tested via: win message, lose message, and scoreboardAdapter mock setup
     const mockIsTopScore = scoreboardAdapter.isTopScore as jest.Mock;
-    mockIsTopScore.mockReturnValue(true);
+    mockIsTopScore.mockResolvedValue(true);
 
     render(<RockPaperScissorsPage />);
 
@@ -309,7 +309,7 @@ describe("RockPaperScissorsPage", () => {
   it("does not show name input modal when score is not top 10", async () => {
     const user = userEvent.setup();
     mockMathRandom.mockReturnValue(0.9); // scissors
-    (scoreboardAdapter.isTopScore as jest.Mock).mockReturnValue(false);
+    (scoreboardAdapter.isTopScore as jest.Mock).mockResolvedValue(false);
 
     render(<RockPaperScissorsPage />);
 
@@ -327,7 +327,7 @@ describe("RockPaperScissorsPage", () => {
   it("does not show modal when losing without any wins", async () => {
     const user = userEvent.setup();
     mockMathRandom.mockReturnValue(0.5); // paper
-    (scoreboardAdapter.isTopScore as jest.Mock).mockReturnValue(true);
+    (scoreboardAdapter.isTopScore as jest.Mock).mockResolvedValue(true);
 
     render(<RockPaperScissorsPage />);
 
@@ -347,7 +347,7 @@ describe("RockPaperScissorsPage", () => {
     // This test verifies that isTopScore is called after a game ends with a score
     // Core mechanics already tested in win/lose tests
     const mockIsTopScore = scoreboardAdapter.isTopScore as jest.Mock;
-    mockIsTopScore.mockReturnValue(false);
+    mockIsTopScore.mockResolvedValue(false);
 
     render(<RockPaperScissorsPage />);
 
@@ -360,7 +360,7 @@ describe("RockPaperScissorsPage", () => {
     // This test verifies saveScore is called with correct parameters
     // Game flow already tested in other tests
     const mockSaveScore = scoreboardAdapter.saveScore as jest.Mock;
-    mockSaveScore.mockImplementation(() => {});
+    mockSaveScore.mockResolvedValue(undefined);
 
     render(<RockPaperScissorsPage />);
 

@@ -29,7 +29,7 @@ describe("Scoreboard", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockScoreboardAdapter.getTopScores.mockReturnValue(mockScores);
+    mockScoreboardAdapter.getTopScores.mockResolvedValue(mockScores);
   });
 
   it("renders the scoreboard with default title", () => {
@@ -53,76 +53,95 @@ describe("Scoreboard", () => {
     );
   });
 
-  it("displays all loaded scores", () => {
+  it("displays all loaded scores", async () => {
     render(<Scoreboard gameId="test-game" />);
 
-    expect(screen.getByText("Alice")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Alice")).toBeInTheDocument();
+    });
+    
     expect(screen.getByText("Bob")).toBeInTheDocument();
     expect(screen.getByText("Charlie")).toBeInTheDocument();
     expect(screen.getByText("Diana")).toBeInTheDocument();
   });
 
-  it("displays score values correctly", () => {
+  it("displays score values correctly", async () => {
     render(<Scoreboard gameId="test-game" />);
 
-    expect(screen.getByText("100")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("100")).toBeInTheDocument();
+    });
+    
     expect(screen.getByText("90")).toBeInTheDocument();
     expect(screen.getByText("80")).toBeInTheDocument();
     expect(screen.getByText("70")).toBeInTheDocument();
   });
 
-  it("displays rank numbers correctly", () => {
+  it("displays rank numbers correctly", async () => {
     render(<Scoreboard gameId="test-game" />);
 
-    const rankElements = screen.getAllByText(/^[1-4]$/);
-    expect(rankElements).toHaveLength(4);
+    await waitFor(() => {
+      const rankElements = screen.getAllByText(/^[1-4]$/);
+      expect(rankElements).toHaveLength(4);
+    });
   });
 
-  it("shows empty state when no scores", () => {
-    mockScoreboardAdapter.getTopScores.mockReturnValue([]);
+  it("shows empty state when no scores", async () => {
+    mockScoreboardAdapter.getTopScores.mockResolvedValue([]);
 
     render(<Scoreboard gameId="test-game" />);
 
-    expect(screen.getByText("No scores yet!")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("No scores yet!")).toBeInTheDocument();
+    });
+    
     expect(
       screen.getByText("Be the first to play and set a record."),
     ).toBeInTheDocument();
   });
 
-  it("applies special styling to first place (gold)", () => {
+  it("applies special styling to first place (gold)", async () => {
     const { container } = render(<Scoreboard gameId="test-game" />);
 
-    const firstPlaceDiv = container.querySelector(
-      ".from-yellow-100.to-yellow-50.border-yellow-400",
-    );
-    expect(firstPlaceDiv).toBeInTheDocument();
+    await waitFor(() => {
+      const firstPlaceDiv = container.querySelector(
+        ".from-yellow-100.to-yellow-50.border-yellow-400",
+      );
+      expect(firstPlaceDiv).toBeInTheDocument();
+    });
   });
 
-  it("applies special styling to second place (silver)", () => {
+  it("applies special styling to second place (silver)", async () => {
     const { container } = render(<Scoreboard gameId="test-game" />);
 
-    const secondPlaceDiv = container.querySelector(
-      ".from-gray-200.to-gray-100.border-gray-400",
-    );
-    expect(secondPlaceDiv).toBeInTheDocument();
+    await waitFor(() => {
+      const secondPlaceDiv = container.querySelector(
+        ".from-gray-200.to-gray-100.border-gray-400",
+      );
+      expect(secondPlaceDiv).toBeInTheDocument();
+    });
   });
 
-  it("applies special styling to third place (bronze)", () => {
+  it("applies special styling to third place (bronze)", async () => {
     const { container } = render(<Scoreboard gameId="test-game" />);
 
-    const thirdPlaceDiv = container.querySelector(
-      ".from-orange-100.to-orange-50.border-orange-400",
-    );
-    expect(thirdPlaceDiv).toBeInTheDocument();
+    await waitFor(() => {
+      const thirdPlaceDiv = container.querySelector(
+        ".from-orange-100.to-orange-50.border-orange-400",
+      );
+      expect(thirdPlaceDiv).toBeInTheDocument();
+    });
   });
 
-  it("formats dates correctly", () => {
+  it("formats dates correctly", async () => {
     render(<Scoreboard gameId="test-game" />);
 
-    // Check that dates are displayed for each score entry
-    const dateElements = screen.getAllByText(/[A-Za-z]{3}\s\d{1,2}/);
-    // We should have 4 dates displayed (one for each score)
-    expect(dateElements.length).toBeGreaterThanOrEqual(4);
+    await waitFor(() => {
+      // Check that dates are displayed for each score entry
+      const dateElements = screen.getAllByText(/[A-Za-z]{3}\s\d{1,2}/);
+      // We should have 4 dates displayed (one for each score)
+      expect(dateElements.length).toBeGreaterThanOrEqual(4);
+    });
   });
 
   it("reloads scores when scoreboardUpdated event is fired with matching gameId", async () => {
@@ -132,9 +151,11 @@ describe("Scoreboard", () => {
 
     render(<Scoreboard gameId="test-game" />);
 
-    expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
+    });
 
-    mockScoreboardAdapter.getTopScores.mockReturnValue(newScores);
+    mockScoreboardAdapter.getTopScores.mockResolvedValue(newScores);
 
     // Dispatch custom event
     await act(async () => {
@@ -154,7 +175,9 @@ describe("Scoreboard", () => {
   it("ignores scoreboardUpdated event with different gameId", async () => {
     render(<Scoreboard gameId="test-game" />);
 
-    expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
+    });
 
     // Dispatch event with different gameId
     await act(async () => {
@@ -164,10 +187,11 @@ describe("Scoreboard", () => {
       window.dispatchEvent(event);
     });
 
-    await waitFor(() => {
-      // Should still be called only once
-      expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
-    });
+    // Wait a bit to ensure no extra calls
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Should still be called only once
+    expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
   });
 
   it("cleans up event listener on unmount", () => {
@@ -202,27 +226,34 @@ describe("Scoreboard", () => {
     expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(2);
   });
 
-  it("displays rank badge with correct background colors", () => {
+  it("displays rank badge with correct background colors", async () => {
     const { container } = render(<Scoreboard gameId="test-game" />);
 
-    // First place badge should be yellow
-    const badges = container.querySelectorAll(".rounded-full.font-bold");
-    expect(badges[0]).toHaveClass("bg-yellow-400", "text-yellow-900");
-    expect(badges[1]).toHaveClass("bg-gray-400", "text-gray-900");
-    expect(badges[2]).toHaveClass("bg-orange-400", "text-orange-900");
+    await waitFor(() => {
+      // First place badge should be yellow
+      const badges = container.querySelectorAll(".rounded-full.font-bold");
+      expect(badges.length).toBeGreaterThan(0);
+      expect(badges[0]).toHaveClass("bg-yellow-400", "text-yellow-900");
+      expect(badges[1]).toHaveClass("bg-gray-400", "text-gray-900");
+      expect(badges[2]).toHaveClass("bg-orange-400", "text-orange-900");
+    });
   });
 
-  it("displays scores as 2-column layout (name/date and score)", () => {
+  it("displays scores as 2-column layout (name/date and score)", async () => {
     const { container } = render(<Scoreboard gameId="test-game" />);
 
-    const scoreRows = container.querySelectorAll(".justify-between");
-    expect(scoreRows.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      const scoreRows = container.querySelectorAll(".justify-between");
+      expect(scoreRows.length).toBeGreaterThan(0);
+    });
   });
 
-  it("has proper spacing between score entries", () => {
+  it("has proper spacing between score entries", async () => {
     const { container } = render(<Scoreboard gameId="test-game" />);
 
-    const scoresContainer = container.querySelector(".space-y-2");
-    expect(scoresContainer).toBeInTheDocument();
+    await waitFor(() => {
+      const scoresContainer = container.querySelector(".space-y-2");
+      expect(scoresContainer).toBeInTheDocument();
+    });
   });
 });
