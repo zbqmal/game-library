@@ -5,87 +5,72 @@ export interface ScoreEntry {
 }
 
 export interface ScoreboardAdapter {
-  getTopScores(gameId: string, limit?: number): ScoreEntry[];
-  saveScore(gameId: string, entry: Omit<ScoreEntry, 'timestamp'>): void;
-  clearScores(gameId: string): void;
-  isTopScore(gameId: string, score: number): boolean;
+  getTopScores(gameId: string, limit?: number): Promise<ScoreEntry[]>;
+  saveScore(gameId: string, entry: Omit<ScoreEntry, 'timestamp'>): Promise<void>;
+  clearScores(gameId: string): Promise<void>;
+  isTopScore(gameId: string, score: number): Promise<boolean>;
 }
 
-const STORAGE_PREFIX = 'game-library-scores-';
-const MAX_SCORES_TO_RETRIEVE = 1000; // Used when retrieving all scores before filtering
-
-class LocalStorageScoreboardAdapter implements ScoreboardAdapter {
-  private getStorageKey(gameId: string): string {
-    return `${STORAGE_PREFIX}${gameId}`;
-  }
-
-  getTopScores(gameId: string, limit: number = 10): ScoreEntry[] {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-
+class FirestoreScoreboardAdapter implements ScoreboardAdapter {
+  async getTopScores(gameId: string, limit: number = 10): Promise<ScoreEntry[]> {
     try {
-      const key = this.getStorageKey(gameId);
-      const data = localStorage.getItem(key);
+      const response = await fetch(`/api/scoreboard/get-scores?gameId=${encodeURIComponent(gameId)}&limit=${limit}`);
       
-      if (!data) {
+      if (!response.ok) {
+        console.error('Error fetching scores:', await response.text());
         return [];
       }
 
-      const scores: ScoreEntry[] = JSON.parse(data);
-      
-      // Sort by score (descending) and return top N
-      return scores
-        .sort((a, b) => b.score - a.score)
-        .slice(0, limit);
+      const data = await response.json();
+      return data.scores || [];
     } catch (error) {
-      console.error('Error reading scores from localStorage:', error);
+      console.error('Error fetching scores:', error);
       return [];
     }
   }
 
-  saveScore(gameId: string, entry: Omit<ScoreEntry, 'timestamp'>): void {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
+  async saveScore(gameId: string, entry: Omit<ScoreEntry, 'timestamp'>): Promise<void> {
     try {
-      const key = this.getStorageKey(gameId);
-      const existingScores = this.getTopScores(gameId, MAX_SCORES_TO_RETRIEVE); // Get all scores
-      
-      const newEntry: ScoreEntry = {
-        ...entry,
-        timestamp: Date.now(),
-      };
+      const response = await fetch('/api/scoreboard/save-score', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gameId,
+          name: entry.name,
+          score: entry.score,
+        }),
+      });
 
-      const updatedScores = [...existingScores, newEntry];
-      
-      // Keep only top 10
-      const topScores = updatedScores
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10);
-
-      localStorage.setItem(key, JSON.stringify(topScores));
+      if (!response.ok) {
+        console.error('Error saving score:', await response.text());
+      }
     } catch (error) {
-      console.error('Error saving score to localStorage:', error);
+      console.error('Error saving score:', error);
     }
   }
 
-  clearScores(gameId: string): void {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
+  async clearScores(gameId: string): Promise<void> {
     try {
-      const key = this.getStorageKey(gameId);
-      localStorage.removeItem(key);
+      const response = await fetch('/api/scoreboard/clear-scores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gameId }),
+      });
+
+      if (!response.ok) {
+        console.error('Error clearing scores:', await response.text());
+      }
     } catch (error) {
-      console.error('Error clearing scores from localStorage:', error);
+      console.error('Error clearing scores:', error);
     }
   }
 
-  isTopScore(gameId: string, score: number): boolean {
-    const topScores = this.getTopScores(gameId, 10);
+  async isTopScore(gameId: string, score: number): Promise<boolean> {
+    const topScores = await this.getTopScores(gameId, 10);
     
     // If we have less than 10 scores, any score qualifies
     if (topScores.length < 10) {
@@ -99,4 +84,4 @@ class LocalStorageScoreboardAdapter implements ScoreboardAdapter {
 }
 
 // Export a singleton instance
-export const scoreboardAdapter = new LocalStorageScoreboardAdapter();
+export const scoreboardAdapter = new FirestoreScoreboardAdapter();

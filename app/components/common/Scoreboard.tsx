@@ -15,8 +15,8 @@ export default function Scoreboard({
   const [scores, setScores] = useState<ScoreEntry[]>([]);
 
   useEffect(() => {
-    const loadScores = () => {
-      const topScores = scoreboardAdapter.getTopScores(gameId, 10);
+    const loadScores = async () => {
+      const topScores = await scoreboardAdapter.getTopScores(gameId, 10);
       setScores(topScores);
     };
 
