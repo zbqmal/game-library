@@ -1,14 +1,34 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import Fuse from "fuse.js";
 import Header from "./components/common/Header";
 import SearchBar from "./components/common/SearchBar";
 import GameGrid from "./components/common/GameGrid";
+import VisitCounter from "./components/common/VisitCounter";
 import { games } from "./data/games";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Track page visit on mount
+  useEffect(() => {
+    const trackVisit = async () => {
+      try {
+        await fetch('/api/analytics/track-visit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ page: 'home' }),
+        });
+      } catch (error) {
+        console.error('Failed to track visit:', error);
+      }
+    };
+
+    trackVisit();
+  }, []);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -41,6 +61,10 @@ export default function Home() {
           </p>
 
           <SearchBar onSearch={handleSearch} />
+          
+          <div className="mt-4 flex justify-center">
+            <VisitCounter page="home" />
+          </div>
         </div>
         <GameGrid games={filteredGames} />
       </main>
