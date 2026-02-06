@@ -7,12 +7,14 @@ import SearchBar from "./components/common/SearchBar";
 import GameGrid from "./components/common/GameGrid";
 import VisitCounter from "./components/common/VisitCounter";
 import { games } from "./data/games";
+import { useGameLibraryTranslations } from "./translation-engine";
 
 let lastTrackedPage: string | null = null;
 let lastTrackedAt = 0;
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { texts } = useGameLibraryTranslations();
 
   // Track page visit on mount
   useEffect(() => {
@@ -70,8 +72,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-            Enjoy a collection of fun mini-games and challenge yourself to beat
-            other players&apos; scores!
+            {texts.welcomeMessage}
           </p>
 
           <SearchBar onSearch={handleSearch} />
@@ -84,7 +85,7 @@ export default function Home() {
       </main>
 
       <footer className="mt-auto py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
-        <p>© 2026 Game Library. Built with Next.js</p>
+        <p>{texts.footerContent}</p>
       </footer>
     </div>
   );
