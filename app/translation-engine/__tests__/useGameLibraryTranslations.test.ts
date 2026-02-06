@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, act, renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useGameLibraryTranslations } from '../useGameLibraryTranslations';
 import { translationEngine } from '../TranslationEngine';
 

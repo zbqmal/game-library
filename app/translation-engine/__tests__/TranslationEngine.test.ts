@@ -87,7 +87,7 @@ describe('TranslationEngine', () => {
         const translations = translationEngine.getTranslations();
         requiredKeys.forEach(key => {
           expect(translations).toHaveProperty(key);
-          expect((translations as any)[key]).toBeTruthy();
+          expect(translations[key as keyof typeof translations]).toBeTruthy();
         });
       });
     });
@@ -123,21 +123,21 @@ describe('TranslationEngine', () => {
   describe('game translations', () => {
     it('should translate game titles correctly for all languages', () => {
       const games = [
-        { key: 'upDownGameTitle', en: 'Up And Down', es: 'Arriba y Abajo', ko: '업 앤 다운' },
-        { key: 'rpsGameTitle', en: 'Rock-Paper-Scissors', es: 'Piedra-Papel-Tijeras', ko: '가위바위보' },
-        { key: 'treasureGameTitle', en: 'Treasure Hunt', es: 'Búsqueda del Tesoro', ko: '보물 찾기' },
-        { key: 'game47Title', en: '47', es: '47', ko: '47' }
+        { key: 'upDownGameTitle' as const, en: 'Up And Down', es: 'Arriba y Abajo', ko: '업 앤 다운' },
+        { key: 'rpsGameTitle' as const, en: 'Rock-Paper-Scissors', es: 'Piedra-Papel-Tijeras', ko: '가위바위보' },
+        { key: 'treasureGameTitle' as const, en: 'Treasure Hunt', es: 'Búsqueda del Tesoro', ko: '보물 찾기' },
+        { key: 'game47Title' as const, en: '47', es: '47', ko: '47' }
       ];
 
       games.forEach(game => {
         translationEngine.changeLanguage('en');
-        expect((translationEngine.getTranslations() as any)[game.key]).toBe(game.en);
+        expect(translationEngine.getTranslations()[game.key]).toBe(game.en);
         
         translationEngine.changeLanguage('es');
-        expect((translationEngine.getTranslations() as any)[game.key]).toBe(game.es);
+        expect(translationEngine.getTranslations()[game.key]).toBe(game.es);
         
         translationEngine.changeLanguage('ko');
-        expect((translationEngine.getTranslations() as any)[game.key]).toBe(game.ko);
+        expect(translationEngine.getTranslations()[game.key]).toBe(game.ko);
       });
     });
   });
