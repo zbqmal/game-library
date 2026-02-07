@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getCurrentDateEST } from "@/app/lib/utils";
+import { getCurrentDateEST, interpolate } from "@/app/lib/utils";
+import { useGameLibraryTranslations } from "@/app/translation-engine";
 
 interface VisitCounterProps {
   page: string;
@@ -11,6 +12,7 @@ export default function VisitCounter({ page }: VisitCounterProps) {
   const [visits, setVisits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { texts } = useGameLibraryTranslations();
 
   const today = useMemo(() => getCurrentDateEST(), []);
 
@@ -41,7 +43,7 @@ export default function VisitCounter({ page }: VisitCounterProps) {
   if (loading) {
     return (
       <div className="text-sm text-gray-500 dark:text-gray-400">
-        Loading visits...
+        {texts.loadingVisitsLabel}
       </div>
     );
   }
@@ -53,6 +55,16 @@ export default function VisitCounter({ page }: VisitCounterProps) {
   if (visits === null) {
     return null;
   }
+
+  const visitText = interpolate(
+    visits === 1
+      ? texts.visitCountTemplateSingular
+      : texts.visitCountTemplatePlural,
+    {
+      count: visits.toLocaleString(),
+      date: today,
+    },
+  );
 
   return (
     <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
@@ -75,10 +87,7 @@ export default function VisitCounter({ page }: VisitCounterProps) {
           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
         />
       </svg>
-      <span>
-        {visits.toLocaleString()} {visits === 1 ? "visit" : "visits"} for today
-        ({today})
-      </span>
+      <span>{visitText}</span>
     </div>
   );
 }

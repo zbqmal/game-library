@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import Scoreboard from "../Scoreboard";
 import { scoreboardAdapter, ScoreEntry } from "../../../lib/scoreboard";
+import { translationEngine } from "@/app/translation-engine";
 
 jest.mock("../../../lib/scoreboard");
 
@@ -29,6 +30,8 @@ describe("Scoreboard", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorage.clear();
+    translationEngine.changeLanguage("en");
     mockScoreboardAdapter.getTopScores.mockResolvedValue(mockScores);
   });
 
@@ -36,6 +39,15 @@ describe("Scoreboard", () => {
     render(<Scoreboard gameId="test-game" />);
 
     expect(screen.getByText("Top 10 Scoreboard")).toBeInTheDocument();
+  });
+
+  it("renders Spanish title when language is Spanish", () => {
+    translationEngine.changeLanguage("es");
+    render(<Scoreboard gameId="test-game" />);
+
+    expect(
+      screen.getByText("Tabla de Puntuaciones Top 10"),
+    ).toBeInTheDocument();
   });
 
   it("renders the scoreboard with custom title", () => {
@@ -59,7 +71,7 @@ describe("Scoreboard", () => {
     await waitFor(() => {
       expect(screen.getByText("Alice")).toBeInTheDocument();
     });
-    
+
     expect(screen.getByText("Bob")).toBeInTheDocument();
     expect(screen.getByText("Charlie")).toBeInTheDocument();
     expect(screen.getByText("Diana")).toBeInTheDocument();
@@ -71,7 +83,7 @@ describe("Scoreboard", () => {
     await waitFor(() => {
       expect(screen.getByText("100")).toBeInTheDocument();
     });
-    
+
     expect(screen.getByText("90")).toBeInTheDocument();
     expect(screen.getByText("80")).toBeInTheDocument();
     expect(screen.getByText("70")).toBeInTheDocument();
@@ -94,7 +106,7 @@ describe("Scoreboard", () => {
     await waitFor(() => {
       expect(screen.getByText("No scores yet!")).toBeInTheDocument();
     });
-    
+
     expect(
       screen.getByText("Be the first to play and set a record."),
     ).toBeInTheDocument();
@@ -179,7 +191,8 @@ describe("Scoreboard", () => {
       expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(1);
     });
 
-    const callCountBefore = mockScoreboardAdapter.getTopScores.mock.calls.length;
+    const callCountBefore =
+      mockScoreboardAdapter.getTopScores.mock.calls.length;
 
     // Dispatch event with different gameId
     await act(async () => {
@@ -190,7 +203,9 @@ describe("Scoreboard", () => {
     });
 
     // Should still be called only once (no additional calls)
-    expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(callCountBefore);
+    expect(mockScoreboardAdapter.getTopScores).toHaveBeenCalledTimes(
+      callCountBefore,
+    );
   });
 
   it("cleans up event listener on unmount", () => {

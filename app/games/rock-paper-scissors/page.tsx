@@ -7,6 +7,8 @@ import NameInputModal from "@/app/components/common/NameInputModal";
 import Countdown from "@/app/components/games/rockPaperScissors/Countdown";
 import { initializeGame, processRound, GameState, Choice } from "./gameLogic";
 import { scoreboardAdapter } from "@/app/lib/scoreboard";
+import { useGameLibraryTranslations } from "@/app/translation-engine";
+import { interpolate } from "@/app/lib/utils";
 
 const GAME_ID = "rock-paper-scissors";
 
@@ -16,6 +18,7 @@ export default function RockPaperScissorsPage() {
   const [countdownKey, setCountdownKey] = useState(0);
   const [pendingChoice, setPendingChoice] = useState<Choice | null>(null);
   const [showNameModal, setShowNameModal] = useState(false);
+  const { texts } = useGameLibraryTranslations();
 
   const handleChoice = (choice: Choice) => {
     setPendingChoice(choice);
@@ -72,6 +75,15 @@ export default function RockPaperScissorsPage() {
     return emojis[choice];
   };
 
+  const getChoiceLabel = (choice: Choice) => {
+    const labels: Record<Choice, string> = {
+      rock: texts.rpsChoiceRock,
+      paper: texts.rpsChoicePaper,
+      scissors: texts.rpsChoiceScissors,
+    };
+    return labels[choice];
+  };
+
   const getOutcomeMessage = () => {
     if (!gameState.outcome) return null;
 
@@ -79,7 +91,9 @@ export default function RockPaperScissorsPage() {
       return (
         <div className="text-center py-4">
           <div className="text-5xl mb-2">🎉</div>
-          <p className="text-2xl font-bold text-green-600">You Win!</p>
+          <p className="text-2xl font-bold text-green-600">
+            {texts.rpsWinMessage}
+          </p>
         </div>
       );
     }
@@ -88,9 +102,13 @@ export default function RockPaperScissorsPage() {
       return (
         <div className="text-center py-4">
           <div className="text-5xl mb-2">😢</div>
-          <p className="text-2xl font-bold text-red-600">You Lose!</p>
+          <p className="text-2xl font-bold text-red-600">
+            {texts.rpsLoseMessage}
+          </p>
           <p className="text-lg text-gray-900 mt-2">
-            Final Score: {gameState.finalScore} consecutive wins
+            {interpolate(texts.rpsFinalScore, {
+              score: gameState.finalScore,
+            })}
           </p>
         </div>
       );
@@ -99,21 +117,25 @@ export default function RockPaperScissorsPage() {
     return (
       <div className="text-center py-4">
         <div className="text-5xl mb-2">🤝</div>
-        <p className="text-2xl font-bold text-blue-600">Draw!</p>
+        <p className="text-2xl font-bold text-blue-600">
+          {texts.rpsDrawMessage}
+        </p>
       </div>
     );
   };
 
   return (
     <GameShell
-      title="Rock-Paper-Scissors"
-      description="Play against the computer and get as many consecutive wins as possible!"
+      title={texts.rpsGameTitle}
+      description={texts.rpsPageDescription}
       scoreboard={<Scoreboard gameId={GAME_ID} />}
     >
       <div className="relative space-y-6 min-h-[600px]">
         {/* Score Display */}
         <div className="bg-purple-50 rounded-lg p-4 text-center">
-          <p className="text-sm text-gray-900 font-medium">Consecutive Wins</p>
+          <p className="text-sm text-gray-900 font-medium">
+            {texts.rpsConsecutiveWinsLabel}
+          </p>
           <p className="text-4xl font-bold text-purple-600">
             {gameState.consecutiveWins}
           </p>
@@ -124,24 +146,26 @@ export default function RockPaperScissorsPage() {
           <div className="bg-gray-50 rounded-lg p-6">
             <div className="grid grid-cols-3 gap-4 items-center mb-4">
               <div className="text-center">
-                <p className="text-sm text-gray-900 font-medium mb-2">You</p>
+                <p className="text-sm text-gray-900 font-medium mb-2">
+                  {texts.rpsYouLabel}
+                </p>
                 <div className="text-6xl">
                   {getChoiceEmoji(gameState.playerChoice)}
                 </div>
                 <p className="text-lg font-semibold capitalize mt-2">
-                  {gameState.playerChoice}
+                  {getChoiceLabel(gameState.playerChoice)}
                 </p>
               </div>
-              <div className="text-center text-4xl">VS</div>
+              <div className="text-center text-4xl">{texts.rpsVsLabel}</div>
               <div className="text-center">
                 <p className="text-sm text-gray-900 font-medium mb-2">
-                  Computer
+                  {texts.rpsComputerLabel}
                 </p>
                 <div className="text-6xl">
                   {getChoiceEmoji(gameState.computerChoice)}
                 </div>
                 <p className="text-lg font-semibold capitalize mt-2">
-                  {gameState.computerChoice}
+                  {getChoiceLabel(gameState.computerChoice)}
                 </p>
               </div>
             </div>
@@ -154,8 +178,8 @@ export default function RockPaperScissorsPage() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-3 text-center">
               {gameState.playerChoice
-                ? "Make your next choice:"
-                : "Choose your move:"}
+                ? texts.rpsChooseNext
+                : texts.rpsChooseFirst}
             </h3>
             <div className="grid grid-cols-3 gap-4">
               {(["rock", "paper", "scissors"] as Choice[]).map((choice) => (
@@ -165,7 +189,9 @@ export default function RockPaperScissorsPage() {
                   className="flex flex-col items-center justify-center p-6 bg-white border-4 border-purple-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all transform hover:scale-105 active:scale-95"
                 >
                   <div className="text-6xl mb-2">{getChoiceEmoji(choice)}</div>
-                  <p className="text-lg font-semibold capitalize">{choice}</p>
+                  <p className="text-lg font-semibold capitalize">
+                    {getChoiceLabel(choice)}
+                  </p>
                 </button>
               ))}
             </div>
@@ -178,7 +204,7 @@ export default function RockPaperScissorsPage() {
             onClick={handleReset}
             className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
           >
-            Play Again
+            {texts.actionPlayAgain}
           </button>
         )}
 

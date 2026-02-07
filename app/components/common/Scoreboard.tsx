@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { scoreboardAdapter, ScoreEntry } from "../../lib/scoreboard";
+import { useGameLibraryTranslations } from "@/app/translation-engine";
 
 interface ScoreboardProps {
   gameId: string;
   title?: string;
 }
 
-export default function Scoreboard({
-  gameId,
-  title = "Top 10 Scoreboard",
-}: ScoreboardProps) {
+export default function Scoreboard({ gameId, title }: ScoreboardProps) {
   const [scores, setScores] = useState<ScoreEntry[]>([]);
+  const { texts, activeLangCode } = useGameLibraryTranslations();
+
+  const resolvedTitle = title ?? texts.scoreboardTitle;
 
   useEffect(() => {
     const loadScores = async () => {
@@ -39,17 +40,27 @@ export default function Scoreboard({
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const localeMap = {
+      en: "en-US",
+      es: "es-ES",
+      ko: "ko-KR",
+    } as const;
+    return date.toLocaleDateString(localeMap[activeLangCode], {
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-purple-600 mb-4">{title}</h2>
+      <h2 className="text-2xl font-bold text-purple-600 mb-4">
+        {resolvedTitle}
+      </h2>
 
       {scores.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          <p className="text-lg">No scores yet!</p>
-          <p className="text-sm mt-2">Be the first to play and set a record.</p>
+          <p className="text-lg">{texts.scoreboardEmptyTitle}</p>
+          <p className="text-sm mt-2">{texts.scoreboardEmptySubtitle}</p>
         </div>
       ) : (
         <div className="space-y-2">

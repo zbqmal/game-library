@@ -1,5 +1,8 @@
+"use client";
+
 import { Game } from "../../data/games";
 import GameTile from "./GameTile";
+import { useGameLibraryTranslations } from "@/app/translation-engine";
 
 interface GameGridProps {
   games: Game[];
@@ -20,6 +23,8 @@ function SkeletonCard() {
 }
 
 export default function GameGrid({ games, isLoading = false }: GameGridProps) {
+  const { texts } = useGameLibraryTranslations();
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -35,10 +40,10 @@ export default function GameGrid({ games, isLoading = false }: GameGridProps) {
       <div className="text-center py-20">
         <div className="inline-block bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border-2 border-dashed border-gray-300 dark:border-gray-600">
           <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">
-            🔍 No games found
+            🔍 {texts.noResultsMessage}
           </p>
           <p className="text-gray-500 dark:text-gray-500 text-sm">
-            Try adjusting your search
+            {texts.noResultsSuggestion}
           </p>
         </div>
       </div>

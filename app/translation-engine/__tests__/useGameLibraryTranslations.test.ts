@@ -1,88 +1,99 @@
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useGameLibraryTranslations } from '../useGameLibraryTranslations';
-import { translationEngine } from '../TranslationEngine';
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { useGameLibraryTranslations } from "../useGameLibraryTranslations";
+import { translationEngine } from "../TranslationEngine";
 
-describe('useGameLibraryTranslations', () => {
+describe("useGameLibraryTranslations", () => {
   beforeEach(() => {
     localStorage.clear();
-    translationEngine.changeLanguage('en');
+    translationEngine.changeLanguage("en");
   });
 
-  it('should return English translations by default', () => {
+  it("should return English translations by default", () => {
     const { result } = renderHook(() => useGameLibraryTranslations());
-    
-    expect(result.current.activeLangCode).toBe('en');
-    expect(result.current.texts.mainHeading).toBe('🎮 Game Library');
+
+    expect(result.current.activeLangCode).toBe("en");
+    expect(result.current.texts.mainHeading).toBe("🎮 Game Library");
   });
 
-  it('should update translations when language changes', async () => {
+  it("should update translations when language changes", async () => {
     const { result } = renderHook(() => useGameLibraryTranslations());
-    
-    expect(result.current.texts.mainHeading).toBe('🎮 Game Library');
-    
+
+    expect(result.current.texts.mainHeading).toBe("🎮 Game Library");
+
     act(() => {
-      result.current.updateLanguage('es');
+      result.current.updateLanguage("es");
     });
-    
+
     await waitFor(() => {
-      expect(result.current.activeLangCode).toBe('es');
-      expect(result.current.texts.mainHeading).toBe('🎮 Biblioteca de Juegos');
+      expect(result.current.activeLangCode).toBe("es");
+      expect(result.current.texts.mainHeading).toBe("🎮 Biblioteca de Juegos");
     });
   });
 
-  it('should update to Korean translations', async () => {
+  it("should update to Korean translations", async () => {
     const { result } = renderHook(() => useGameLibraryTranslations());
-    
+
     act(() => {
-      result.current.updateLanguage('ko');
+      result.current.updateLanguage("ko");
     });
-    
+
     await waitFor(() => {
-      expect(result.current.activeLangCode).toBe('ko');
-      expect(result.current.texts.mainHeading).toBe('🎮 게임 라이브러리');
+      expect(result.current.activeLangCode).toBe("ko");
+      expect(result.current.texts.mainHeading).toBe("🎮 게임 라이브러리");
     });
   });
 
-  it('should sync across multiple hook instances', async () => {
+  it("should sync across multiple hook instances", async () => {
     const { result: result1 } = renderHook(() => useGameLibraryTranslations());
     const { result: result2 } = renderHook(() => useGameLibraryTranslations());
-    
+
     act(() => {
-      result1.current.updateLanguage('es');
+      result1.current.updateLanguage("es");
     });
-    
+
     await waitFor(() => {
-      expect(result1.current.activeLangCode).toBe('es');
-      expect(result2.current.activeLangCode).toBe('es');
+      expect(result1.current.activeLangCode).toBe("es");
+      expect(result2.current.activeLangCode).toBe("es");
     });
   });
 
-  it('should clean up listener on unmount', () => {
+  it("should clean up listener on unmount", () => {
     const { unmount } = renderHook(() => useGameLibraryTranslations());
-    
+
     // The hook should properly clean up when unmounted
     unmount();
-    
+
     // Verify no errors occur
     expect(true).toBe(true);
   });
 
-  it('should provide all translation keys', () => {
+  it("should provide all translation keys", () => {
     const { result } = renderHook(() => useGameLibraryTranslations());
-    
+
     const expectedKeys = [
-      'mainHeading',
-      'welcomeMessage',
-      'inputPlaceholder',
-      'footerContent',
-      'upDownGameTitle',
-      'rpsGameTitle',
-      'treasureGameTitle',
-      'game47Title',
-      'languagePickerLabel'
+      "mainHeading",
+      "welcomeMessage",
+      "inputPlaceholder",
+      "footerContent",
+      "upDownGameTitle",
+      "rpsGameTitle",
+      "treasureGameTitle",
+      "game47Title",
+      "languagePickerLabel",
+      "searchLabel",
+      "clearSearchLabel",
+      "searchingForLabel",
+      "noResultsMessage",
+      "noResultsSuggestion",
+      "scoreboardBadgeLabel",
+      "scoreboardEmptyTitle",
+      "scoreboardEmptySubtitle",
+      "visitCountTemplateSingular",
+      "visitCountTemplatePlural",
+      "loadingVisitsLabel",
     ];
-    
-    expectedKeys.forEach(key => {
+
+    expectedKeys.forEach((key) => {
       expect(result.current.texts).toHaveProperty(key);
     });
   });

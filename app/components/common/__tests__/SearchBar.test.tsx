@@ -1,8 +1,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import SearchBar from "../SearchBar";
+import { translationEngine } from "@/app/translation-engine";
 
 describe("SearchBar", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    translationEngine.changeLanguage("en");
+  });
+
   it("renders with placeholder text", () => {
     const mockOnSearch = jest.fn();
     render(<SearchBar onSearch={mockOnSearch} placeholder="Search games..." />);
@@ -91,5 +97,15 @@ describe("SearchBar", () => {
     // Should show what we're searching for
     expect(screen.getByText(/Searching for:/)).toBeInTheDocument();
     expect(screen.getByText("puzzle")).toBeInTheDocument();
+  });
+
+  it("renders Spanish placeholder and labels when language is Spanish", () => {
+    translationEngine.changeLanguage("es");
+    render(<SearchBar onSearch={jest.fn()} />);
+
+    expect(screen.getByPlaceholderText("Buscar juegos...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /buscar juegos/i }),
+    ).toBeInTheDocument();
   });
 });

@@ -16,12 +16,21 @@ import {
   formatTargetTime,
   FADE_OUT_DURATION,
 } from "./gameLogic";
+import { useGameLibraryTranslations } from "@/app/translation-engine";
+import { interpolate } from "@/app/lib/utils";
 
 export default function FortySevenPage() {
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [gameState, setGameState] = useState<GameState>(initializeGame());
   const animationFrameRef = useRef<number | null>(null);
   const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { texts } = useGameLibraryTranslations();
+
+  const difficultyLabels: Record<Difficulty, string> = {
+    EASY: texts.game47DifficultyEasy,
+    MEDIUM: texts.game47DifficultyMedium,
+    HARD: texts.game47DifficultyHard,
+  };
 
   // Timer update loop
   useEffect(() => {
@@ -82,32 +91,50 @@ export default function FortySevenPage() {
           <div className="bg-purple-50 rounded-lg p-8">
             <div className="text-6xl mb-4">⏱️</div>
             <h2 className="text-2xl font-bold text-purple-800 mb-4">
-              Select Difficulty
+              {texts.game47SelectDifficultyTitle}
             </h2>
             <p className="text-gray-700 mb-6">
-              Choose your target time:
+              {texts.game47SelectDifficultySubtitle}
             </p>
             <div className="space-y-3">
               <button
-                onClick={() => handleDifficultySelect('EASY')}
+                onClick={() => handleDifficultySelect("EASY")}
                 className="w-full py-4 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors font-semibold text-lg border-2 border-green-300"
               >
-                <div className="text-xl font-bold">EASY</div>
-                <div className="text-sm">Target: 0:47</div>
+                <div className="text-xl font-bold">
+                  {texts.game47DifficultyEasy}
+                </div>
+                <div className="text-sm">
+                  {interpolate(texts.game47TargetLabel, {
+                    time: "0:47",
+                  })}
+                </div>
               </button>
               <button
-                onClick={() => handleDifficultySelect('MEDIUM')}
+                onClick={() => handleDifficultySelect("MEDIUM")}
                 className="w-full py-4 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors font-semibold text-lg border-2 border-yellow-300"
               >
-                <div className="text-xl font-bold">MEDIUM</div>
-                <div className="text-sm">Target: 1:47</div>
+                <div className="text-xl font-bold">
+                  {texts.game47DifficultyMedium}
+                </div>
+                <div className="text-sm">
+                  {interpolate(texts.game47TargetLabel, {
+                    time: "1:47",
+                  })}
+                </div>
               </button>
               <button
-                onClick={() => handleDifficultySelect('HARD')}
+                onClick={() => handleDifficultySelect("HARD")}
                 className="w-full py-4 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors font-semibold text-lg border-2 border-red-300"
               >
-                <div className="text-xl font-bold">HARD</div>
-                <div className="text-sm">Target: 2:47</div>
+                <div className="text-xl font-bold">
+                  {texts.game47DifficultyHard}
+                </div>
+                <div className="text-sm">
+                  {interpolate(texts.game47TargetLabel, {
+                    time: "2:47",
+                  })}
+                </div>
               </button>
             </div>
           </div>
@@ -121,28 +148,33 @@ export default function FortySevenPage() {
           <div className="bg-purple-50 rounded-lg p-8">
             <div className="text-6xl mb-4">⏱️</div>
             <h2 className="text-2xl font-bold text-purple-800 mb-4">
-              Ready to Play?
+              {texts.game47ReadyTitle}
             </h2>
             <div className="mb-4 p-3 bg-purple-100 rounded-lg">
               <p className="text-sm text-purple-700 font-semibold">
-                Difficulty: {difficulty}
+                {interpolate(texts.game47DifficultyLabel, {
+                  difficulty: difficultyLabels[difficulty],
+                })}
               </p>
               <p className="text-lg font-bold text-purple-900">
-                Target: {formatTargetTime(difficulty)}
+                {interpolate(texts.game47TargetLabel, {
+                  time: formatTargetTime(difficulty),
+                })}
               </p>
             </div>
             <p className="text-gray-700 mb-6">
-              Stop the timer at exactly {formatTargetTime(difficulty)} to win!
+              {interpolate(texts.game47StopAtExact, {
+                time: formatTargetTime(difficulty),
+              })}
             </p>
             <p className="text-sm text-gray-600 mb-6">
-              The timer will fade out after 3 seconds, so you&apos;ll need to
-              rely on your internal sense of time.
+              {texts.game47FadeOutHint}
             </p>
             <button
               onClick={handleStart}
               className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold text-lg"
             >
-              Start Timer
+              {texts.game47StartTimer}
             </button>
           </div>
         </div>
@@ -164,7 +196,7 @@ export default function FortySevenPage() {
             <div className="text-7xl font-bold text-purple-600 mb-2">
               {formatTime(gameState.currentTime)}s
             </div>
-            <p className="text-gray-600">Timer running...</p>
+            <p className="text-gray-600">{texts.game47TimerRunning}</p>
           </div>
 
           {/* Stop Button */}
@@ -172,13 +204,17 @@ export default function FortySevenPage() {
             onClick={handleStop}
             className="w-full py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-lg"
           >
-            Stop Timer
+            {texts.game47StopTimer}
           </button>
         </div>
       );
     }
 
-    if (gameState.gameStatus === "stopped" && gameState.finalTime !== null && difficulty !== null) {
+    if (
+      gameState.gameStatus === "stopped" &&
+      gameState.finalTime !== null &&
+      difficulty !== null
+    ) {
       const difference = calculateDifference(gameState.finalTime, difficulty);
       const isWin = isExactMatch(gameState.finalTime, difficulty);
 
@@ -189,24 +225,29 @@ export default function FortySevenPage() {
               <>
                 <div className="text-6xl mb-4">🎉</div>
                 <h2 className="text-3xl font-bold text-green-600 mb-4">
-                  Perfect!
+                  {texts.game47PerfectTitle}
                 </h2>
                 <p className="text-xl text-gray-700 mb-2">
-                  You stopped at exactly {formatTime(gameState.finalTime)}
-                  seconds!
+                  {interpolate(texts.game47PerfectMessage, {
+                    time: formatTime(gameState.finalTime),
+                  })}
                 </p>
               </>
             ) : (
               <>
                 <div className="text-6xl mb-4">⏱️</div>
                 <h2 className="text-3xl font-bold text-purple-800 mb-4">
-                  Your Result
+                  {texts.game47ResultTitle}
                 </h2>
                 <p className="text-xl text-gray-700 mb-2">
-                  You stopped at {formatTime(gameState.finalTime)} seconds
+                  {interpolate(texts.game47StoppedAtMessage, {
+                    time: formatTime(gameState.finalTime),
+                  })}
                 </p>
                 <div className="mt-4 p-4 bg-white rounded-lg">
-                  <p className="text-gray-600 mb-2">Difference from target:</p>
+                  <p className="text-gray-600 mb-2">
+                    {texts.game47DifferenceLabel}
+                  </p>
                   <p
                     className={`text-3xl font-bold ${
                       difference > 0 ? "text-red-600" : "text-blue-600"
@@ -216,9 +257,9 @@ export default function FortySevenPage() {
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
                     {difference > 0
-                      ? "(stopped late)"
+                      ? texts.game47StoppedLate
                       : difference < 0
-                        ? "(stopped early)"
+                        ? texts.game47StoppedEarly
                         : ""}
                   </p>
                 </div>
@@ -230,7 +271,7 @@ export default function FortySevenPage() {
             onClick={handleReset}
             className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
           >
-            Play Again
+            {texts.actionPlayAgain}
           </button>
         </div>
       );
@@ -241,8 +282,8 @@ export default function FortySevenPage() {
 
   return (
     <GameShell
-      title="47"
-      description="A timing challenge! Stop the timer at exactly 47.0 seconds. The timer will fade out after 3 seconds—trust your instincts!"
+      title={texts.game47Title}
+      description={texts.game47PageDescription}
     >
       {renderContent()}
     </GameShell>
