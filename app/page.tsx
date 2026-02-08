@@ -7,12 +7,14 @@ import SearchBar from "./components/common/SearchBar";
 import GameGrid from "./components/common/GameGrid";
 import VisitCounter from "./components/common/VisitCounter";
 import { games } from "./data/games";
+import { useGameLibraryTranslations } from "./translation-engine";
 
 let lastTrackedPage: string | null = null;
 let lastTrackedAt = 0;
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { texts } = useGameLibraryTranslations();
 
   // Track page visit on mount
   useEffect(() => {
@@ -48,20 +50,63 @@ export default function Home() {
     setSearchQuery(query);
   }, []);
 
+  const localizedGames = useMemo(() => {
+    const gameKeyMap = {
+      "up-and-down": {
+        title: texts.upDownGameTitle,
+        description: texts.upDownGameDescription,
+      },
+      "rock-paper-scissors": {
+        title: texts.rpsGameTitle,
+        description: texts.rpsGameDescription,
+      },
+      "treasure-hunt": {
+        title: texts.treasureGameTitle,
+        description: texts.treasureGameDescription,
+      },
+      "47": {
+        title: texts.game47Title,
+        description: texts.game47Description,
+      },
+    } as const;
+
+    const tagKeyMap: Record<string, string> = {
+      logic: texts.tagLogic,
+      puzzle: texts.tagPuzzle,
+      "single-player": texts.tagSolo,
+      classic: texts.tagClassic,
+      quick: texts.tagQuick,
+      "two-player": texts.tagDuo,
+      strategy: texts.tagStrategy,
+      timing: texts.tagTiming,
+      challenge: texts.tagChallenge,
+    };
+
+    return games.map((game) => {
+      const translation = gameKeyMap[game.slug as keyof typeof gameKeyMap];
+      return {
+        ...game,
+        title: translation?.title ?? game.title,
+        description: translation?.description ?? game.description,
+        tags: game.tags.map((tag) => tagKeyMap[tag] ?? tag),
+      };
+    });
+  }, [texts]);
+
   // Memoize Fuse instance to avoid recreating on every render
   const fuse = useMemo(() => {
-    return new Fuse(games, {
+    return new Fuse(localizedGames, {
       keys: ["title", "description", "tags"],
       threshold: 0.3,
       ignoreLocation: true,
     });
-  }, []);
+  }, [localizedGames]);
 
   const filteredGames = useMemo(() => {
     return searchQuery
       ? fuse.search(searchQuery).map((result) => result.item)
-      : games;
-  }, [searchQuery, fuse]);
+      : localizedGames;
+  }, [searchQuery, fuse, localizedGames]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -70,8 +115,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-            Enjoy a collection of fun mini-games and challenge yourself to beat
-            other players&apos; scores!
+            {texts.welcomeMessage}
           </p>
 
           <SearchBar onSearch={handleSearch} />
@@ -84,7 +128,7 @@ export default function Home() {
       </main>
 
       <footer className="mt-auto py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
-        <p>© 2026 Game Library. Built with Next.js</p>
+        <p>{texts.footerContent}</p>
       </footer>
     </div>
   );

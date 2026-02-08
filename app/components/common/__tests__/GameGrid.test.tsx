@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import GameGrid from "../GameGrid";
 import { Game } from "../../../data/games";
+import { translationEngine } from "@/app/translation-engine";
 
 const mockGames: Game[] = [
   {
@@ -26,6 +27,11 @@ const mockGames: Game[] = [
 ];
 
 describe("GameGrid", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    translationEngine.changeLanguage("en");
+  });
+
   it("renders game tiles for each game", () => {
     render(<GameGrid games={mockGames} />);
 
@@ -69,5 +75,15 @@ describe("GameGrid", () => {
       "md:grid-cols-2",
       "lg:grid-cols-3",
     );
+  });
+
+  it("renders Spanish empty state when language is Spanish", () => {
+    translationEngine.changeLanguage("es");
+    render(<GameGrid games={[]} />);
+
+    expect(screen.getByText(/No se encontraron juegos/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Intenta ajustar tu búsqueda/i),
+    ).toBeInTheDocument();
   });
 });

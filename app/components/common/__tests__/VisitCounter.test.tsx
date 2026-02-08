@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import VisitCounter from "../VisitCounter";
 
 jest.mock("@/app/lib/utils", () => ({
+  ...jest.requireActual("@/app/lib/utils"),
   getCurrentDateEST: () => "2026-02-04",
 }));
 

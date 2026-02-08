@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import { useGameLibraryTranslations } from "@/app/translation-engine";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -10,10 +11,12 @@ interface SearchBarProps {
 
 export default function SearchBar({
   onSearch,
-  placeholder = 'Search games...',
+  placeholder,
   debounceMs = 200,
 }: SearchBarProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
+  const { texts } = useGameLibraryTranslations();
+  const resolvedPlaceholder = placeholder ?? texts.inputPlaceholder;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -24,13 +27,13 @@ export default function SearchBar({
   }, [query, onSearch, debounceMs]);
 
   const handleClear = () => {
-    setQuery('');
+    setQuery("");
   };
 
   return (
     <div className="relative max-w-2xl mx-auto">
       <label htmlFor="game-search" className="sr-only">
-        Search games
+        {texts.searchLabel}
       </label>
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -55,7 +58,7 @@ export default function SearchBar({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="block w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           autoComplete="off"
         />
         {query && (
@@ -63,7 +66,7 @@ export default function SearchBar({
             type="button"
             onClick={handleClear}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            aria-label="Clear search"
+            aria-label={texts.clearSearchLabel}
           >
             <svg
               className="h-5 w-5"
@@ -84,7 +87,8 @@ export default function SearchBar({
       </div>
       {query && (
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Searching for: <span className="font-semibold">{query}</span>
+          {texts.searchingForLabel}{" "}
+          <span className="font-semibold">{query}</span>
         </p>
       )}
     </div>

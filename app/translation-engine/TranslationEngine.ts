@@ -1,0 +1,482 @@
+// Custom Translation Engine for Game Library
+// Class-based event emitter pattern with unique architecture
+
+type LangCode = "en" | "es" | "ko";
+type EventHandler = () => void;
+
+class TranslationEngine {
+  private selectedLang: LangCode = "en";
+  private listeners: EventHandler[] = [];
+  private storageKey = "game_library_language_preference";
+
+  private textMappings = {
+    en: {
+      mainHeading: "🎮 Game Library",
+      welcomeMessage:
+        "Enjoy a collection of fun mini-games and challenge yourself to beat other players' scores!",
+      inputPlaceholder: "Search games...",
+      visitCountLabel: "Today's Visits",
+      footerContent: "© 2026 Game Library. Built with Next.js",
+      upDownGameTitle: "Up And Down",
+      upDownGameDescription:
+        "Guess the secret number with limited attempts. Can you figure it out?",
+      rpsGameTitle: "Rock-Paper-Scissors",
+      rpsGameDescription:
+        "Play the classic game against the computer. Get consecutive wins for higher scores!",
+      treasureGameTitle: "Treasure Hunt",
+      treasureGameDescription:
+        "Two players take turns uncovering tiles to find the hidden treasure!",
+      game47Title: "47",
+      game47Description:
+        "A timing challenge! Stop the timer at exactly 47.0 seconds. The timer fades out after 3 seconds.",
+      linkBackHome: "Back to Games",
+      actionPlayAgain: "Play Again",
+      actionNewGame: "New Game",
+      scoreboardTitle: "Top 10 Scoreboard",
+      topScoresHeading: "Top Scores",
+      playerNameLabel: "Player Name",
+      scoreLabel: "Score",
+      searchInputLabel: "Search games...",
+      searchLabel: "Search games",
+      clearSearchLabel: "Clear search",
+      searchingForLabel: "Searching for:",
+      noResultsMessage: "No games found",
+      noResultsSuggestion: "Try adjusting your search",
+      namePrompt: "Enter your name",
+      submitButton: "Save Score",
+      dismissButton: "Skip",
+      congratsMessage: "Top 10 Score!",
+      achievementMessage: "You made it to the top 10!",
+      scoreMessage: "You scored {{score}} points!",
+      characterCountLabel: "characters",
+      tagLogic: "logic",
+      tagPuzzle: "puzzle",
+      tagSolo: "single-player",
+      tagClassic: "classic",
+      tagQuick: "quick",
+      tagDuo: "two-player",
+      tagStrategy: "strategy",
+      tagTiming: "timing",
+      tagChallenge: "challenge",
+      scoreboardBadgeLabel: "Scoreboard",
+      languagePickerLabel: "Language",
+      englishOption: "🇬🇧 English",
+      spanishOption: "🇪🇸 Spanish",
+      koreanOption: "🇰🇷 Korean",
+      scoreboardEmptyTitle: "No scores yet!",
+      scoreboardEmptySubtitle: "Be the first to play and set a record.",
+      visitCountTemplateSingular: "{{count}} visit for today ({{date}})",
+      visitCountTemplatePlural: "{{count}} visits for today ({{date}})",
+      loadingVisitsLabel: "Loading visits...",
+      upDownConfigTitle: "Configure Your Game",
+      upDownConfigSubtitle:
+        "Customize the difficulty by setting your preferred range and number of attempts",
+      upDownMinLabel: "Minimum Number (1 - {{max}}):",
+      upDownMaxLabel: "Maximum Number ({{min}} - {{max}}):",
+      upDownAttemptsLabel: "Maximum Attempts (1 - {{max}}):",
+      upDownStartGame: "Start Game",
+      upDownRemainingAttempts: "Remaining Attempts",
+      upDownRangeLabel: "Range",
+      upDownGuessLabel: "Enter your guess:",
+      upDownMakeGuess: "Make Guess",
+      upDownLastGuess: "Last guess:",
+      upDownWinTitle: "Congratulations!",
+      upDownWinMessage: "You guessed the number {{number}}!",
+      upDownLoseTitle: "Game Over!",
+      upDownLoseMessage: "The secret number was {{number}}",
+      upDownHigherHint: "Think Higher!",
+      upDownLowerHint: "Think Lower!",
+      upDownFirstGuess: "Make your first guess!",
+      upDownLongDescription:
+        "A configurable number guessing game! Set your own difficulty by choosing the number range and attempts before starting. Default: guess between {{min}} and {{max}} in {{attempts}} attempts.",
+      rpsPageDescription:
+        "Play against the computer and get as many consecutive wins as possible!",
+      rpsConsecutiveWinsLabel: "Consecutive Wins",
+      rpsYouLabel: "You",
+      rpsComputerLabel: "Computer",
+      rpsChooseNext: "Make your next choice:",
+      rpsChooseFirst: "Choose your move:",
+      rpsWinMessage: "You Win!",
+      rpsLoseMessage: "You Lose!",
+      rpsFinalScore: "Final Score: {{score}} consecutive wins",
+      rpsDrawMessage: "Draw!",
+      rpsVsLabel: "VS",
+      rpsChoiceRock: "rock",
+      rpsChoicePaper: "paper",
+      rpsChoiceScissors: "scissors",
+      treasureConfigTitle: "Game Configuration",
+      treasureGridSizeLabel: "Grid Size",
+      treasureGridInfo: "{{size}}×{{size}} grid = {{tiles}} tiles",
+      treasurePlayerCountLabel: "Number of Players (2-{{max}})",
+      treasurePlayerCountError: "Must be between 2 and {{max}}",
+      treasurePlayerNamesLabel: "Player Names (max 20 characters each)",
+      treasurePlayerPlaceholder: "Player {{number}}",
+      treasureStartGame: "Start Game",
+      treasureRulesTitle: "Game Rules:",
+      treasureRuleTurns: "Players take turns clicking tiles",
+      treasureRuleHidden: "One tile contains a hidden treasure 💎",
+      treasureRuleWin: "The first player to find the treasure wins!",
+      treasureRuleCovered: "Covered tiles show a shrub 🌳",
+      treasureDescriptionConfig:
+        "Configure your game and start the hunt for treasure!",
+      treasureDescriptionPlay:
+        "Take turns uncovering tiles to find the hidden treasure!",
+      treasureWinnerMessage: "{{name}} Wins!",
+      treasureTurnMessage: "{{name}}'s Turn",
+      treasureTurnHint: "Click a tile to search for treasure",
+      treasureNewGame: "New Game",
+      treasureGridLabel: "Grid:",
+      treasurePlayersLabel: "Players:",
+      treasureInvalidConfig: "Invalid configuration",
+      game47PageDescription:
+        "A timing challenge! Stop the timer at exactly 47.0 seconds. The timer will fade out after 3 seconds—trust your instincts!",
+      game47SelectDifficultyTitle: "Select Difficulty",
+      game47SelectDifficultySubtitle: "Choose your target time:",
+      game47ReadyTitle: "Ready to Play?",
+      game47DifficultyLabel: "Difficulty: {{difficulty}}",
+      game47TargetLabel: "Target: {{time}}",
+      game47StopAtExact: "Stop the timer at exactly {{time}} to win!",
+      game47FadeOutHint:
+        "The timer will fade out after 3 seconds, so you'll need to rely on your internal sense of time.",
+      game47StartTimer: "Start Timer",
+      game47TimerRunning: "Timer running...",
+      game47StopTimer: "Stop Timer",
+      game47PerfectTitle: "Perfect!",
+      game47PerfectMessage: "You stopped at exactly {{time}} seconds!",
+      game47ResultTitle: "Your Result",
+      game47StoppedAtMessage: "You stopped at {{time}} seconds",
+      game47DifferenceLabel: "Difference from target:",
+      game47StoppedLate: "(stopped late)",
+      game47StoppedEarly: "(stopped early)",
+      game47DifficultyEasy: "EASY",
+      game47DifficultyMedium: "MEDIUM",
+      game47DifficultyHard: "HARD",
+    },
+    es: {
+      mainHeading: "🎮 Biblioteca de Juegos",
+      welcomeMessage:
+        "¡Disfruta de una colección de minijuegos divertidos y desafíate a superar las puntuaciones de otros jugadores!",
+      inputPlaceholder: "Buscar juegos...",
+      visitCountLabel: "Visitas de Hoy",
+      footerContent: "© 2026 Biblioteca de Juegos. Creado con Next.js",
+      upDownGameTitle: "Arriba y Abajo",
+      upDownGameDescription:
+        "¡Adivina el número secreto con intentos limitados. ¿Puedes resolverlo?",
+      rpsGameTitle: "Piedra-Papel-Tijeras",
+      rpsGameDescription:
+        "¡Juega el juego clásico contra la computadora. Consigue victorias consecutivas para obtener puntuaciones más altas!",
+      treasureGameTitle: "Búsqueda del Tesoro",
+      treasureGameDescription:
+        "¡Dos jugadores se turnan para descubrir fichas y encontrar el tesoro escondido!",
+      game47Title: "47",
+      game47Description:
+        "¡Un desafío de tiempo! Detén el temporizador exactamente a los 47.0 segundos. El temporizador se desvanece después de 3 segundos.",
+      linkBackHome: "Volver a los Juegos",
+      actionPlayAgain: "Jugar de Nuevo",
+      actionNewGame: "Nuevo Juego",
+      scoreboardTitle: "Tabla de Puntuaciones Top 10",
+      topScoresHeading: "Mejores Puntuaciones",
+      playerNameLabel: "Nombre del Jugador",
+      scoreLabel: "Puntuación",
+      searchInputLabel: "Buscar juegos...",
+      searchLabel: "Buscar juegos",
+      clearSearchLabel: "Borrar búsqueda",
+      searchingForLabel: "Buscando:",
+      noResultsMessage: "No se encontraron juegos",
+      noResultsSuggestion: "Intenta ajustar tu búsqueda",
+      namePrompt: "Ingresa tu nombre",
+      submitButton: "Guardar puntuación",
+      dismissButton: "Omitir",
+      congratsMessage: "¡Puntuación Top 10!",
+      achievementMessage: "¡Llegaste al top 10!",
+      scoreMessage: "¡Lograste {{score}} puntos!",
+      characterCountLabel: "caracteres",
+      tagLogic: "lógica",
+      tagPuzzle: "rompecabezas",
+      tagSolo: "un jugador",
+      tagClassic: "clásico",
+      tagQuick: "rápido",
+      tagDuo: "dos jugadores",
+      tagStrategy: "estrategia",
+      tagTiming: "tiempo",
+      tagChallenge: "desafío",
+      scoreboardBadgeLabel: "Tabla de puntuaciones",
+      languagePickerLabel: "Idioma",
+      englishOption: "🇬🇧 Inglés",
+      spanishOption: "🇪🇸 Español",
+      koreanOption: "🇰🇷 한국어",
+      scoreboardEmptyTitle: "¡Aún no hay puntuaciones!",
+      scoreboardEmptySubtitle: "Sé el primero en jugar y establecer un récord.",
+      visitCountTemplateSingular: "{{count}} visita de hoy ({{date}})",
+      visitCountTemplatePlural: "{{count}} visitas de hoy ({{date}})",
+      loadingVisitsLabel: "Cargando visitas...",
+      upDownConfigTitle: "Configura tu juego",
+      upDownConfigSubtitle:
+        "Personaliza la dificultad configurando tu rango preferido y número de intentos",
+      upDownMinLabel: "Número mínimo (1 - {{max}}):",
+      upDownMaxLabel: "Número máximo ({{min}} - {{max}}):",
+      upDownAttemptsLabel: "Intentos máximos (1 - {{max}}):",
+      upDownStartGame: "Iniciar juego",
+      upDownRemainingAttempts: "Intentos restantes",
+      upDownRangeLabel: "Rango",
+      upDownGuessLabel: "Ingresa tu intento:",
+      upDownMakeGuess: "Hacer intento",
+      upDownLastGuess: "Último intento:",
+      upDownWinTitle: "¡Felicitaciones!",
+      upDownWinMessage: "¡Adivinaste el número {{number}}!",
+      upDownLoseTitle: "¡Juego terminado!",
+      upDownLoseMessage: "El número secreto era {{number}}",
+      upDownHigherHint: "¡Más alto!",
+      upDownLowerHint: "¡Más bajo!",
+      upDownFirstGuess: "¡Haz tu primer intento!",
+      upDownLongDescription:
+        "¡Un juego de adivinanza configurable! Ajusta la dificultad eligiendo el rango de números y los intentos antes de empezar. Por defecto: adivina entre {{min}} y {{max}} en {{attempts}} intentos.",
+      rpsPageDescription:
+        "¡Juega contra la computadora y consigue tantas victorias consecutivas como puedas!",
+      rpsConsecutiveWinsLabel: "Victorias consecutivas",
+      rpsYouLabel: "Tú",
+      rpsComputerLabel: "Computadora",
+      rpsChooseNext: "Elige tu siguiente jugada:",
+      rpsChooseFirst: "Elige tu jugada:",
+      rpsWinMessage: "¡Ganaste!",
+      rpsLoseMessage: "¡Perdiste!",
+      rpsFinalScore: "Puntuación final: {{score}} victorias consecutivas",
+      rpsDrawMessage: "¡Empate!",
+      rpsVsLabel: "VS",
+      rpsChoiceRock: "piedra",
+      rpsChoicePaper: "papel",
+      rpsChoiceScissors: "tijeras",
+      treasureConfigTitle: "Configuración del juego",
+      treasureGridSizeLabel: "Tamaño de la cuadrícula",
+      treasureGridInfo: "Cuadrícula {{size}}×{{size}} = {{tiles}} casillas",
+      treasurePlayerCountLabel: "Número de jugadores (2-{{max}})",
+      treasurePlayerCountError: "Debe estar entre 2 y {{max}}",
+      treasurePlayerNamesLabel:
+        "Nombres de jugadores (máx. 20 caracteres cada uno)",
+      treasurePlayerPlaceholder: "Jugador {{number}}",
+      treasureStartGame: "Iniciar juego",
+      treasureRulesTitle: "Reglas del juego:",
+      treasureRuleTurns:
+        "Los jugadores se turnan para hacer clic en las casillas",
+      treasureRuleHidden: "Una casilla contiene un tesoro oculto 💎",
+      treasureRuleWin: "¡El primer jugador que encuentre el tesoro gana!",
+      treasureRuleCovered: "Las casillas cubiertas muestran un arbusto 🌳",
+      treasureDescriptionConfig:
+        "¡Configura tu juego y empieza la búsqueda del tesoro!",
+      treasureDescriptionPlay:
+        "¡Tomen turnos para descubrir casillas y encontrar el tesoro oculto!",
+      treasureWinnerMessage: "¡{{name}} gana!",
+      treasureTurnMessage: "Turno de {{name}}",
+      treasureTurnHint: "Haz clic en una casilla para buscar el tesoro",
+      treasureNewGame: "Nuevo juego",
+      treasureGridLabel: "Cuadrícula:",
+      treasurePlayersLabel: "Jugadores:",
+      treasureInvalidConfig: "Configuración inválida",
+      game47PageDescription:
+        "¡Un desafío de tiempo! Detén el temporizador exactamente a los 47.0 segundos. El temporizador se desvanecerá después de 3 segundos—confía en tu instinto.",
+      game47SelectDifficultyTitle: "Seleccionar dificultad",
+      game47SelectDifficultySubtitle: "Elige tu tiempo objetivo:",
+      game47ReadyTitle: "¿Listo para jugar?",
+      game47DifficultyLabel: "Dificultad: {{difficulty}}",
+      game47TargetLabel: "Objetivo: {{time}}",
+      game47StopAtExact:
+        "Detén el temporizador exactamente en {{time}} para ganar!",
+      game47FadeOutHint:
+        "El temporizador se desvanecerá después de 3 segundos, así que tendrás que confiar en tu sentido interno del tiempo.",
+      game47StartTimer: "Iniciar temporizador",
+      game47TimerRunning: "Temporizador en marcha...",
+      game47StopTimer: "Detener temporizador",
+      game47PerfectTitle: "¡Perfecto!",
+      game47PerfectMessage: "¡Te detuviste exactamente en {{time}} segundos!",
+      game47ResultTitle: "Tu resultado",
+      game47StoppedAtMessage: "Te detuviste en {{time}} segundos",
+      game47DifferenceLabel: "Diferencia con el objetivo:",
+      game47StoppedLate: "(te detuviste tarde)",
+      game47StoppedEarly: "(te detuviste temprano)",
+      game47DifficultyEasy: "FÁCIL",
+      game47DifficultyMedium: "MEDIO",
+      game47DifficultyHard: "DIFÍCIL",
+    },
+    ko: {
+      mainHeading: "🎮 게임 라이브러리",
+      welcomeMessage:
+        "재미있는 미니게임 모음을 즐기고 다른 플레이어의 점수를 이기는 도전을 해보세요!",
+      inputPlaceholder: "게임 검색...",
+      visitCountLabel: "오늘의 방문",
+      footerContent: "© 2026 게임 라이브러리. Next.js로 제작",
+      upDownGameTitle: "업 앤 다운",
+      upDownGameDescription:
+        "제한된 시도로 숨겨진 숫자를 맞춰보세요. 알아낼 수 있을까요?",
+      rpsGameTitle: "가위바위보",
+      rpsGameDescription:
+        "컴퓨터와 고전 게임을 플레이하세요. 연속 승리로 더 높은 점수를 얻으세요!",
+      treasureGameTitle: "보물 찾기",
+      treasureGameDescription:
+        "두 플레이어가 번갈아 타일을 공개하여 숨겨진 보물을 찾습니다!",
+      game47Title: "47",
+      game47Description:
+        "타이밍 챌린지! 정확히 47.0초에 타이머를 멈추세요. 타이머는 3초 후 사라집니다.",
+      linkBackHome: "게임 목록으로",
+      actionPlayAgain: "다시 플레이",
+      actionNewGame: "새 게임",
+      scoreboardTitle: "상위 10 점수판",
+      topScoresHeading: "최고 점수",
+      playerNameLabel: "플레이어 이름",
+      scoreLabel: "점수",
+      searchInputLabel: "게임 검색...",
+      searchLabel: "게임 검색",
+      clearSearchLabel: "검색 지우기",
+      searchingForLabel: "검색어:",
+      noResultsMessage: "게임을 찾을 수 없습니다",
+      noResultsSuggestion: "검색어를 수정해 보세요",
+      namePrompt: "이름을 입력하세요",
+      submitButton: "점수 저장",
+      dismissButton: "건너뛰기",
+      congratsMessage: "상위 10 점수!",
+      achievementMessage: "상위 10위에 진입했습니다!",
+      scoreMessage: "{{score}}점을 획득했습니다!",
+      characterCountLabel: "자",
+      tagLogic: "논리",
+      tagPuzzle: "퍼즐",
+      tagSolo: "1인용",
+      tagClassic: "클래식",
+      tagQuick: "빠른",
+      tagDuo: "2인용",
+      tagStrategy: "전략",
+      tagTiming: "타이밍",
+      tagChallenge: "도전",
+      scoreboardBadgeLabel: "점수판",
+      languagePickerLabel: "언어",
+      englishOption: "🇬🇧 English",
+      spanishOption: "🇪🇸 Español",
+      koreanOption: "🇰🇷 한국어",
+      scoreboardEmptyTitle: "아직 점수가 없습니다!",
+      scoreboardEmptySubtitle: "가장 먼저 플레이하고 기록을 세워보세요.",
+      visitCountTemplateSingular: "오늘 방문 {{count}}회 ({{date}})",
+      visitCountTemplatePlural: "오늘 방문 {{count}}회 ({{date}})",
+      loadingVisitsLabel: "방문 수 불러오는 중...",
+      upDownConfigTitle: "게임 설정",
+      upDownConfigSubtitle:
+        "선호하는 범위와 시도 횟수를 설정해 난이도를 조절하세요",
+      upDownMinLabel: "최소 숫자 (1 - {{max}}):",
+      upDownMaxLabel: "최대 숫자 ({{min}} - {{max}}):",
+      upDownAttemptsLabel: "최대 시도 횟수 (1 - {{max}}):",
+      upDownStartGame: "게임 시작",
+      upDownRemainingAttempts: "남은 시도",
+      upDownRangeLabel: "범위",
+      upDownGuessLabel: "추측 숫자를 입력하세요:",
+      upDownMakeGuess: "추측하기",
+      upDownLastGuess: "마지막 추측:",
+      upDownWinTitle: "축하합니다!",
+      upDownWinMessage: "{{number}}을(를) 맞췄습니다!",
+      upDownLoseTitle: "게임 오버!",
+      upDownLoseMessage: "정답은 {{number}}였습니다",
+      upDownHigherHint: "더 높게!",
+      upDownLowerHint: "더 낮게!",
+      upDownFirstGuess: "첫 번째 추측을 해보세요!",
+      upDownLongDescription:
+        "숫자 맞추기 게임! 범위와 시도 횟수를 설정해 난이도를 조절하세요. 기본값: {{min}}부터 {{max}}까지 {{attempts}}번 안에 맞추기.",
+      rpsPageDescription:
+        "컴퓨터와 대결하고 연속 승리를 최대한 많이 쌓아보세요!",
+      rpsConsecutiveWinsLabel: "연속 승리",
+      rpsYouLabel: "당신",
+      rpsComputerLabel: "컴퓨터",
+      rpsChooseNext: "다음 선택을 하세요:",
+      rpsChooseFirst: "수 선택:",
+      rpsWinMessage: "승리!",
+      rpsLoseMessage: "패배!",
+      rpsFinalScore: "최종 점수: 연속 승리 {{score}}회",
+      rpsDrawMessage: "무승부!",
+      rpsVsLabel: "VS",
+      rpsChoiceRock: "바위",
+      rpsChoicePaper: "보",
+      rpsChoiceScissors: "가위",
+      treasureConfigTitle: "게임 설정",
+      treasureGridSizeLabel: "격자 크기",
+      treasureGridInfo: "{{size}}×{{size}} 격자 = {{tiles}}칸",
+      treasurePlayerCountLabel: "플레이어 수 (2-{{max}})",
+      treasurePlayerCountError: "2에서 {{max}} 사이여야 합니다",
+      treasurePlayerNamesLabel: "플레이어 이름 (각 20자 이내)",
+      treasurePlayerPlaceholder: "플레이어 {{number}}",
+      treasureStartGame: "게임 시작",
+      treasureRulesTitle: "게임 규칙:",
+      treasureRuleTurns: "플레이어가 번갈아 타일을 선택합니다",
+      treasureRuleHidden: "한 타일에 보물이 숨겨져 있습니다 💎",
+      treasureRuleWin: "보물을 먼저 찾는 플레이어가 승리합니다!",
+      treasureRuleCovered: "덮인 타일은 나무 🌳 로 표시됩니다",
+      treasureDescriptionConfig: "게임을 설정하고 보물 찾기를 시작하세요!",
+      treasureDescriptionPlay: "번갈아 타일을 공개하여 숨겨진 보물을 찾으세요!",
+      treasureWinnerMessage: "{{name}} 승리!",
+      treasureTurnMessage: "{{name}}의 차례",
+      treasureTurnHint: "타일을 눌러 보물을 찾으세요",
+      treasureNewGame: "새 게임",
+      treasureGridLabel: "격자:",
+      treasurePlayersLabel: "플레이어:",
+      treasureInvalidConfig: "잘못된 설정입니다",
+      game47PageDescription:
+        "타이밍 챌린지! 정확히 47.0초에 타이머를 멈추세요. 타이머는 3초 후 사라집니다—감각을 믿어보세요.",
+      game47SelectDifficultyTitle: "난이도 선택",
+      game47SelectDifficultySubtitle: "목표 시간을 선택하세요:",
+      game47ReadyTitle: "플레이 준비됐나요?",
+      game47DifficultyLabel: "난이도: {{difficulty}}",
+      game47TargetLabel: "목표: {{time}}",
+      game47StopAtExact: "정확히 {{time}}에 타이머를 멈추면 승리!",
+      game47FadeOutHint:
+        "타이머는 3초 후 사라지므로, 시간 감각에 의존해야 합니다.",
+      game47StartTimer: "타이머 시작",
+      game47TimerRunning: "타이머 작동 중...",
+      game47StopTimer: "타이머 정지",
+      game47PerfectTitle: "완벽해요!",
+      game47PerfectMessage: "{{time}}초에 정확히 멈췄습니다!",
+      game47ResultTitle: "결과",
+      game47StoppedAtMessage: "{{time}}초에 멈췄습니다",
+      game47DifferenceLabel: "목표와의 차이:",
+      game47StoppedLate: "(늦게 멈춤)",
+      game47StoppedEarly: "(일찍 멈춤)",
+      game47DifficultyEasy: "쉬움",
+      game47DifficultyMedium: "보통",
+      game47DifficultyHard: "어려움",
+    },
+  };
+
+  constructor() {
+    if (typeof window !== "undefined") {
+      const savedLang = localStorage.getItem(this.storageKey);
+      if (savedLang === "es" || savedLang === "ko") {
+        this.selectedLang = savedLang;
+      }
+    }
+  }
+
+  getActiveLanguage(): LangCode {
+    return this.selectedLang;
+  }
+
+  changeLanguage(newLang: LangCode): void {
+    if (this.selectedLang !== newLang) {
+      this.selectedLang = newLang;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(this.storageKey, newLang);
+      }
+      this.notifyAllListeners();
+    }
+  }
+
+  getTranslations() {
+    return this.textMappings[this.selectedLang];
+  }
+
+  attachListener(handler: EventHandler): () => void {
+    this.listeners.push(handler);
+    return () => {
+      this.listeners = this.listeners.filter((h) => h !== handler);
+    };
+  }
+
+  private notifyAllListeners(): void {
+    this.listeners.forEach((handler) => handler());
+  }
+}
+
+export const translationEngine = new TranslationEngine();
+export type TextMapping = ReturnType<typeof translationEngine.getTranslations>;

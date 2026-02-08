@@ -1,7 +1,8 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import NameInputModal from "../NameInputModal";
+import { translationEngine } from "@/app/translation-engine";
 
 describe("NameInputModal", () => {
   const mockOnSave = jest.fn();
@@ -9,6 +10,8 @@ describe("NameInputModal", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorage.clear();
+    translationEngine.changeLanguage("en");
   });
 
   it("does not render when visible is false", () => {
@@ -227,6 +230,28 @@ describe("NameInputModal", () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
+  it("renders Spanish texts when language is Spanish", () => {
+    translationEngine.changeLanguage("es");
+
+    render(
+      <NameInputModal
+        visible={true}
+        onSave={mockOnSave}
+        onClose={mockOnClose}
+        score={50}
+      />,
+    );
+
+    expect(screen.getByText("¡Puntuación Top 10!")).toBeInTheDocument();
+    expect(screen.getByText(/Lograste/i)).toBeInTheDocument();
+    expect(screen.getByText("50")).toBeInTheDocument();
+    expect(screen.getByText(/puntos/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Guardar puntuación/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Omitir/i })).toBeInTheDocument();
+  });
+
   it("sets default name when defaultName prop is provided", async () => {
     const { rerender } = render(
       <NameInputModal
@@ -253,7 +278,6 @@ describe("NameInputModal", () => {
   });
 
   it("enforces maximum length of 20 characters", async () => {
-    const user = userEvent.setup();
     render(
       <NameInputModal
         visible={true}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import GameShell from "@/app/components/common/GameShell";
+import { useGameLibraryTranslations } from "@/app/translation-engine";
+import { interpolate } from "@/app/lib/utils";
 import {
   initializeGame,
   processGuess,
@@ -16,6 +18,7 @@ export default function NumberGuessPage() {
   const [config, setConfig] = useState<GameConfig>(DEFAULT_CONFIG);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [inputValue, setInputValue] = useState("");
+  const { texts } = useGameLibraryTranslations();
   const [minNumberInput, setMinNumberInput] = useState(
     String(DEFAULT_CONFIG.minNumber),
   );
@@ -60,11 +63,12 @@ export default function NumberGuessPage() {
         <div className="text-center py-6">
           <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-3xl font-bold text-green-600 mb-2">
-            Congratulations!
+            {texts.upDownWinTitle}
           </h2>
           <p className="text-xl text-gray-700">
-            You guessed the number{" "}
-            <span className="font-bold">{gameState.secretNumber}</span>!
+            {interpolate(texts.upDownWinMessage, {
+              number: gameState.secretNumber,
+            })}
           </p>
         </div>
       );
@@ -74,10 +78,13 @@ export default function NumberGuessPage() {
       return (
         <div className="text-center py-6">
           <div className="text-6xl mb-4">😢</div>
-          <h2 className="text-3xl font-bold text-red-600 mb-2">Game Over!</h2>
+          <h2 className="text-3xl font-bold text-red-600 mb-2">
+            {texts.upDownLoseTitle}
+          </h2>
           <p className="text-xl text-gray-700">
-            The secret number was{" "}
-            <span className="font-bold">{gameState.secretNumber}</span>
+            {interpolate(texts.upDownLoseMessage, {
+              number: gameState.secretNumber,
+            })}
           </p>
         </div>
       );
@@ -87,7 +94,9 @@ export default function NumberGuessPage() {
       return (
         <div className="text-center py-4">
           <div className="text-5xl mb-2">⬆️</div>
-          <p className="text-2xl font-bold text-blue-600">Think Higher!</p>
+          <p className="text-2xl font-bold text-blue-600">
+            {texts.upDownHigherHint}
+          </p>
         </div>
       );
     }
@@ -96,32 +105,37 @@ export default function NumberGuessPage() {
       return (
         <div className="text-center py-4">
           <div className="text-5xl mb-2">⬇️</div>
-          <p className="text-2xl font-bold text-orange-600">Think Lower!</p>
+          <p className="text-2xl font-bold text-orange-600">
+            {texts.upDownLowerHint}
+          </p>
         </div>
       );
     }
 
     return (
       <div className="text-center py-4 text-gray-500">
-        <p className="text-lg">Make your first guess!</p>
+        <p className="text-lg">{texts.upDownFirstGuess}</p>
       </div>
     );
   };
 
   return (
     <GameShell
-      title="Up And Down"
-      description={`A configurable number guessing game! Set your own difficulty by choosing the number range and attempts before starting. Default: guess between ${DEFAULT_CONFIG.minNumber} and ${DEFAULT_CONFIG.maxNumber} in ${DEFAULT_CONFIG.maxAttempts} attempts.`}
+      title={texts.upDownGameTitle}
+      description={interpolate(texts.upDownLongDescription, {
+        min: DEFAULT_CONFIG.minNumber,
+        max: DEFAULT_CONFIG.maxNumber,
+        attempts: DEFAULT_CONFIG.maxAttempts,
+      })}
     >
       {isConfiguring ? (
         <div className="space-y-6">
           <div className="bg-purple-50 rounded-lg p-6">
             <h2 className="text-2xl font-bold text-purple-800 mb-4 text-center">
-              Configure Your Game
+              {texts.upDownConfigTitle}
             </h2>
             <p className="text-center text-gray-600 mb-6">
-              Customize the difficulty by setting your preferred range and
-              number of attempts
+              {texts.upDownConfigSubtitle}
             </p>
 
             <div className="space-y-4">
@@ -131,7 +145,9 @@ export default function NumberGuessPage() {
                   htmlFor="min-number"
                   className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                  Minimum Number (1 - {SAFE_LIMITS.maxNumber - 1}):
+                  {interpolate(texts.upDownMinLabel, {
+                    max: SAFE_LIMITS.maxNumber - 1,
+                  })}
                 </label>
                 <input
                   id="min-number"
@@ -162,8 +178,10 @@ export default function NumberGuessPage() {
                   htmlFor="max-number"
                   className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                  Maximum Number ({config.minNumber + 1} -{" "}
-                  {SAFE_LIMITS.maxNumber}):
+                  {interpolate(texts.upDownMaxLabel, {
+                    min: config.minNumber + 1,
+                    max: SAFE_LIMITS.maxNumber,
+                  })}
                 </label>
                 <input
                   id="max-number"
@@ -193,7 +211,9 @@ export default function NumberGuessPage() {
                   htmlFor="max-attempts"
                   className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                  Maximum Attempts (1 - {SAFE_LIMITS.maxAttempts}):
+                  {interpolate(texts.upDownAttemptsLabel, {
+                    max: SAFE_LIMITS.maxAttempts,
+                  })}
                 </label>
                 <input
                   id="max-attempts"
@@ -223,7 +243,7 @@ export default function NumberGuessPage() {
               onClick={handleStartGame}
               className="w-full mt-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold text-lg"
             >
-              Start Game
+              {texts.upDownStartGame}
             </button>
           </div>
         </div>
@@ -233,13 +253,18 @@ export default function NumberGuessPage() {
           <div className="bg-purple-50 rounded-lg p-4">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-gray-600">Remaining Attempts</p>
+                <p className="text-sm text-gray-600">
+                  {texts.upDownRemainingAttempts}
+                </p>
+
                 <p className="text-3xl font-bold text-purple-600">
                   {gameState?.remainingAttempts}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Range</p>
+                <p className="text-sm text-gray-600">
+                  {texts.upDownRangeLabel}
+                </p>
                 <p className="text-xl font-semibold text-gray-700">
                   {config.minNumber} - {config.maxNumber}
                 </p>
@@ -260,7 +285,7 @@ export default function NumberGuessPage() {
                   htmlFor="guess-input"
                   className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                  Enter your guess:
+                  {texts.upDownGuessLabel}
                 </label>
                 <input
                   id="guess-input"
@@ -279,7 +304,7 @@ export default function NumberGuessPage() {
                 type="submit"
                 className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold text-lg"
               >
-                Make Guess
+                {texts.upDownMakeGuess}
               </button>
             </form>
           )}
@@ -290,7 +315,7 @@ export default function NumberGuessPage() {
               onClick={handleReset}
               className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
             >
-              Play Again
+              {texts.actionPlayAgain}
             </button>
           )}
 
@@ -298,7 +323,7 @@ export default function NumberGuessPage() {
           {gameState?.lastGuess !== null && (
             <div className="text-center text-sm text-gray-500">
               <p>
-                Last guess:{" "}
+                {texts.upDownLastGuess}{" "}
                 <span className="font-semibold">{gameState?.lastGuess}</span>
               </p>
             </div>

@@ -95,6 +95,30 @@ A timing challenge where you must stop the timer at exactly 47.0 seconds!
 - 🔍 Real-time game search
 - ⌨️ Keyboard accessible
 - 📊 Daily visit tracking with Firebase Firestore (resets at 00:00:00 EST)
+- 🌍 Multi-language support (English, Spanish, Korean)
+
+## Multi-Language Support
+
+The game library supports three languages: English (default), Spanish, and Korean. Users can switch between languages using the dropdown selector in the top-right corner of the header.
+
+**Supported Languages:**
+- 🇺🇸 English
+- 🇪🇸 Spanish (Español)
+- 🇰🇷 Korean (한국어)
+
+**Features:**
+- Language preference is persisted in browser localStorage
+- All UI text, game titles, and descriptions are translated
+- Seamless language switching without page reload
+- Automatic detection and loading of saved language preference
+
+**Adding New Languages:**
+
+To add support for a new language, update the `TranslationEngine.ts` file:
+
+1. Add the new language code to the type definition (e.g., `'fr'` for French)
+2. Add translations in the `textMappings` object with all required keys
+3. Update the `LanguageDropdown` component to include the new option
 
 ## Development
 

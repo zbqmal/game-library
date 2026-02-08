@@ -1,8 +1,14 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import Header from "../Header";
+import { translationEngine } from "@/app/translation-engine";
 
 describe("Header", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    translationEngine.changeLanguage('en');
+  });
+
   it("renders the header element", () => {
     const { container } = render(<Header />);
 
@@ -45,21 +51,21 @@ describe("Header", () => {
   });
 
   it("centers the content", () => {
-    const { container } = render(<Header />);
+    render(<Header />);
 
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading).toHaveClass("text-center");
   });
 
   it("applies responsive font sizing", () => {
-    const { container } = render(<Header />);
+    render(<Header />);
 
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading).toHaveClass("text-3xl", "md:text-4xl");
   });
 
   it("applies bold font weight", () => {
-    const { container } = render(<Header />);
+    render(<Header />);
 
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading).toHaveClass("font-bold");
@@ -78,4 +84,28 @@ describe("Header", () => {
     const container_div = container.querySelector(".container");
     expect(container_div).toHaveClass("mx-auto", "px-4", "py-6");
   });
+
+  it("renders language dropdown", () => {
+    render(<Header />);
+    
+    const languageDropdown = screen.getByRole("combobox");
+    expect(languageDropdown).toBeInTheDocument();
+  });
+
+  it("displays Spanish title when language is Spanish", () => {
+    translationEngine.changeLanguage('es');
+    const { rerender } = render(<Header />);
+    rerender(<Header />);
+    
+    expect(screen.getByText(/🎮 Biblioteca de Juegos/i)).toBeInTheDocument();
+  });
+
+  it("displays Korean title when language is Korean", () => {
+    translationEngine.changeLanguage('ko');
+    const { rerender } = render(<Header />);
+    rerender(<Header />);
+    
+    expect(screen.getByText(/🎮 게임 라이브러리/i)).toBeInTheDocument();
+  });
 });
+

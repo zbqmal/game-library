@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import GameShell from "@/app/components/common/GameShell";
+import { useGameLibraryTranslations } from "@/app/translation-engine";
+import { interpolate } from "@/app/lib/utils";
 import {
   initializeGame,
   uncoverTile,
@@ -14,9 +16,10 @@ export default function TreasureHuntPage() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerCount, setPlayerCount] = useState(2);
   const [gridSize, setGridSize] = useState(3);
-  const [playerNames, setPlayerNames] = useState<string[]>([
-    "Player 1",
-    "Player 2",
+  const { texts } = useGameLibraryTranslations();
+  const [playerNames, setPlayerNames] = useState<string[]>(() => [
+    interpolate(texts.treasurePlayerPlaceholder, { number: 1 }),
+    interpolate(texts.treasurePlayerPlaceholder, { number: 2 }),
   ]);
   const [configError, setConfigError] = useState<string>("");
 
@@ -51,7 +54,11 @@ export default function TreasureHuntPage() {
     if (parsedCount >= 2 && parsedCount <= 6 && parsedCount <= maxPlayers) {
       const newNames = Array(parsedCount)
         .fill(null)
-        .map((_, i) => playerNames[i] || `Player ${i + 1}`);
+        .map(
+          (_, i) =>
+            playerNames[i] ||
+            interpolate(texts.treasurePlayerPlaceholder, { number: i + 1 }),
+        );
       setPlayerNames(newNames);
     }
   };
@@ -67,7 +74,9 @@ export default function TreasureHuntPage() {
   const handleStartGame = () => {
     // Assign default names to empty entries
     const finalNames = playerNames.map((name, i) =>
-      name.trim() === "" ? `Player ${i + 1}` : name,
+      name.trim() === ""
+        ? interpolate(texts.treasurePlayerPlaceholder, { number: i + 1 })
+        : name,
     );
 
     const config: GameConfig = {
@@ -78,7 +87,7 @@ export default function TreasureHuntPage() {
 
     const validation = validateGameConfig(config);
     if (!validation.valid) {
-      setConfigError(validation.error || "Invalid configuration");
+      setConfigError(validation.error || texts.treasureInvalidConfig);
       return;
     }
 
@@ -141,7 +150,7 @@ export default function TreasureHuntPage() {
         <div className="text-center py-4">
           <div className="text-5xl mb-2">🎉</div>
           <p className="text-2xl font-bold text-green-600">
-            {winnerName} Wins!
+            {interpolate(texts.treasureWinnerMessage, { name: winnerName })}
           </p>
         </div>
       );
@@ -152,11 +161,9 @@ export default function TreasureHuntPage() {
     return (
       <div className="text-center py-4">
         <p className="text-xl font-semibold text-gray-900">
-          {currentPlayerName}&apos;s Turn
+          {interpolate(texts.treasureTurnMessage, { name: currentPlayerName })}
         </p>
-        <p className="text-sm text-gray-600 mt-1">
-          Click a tile to search for treasure
-        </p>
+        <p className="text-sm text-gray-600 mt-1">{texts.treasureTurnHint}</p>
       </div>
     );
   };
@@ -165,17 +172,19 @@ export default function TreasureHuntPage() {
   if (!gameState) {
     return (
       <GameShell
-        title="Treasure Hunt"
-        description="Configure your game and start the hunt for treasure!"
+        title={texts.treasureGameTitle}
+        description={texts.treasureDescriptionConfig}
       >
         <div className="space-y-6 max-w-lg mx-auto">
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">Game Configuration</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {texts.treasureConfigTitle}
+            </h3>
 
             {/* Grid Size Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Grid Size
+                {texts.treasureGridSizeLabel}
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {[3, 4, 5, 6].map((size) => (
@@ -193,14 +202,19 @@ export default function TreasureHuntPage() {
                 ))}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {gridSize}×{gridSize} grid = {gridSize * gridSize} tiles
+                {interpolate(texts.treasureGridInfo, {
+                  size: gridSize,
+                  tiles: gridSize * gridSize,
+                })}
               </p>
             </div>
 
             {/* Player Count Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Number of Players (2-{maxPlayers})
+                {interpolate(texts.treasurePlayerCountLabel, {
+                  max: maxPlayers,
+                })}
               </label>
               <input
                 type="number"
@@ -215,7 +229,9 @@ export default function TreasureHuntPage() {
               />
               {playerCount > 0 && !isValidPlayerCount && (
                 <p className="text-xs text-red-600 mt-1">
-                  Must be between 2 and {maxPlayers}
+                  {interpolate(texts.treasurePlayerCountError, {
+                    max: maxPlayers,
+                  })}
                 </p>
               )}
             </div>
@@ -224,7 +240,7 @@ export default function TreasureHuntPage() {
             {isValidPlayerCount && (
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Player Names (max 20 characters each)
+                  {texts.treasurePlayerNamesLabel}
                 </label>
                 <div className="space-y-2">
                   {playerNames.map((name, index) => (
@@ -235,7 +251,12 @@ export default function TreasureHuntPage() {
                         onChange={(e) =>
                           handlePlayerNameChange(index, e.target.value)
                         }
-                        placeholder={`Player ${index + 1}`}
+                        placeholder={interpolate(
+                          texts.treasurePlayerPlaceholder,
+                          {
+                            number: index + 1,
+                          },
+                        )}
                         maxLength={20}
                         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
                           name.trim().length <= 20
@@ -244,7 +265,7 @@ export default function TreasureHuntPage() {
                         }`}
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        {name.length}/20 characters
+                        {name.length}/20 {texts.characterCountLabel}
                       </p>
                     </div>
                   ))}
@@ -269,18 +290,18 @@ export default function TreasureHuntPage() {
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
-              Start Game
+              {texts.treasureStartGame}
             </button>
           </div>
 
           {/* Game Rules */}
           <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
-            <h3 className="font-semibold mb-2">Game Rules:</h3>
+            <h3 className="font-semibold mb-2">{texts.treasureRulesTitle}</h3>
             <ul className="list-disc list-inside space-y-1">
-              <li>Players take turns clicking tiles</li>
-              <li>One tile contains a hidden treasure 💎</li>
-              <li>The first player to find the treasure wins!</li>
-              <li>Covered tiles show a shrub 🌳</li>
+              <li>{texts.treasureRuleTurns}</li>
+              <li>{texts.treasureRuleHidden}</li>
+              <li>{texts.treasureRuleWin}</li>
+              <li>{texts.treasureRuleCovered}</li>
             </ul>
           </div>
         </div>
@@ -291,8 +312,8 @@ export default function TreasureHuntPage() {
   // Game screen
   return (
     <GameShell
-      title="Treasure Hunt"
-      description="Take turns uncovering tiles to find the hidden treasure!"
+      title={texts.treasureGameTitle}
+      description={texts.treasureDescriptionPlay}
     >
       <div className="space-y-6">
         {/* Status Message */}
@@ -325,7 +346,7 @@ export default function TreasureHuntPage() {
             onClick={handleReset}
             className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
           >
-            New Game
+            {texts.treasureNewGame}
           </button>
         )}
 
@@ -333,11 +354,13 @@ export default function TreasureHuntPage() {
         <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
           <div className="flex justify-between items-center">
             <div>
-              <span className="font-semibold">Grid:</span> {gameState.gridSize}×
-              {gameState.gridSize}
+              <span className="font-semibold">{texts.treasureGridLabel}</span>{" "}
+              {gameState.gridSize}×{gameState.gridSize}
             </div>
             <div>
-              <span className="font-semibold">Players:</span>{" "}
+              <span className="font-semibold">
+                {texts.treasurePlayersLabel}
+              </span>{" "}
               {gameState.playerCount}
             </div>
           </div>

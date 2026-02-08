@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import GameTile from "../GameTile";
 import { Game } from "../../../data/games";
+import { translationEngine } from "@/app/translation-engine";
 
 const mockGame: Game = {
   id: "1",
@@ -14,6 +15,11 @@ const mockGame: Game = {
 };
 
 describe("GameTile", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    translationEngine.changeLanguage("en");
+  });
+
   it("renders game title and description", () => {
     render(<GameTile game={mockGame} />);
 
@@ -82,5 +88,13 @@ describe("GameTile", () => {
       "focus:ring-2",
       "focus:ring-purple-500",
     );
+  });
+
+  it("renders Spanish tag and scoreboard label when language is Spanish", () => {
+    translationEngine.changeLanguage("es");
+    render(<GameTile game={mockGame} />);
+
+    expect(screen.getByText("rompecabezas")).toBeInTheDocument();
+    expect(screen.getByText("Tabla de puntuaciones")).toBeInTheDocument();
   });
 });
