@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import GameShell from "@/app/components/common/GameShell";
-import { useGameLibraryTranslations } from "@/app/translation-engine";
 import { db } from "@/lib/firebase-client";
 import { doc, onSnapshot } from "firebase/firestore";
 import { Room } from "../types/room";
@@ -17,8 +15,6 @@ export default function OnlineLobbyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [joinCodeInput, setJoinCodeInput] = useState("");
-  const { texts } = useGameLibraryTranslations();
-  const router = useRouter();
 
   // Load playerId from localStorage on mount
   useEffect(() => {

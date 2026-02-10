@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Assign next available player number
     const playerNumbers = Object.values(roomData.players || {}).map(
-      (p: any) => p.playerNumber
+      (p: { playerNumber: number }) => p.playerNumber
     );
     const nextPlayerNumber = Math.max(0, ...playerNumbers) + 1;
 
