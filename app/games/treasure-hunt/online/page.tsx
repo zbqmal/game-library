@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import GameShell from "@/app/components/common/GameShell";
 import { db } from "@/lib/firebase-client";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -15,6 +15,18 @@ export default function OnlineLobbyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [joinCodeInput, setJoinCodeInput] = useState("");
+
+  // Define handleLeaveRoom early so it can be used in useEffect
+  const handleLeaveRoom = useCallback(() => {
+    localStorage.removeItem("treasure-hunt-player-id");
+    localStorage.removeItem("treasure-hunt-room-code");
+    setPlayerId(null);
+    setRoomCode("");
+    setRoom(null);
+    setView("landing");
+    setUsername("");
+    setJoinCodeInput("");
+  }, []);
 
   // Load playerId from localStorage on mount
   useEffect(() => {
@@ -52,7 +64,7 @@ export default function OnlineLobbyPage() {
     );
 
     return () => unsubscribe();
-  }, [roomCode, view]);
+  }, [roomCode, view, handleLeaveRoom]);
 
   const handleCreateRoom = async () => {
     if (!username.trim()) {
@@ -139,17 +151,6 @@ export default function OnlineLobbyPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLeaveRoom = () => {
-    localStorage.removeItem("treasure-hunt-player-id");
-    localStorage.removeItem("treasure-hunt-room-code");
-    setPlayerId(null);
-    setRoomCode("");
-    setRoom(null);
-    setView("landing");
-    setUsername("");
-    setJoinCodeInput("");
   };
 
   const handleCopyRoomCode = () => {

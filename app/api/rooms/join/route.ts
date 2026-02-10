@@ -3,6 +3,13 @@ import { db } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import crypto from 'crypto';
 
+interface PlayerData {
+  playerId: string;
+  username: string;
+  playerNumber: number;
+  isHost: boolean;
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Check if Firebase is initialized
@@ -83,8 +90,11 @@ export async function POST(request: NextRequest) {
     const playerId = crypto.randomUUID();
 
     // Assign next available player number
-    const playerNumbers = Object.values(roomData.players || {}).map(
-      (p: { playerNumber: number }) => p.playerNumber
+    // Note: This uses Math.max to find the highest existing player number and adds 1.
+    // For Phase 1, this is sufficient since players don't leave during gameplay.
+    // Future phases should track the highest player number separately if player removal is needed.
+    const playerNumbers = (Object.values(roomData.players || {}) as PlayerData[]).map(
+      (p) => p.playerNumber
     );
     const nextPlayerNumber = Math.max(0, ...playerNumbers) + 1;
 
