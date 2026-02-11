@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       gameId: 'treasure-hunt',
       status: 'waiting',
       createdAt: FieldValue.serverTimestamp(),
+      lastActivity: FieldValue.serverTimestamp(),
       config: {
         gridSize,
         maxPlayers,

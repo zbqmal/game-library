@@ -15,6 +15,7 @@ export interface Room {
   gameId: 'treasure-hunt';
   status: 'waiting' | 'playing' | 'finished';
   createdAt: Timestamp;
+  lastActivity: Timestamp;
   config: {
     gridSize: number;
     maxPlayers: number;
