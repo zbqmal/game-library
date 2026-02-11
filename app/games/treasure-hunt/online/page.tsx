@@ -311,7 +311,7 @@ export default function OnlineLobbyPage() {
         <div className="space-y-6 max-w-lg mx-auto">
           {/* Username Input */}
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Your Username
             </label>
             <input

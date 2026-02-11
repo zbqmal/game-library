@@ -134,7 +134,7 @@ export default function NumberGuessPage() {
             <h2 className="text-2xl font-bold text-purple-800 mb-4 text-center">
               {texts.upDownConfigTitle}
             </h2>
-            <p className="text-center text-gray-600 mb-6">
+            <p className="text-center text-gray-800 mb-6">
               {texts.upDownConfigSubtitle}
             </p>
 
@@ -143,7 +143,7 @@ export default function NumberGuessPage() {
               <div>
                 <label
                   htmlFor="min-number"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
                 >
                   {interpolate(texts.upDownMinLabel, {
                     max: SAFE_LIMITS.maxNumber - 1,
@@ -176,7 +176,7 @@ export default function NumberGuessPage() {
               <div>
                 <label
                   htmlFor="max-number"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
                 >
                   {interpolate(texts.upDownMaxLabel, {
                     min: config.minNumber + 1,
@@ -209,7 +209,7 @@ export default function NumberGuessPage() {
               <div>
                 <label
                   htmlFor="max-attempts"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
                 >
                   {interpolate(texts.upDownAttemptsLabel, {
                     max: SAFE_LIMITS.maxAttempts,
@@ -253,7 +253,7 @@ export default function NumberGuessPage() {
           <div className="bg-purple-50 rounded-lg p-4">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-800">
                   {texts.upDownRemainingAttempts}
                 </p>
 
@@ -262,7 +262,7 @@ export default function NumberGuessPage() {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-800">
                   {texts.upDownRangeLabel}
                 </p>
                 <p className="text-xl font-semibold text-gray-700">
@@ -283,7 +283,7 @@ export default function NumberGuessPage() {
               <div>
                 <label
                   htmlFor="guess-input"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
                 >
                   {texts.upDownGuessLabel}
                 </label>

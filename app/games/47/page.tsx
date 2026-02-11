@@ -93,7 +93,7 @@ export default function FortySevenPage() {
             <h2 className="text-2xl font-bold text-purple-800 mb-4">
               {texts.game47SelectDifficultyTitle}
             </h2>
-            <p className="text-gray-700 mb-6">
+            <p className="text-gray-800 mb-6">
               {texts.game47SelectDifficultySubtitle}
             </p>
             <div className="space-y-3">
@@ -162,7 +162,7 @@ export default function FortySevenPage() {
                 })}
               </p>
             </div>
-            <p className="text-gray-700 mb-6">
+            <p className="text-gray-800 mb-6">
               {interpolate(texts.game47StopAtExact, {
                 time: formatTargetTime(difficulty),
               })}
@@ -227,7 +227,7 @@ export default function FortySevenPage() {
                 <h2 className="text-3xl font-bold text-green-600 mb-4">
                   {texts.game47PerfectTitle}
                 </h2>
-                <p className="text-xl text-gray-700 mb-2">
+                <p className="text-xl text-gray-800 mb-2">
                   {interpolate(texts.game47PerfectMessage, {
                     time: formatTime(gameState.finalTime),
                   })}
@@ -239,7 +239,7 @@ export default function FortySevenPage() {
                 <h2 className="text-3xl font-bold text-purple-800 mb-4">
                   {texts.game47ResultTitle}
                 </h2>
-                <p className="text-xl text-gray-700 mb-2">
+                <p className="text-xl text-gray-800 mb-2">
                   {interpolate(texts.game47StoppedAtMessage, {
                     time: formatTime(gameState.finalTime),
                   })}
