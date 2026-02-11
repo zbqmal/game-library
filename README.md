@@ -64,10 +64,25 @@ Players take turns uncovering tiles to find the hidden treasure on a grid.
 
 **Features**:
 
-- Multiplayer support (2-6 players)
+- Local multiplayer support (2-6 players)
+- **Online multiplayer** - play with friends on different devices
 - Configurable grid sizes (3x3 to 6x6)
 - Custom player names (up to 20 characters)
 - Turn-based gameplay
+- Real-time synchronization for online games
+
+**Online Multiplayer**:
+
+To play online with friends:
+
+1. Click "Play Online Multiplayer" button
+2. Create a room or join with a 6-character room code
+3. Share the room code with your friends
+4. Host starts the game when everyone has joined
+5. Players take turns clicking tiles across different devices
+6. Real-time updates keep everyone synchronized
+
+**Room Cleanup**: Inactive rooms are automatically deleted after 1 hour (or 2 hours if a game is in progress) to keep the platform clean.
 
 ### 47
 
@@ -138,6 +153,38 @@ To add support for a new language, update the `TranslationEngine.ts` file:
    - Note: The app will work without Firebase credentials, but visit tracking will not function
 
 4. Run the development server: `npm run dev` or `yarn dev`
+
+### Room Cleanup (Optional)
+
+For online multiplayer, rooms are automatically cleaned up to prevent database clutter. The cleanup API route is available at `/api/rooms/cleanup`.
+
+**Automatic Cleanup with Vercel Cron Jobs:**
+
+To enable automatic room cleanup on Vercel deployments:
+
+1. Create a `vercel.json` file in the root directory:
+```json
+{
+  "crons": [{
+    "path": "/api/rooms/cleanup",
+    "schedule": "0 * * * *"
+  }]
+}
+```
+
+2. Deploy to Vercel - the cron job will run hourly
+
+**Cleanup Rules:**
+- Rooms with status "waiting" or "finished" are deleted after 1 hour of inactivity
+- Active games (status "playing") are deleted after 2 hours of inactivity
+- "lastActivity" is updated on every player action (join, start, move)
+
+**Manual Cleanup:**
+
+You can also call the cleanup endpoint manually:
+```bash
+curl https://your-domain.com/api/rooms/cleanup
+```
 
 ### Visit Count Feature
 
