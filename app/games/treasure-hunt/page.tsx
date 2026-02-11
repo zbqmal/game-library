@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import GameShell from "@/app/components/common/GameShell";
 import { useGameLibraryTranslations } from "@/app/translation-engine";
 import { interpolate } from "@/app/lib/utils";
@@ -176,6 +177,13 @@ export default function TreasureHuntPage() {
         description={texts.treasureDescriptionConfig}
       >
         <div className="space-y-6 max-w-lg mx-auto">
+          {/* Online Multiplayer Button */}
+          <Link href="/games/treasure-hunt/online">
+            <button className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors font-bold text-xl shadow-lg">
+              🌐 Play Online Multiplayer
+            </button>
+          </Link>
+
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold mb-4">
               {texts.treasureConfigTitle}
