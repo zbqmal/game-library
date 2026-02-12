@@ -76,11 +76,34 @@ Players take turns uncovering tiles to find the hidden treasure on a grid.
 To play online with friends:
 
 1. Click "Play Online Multiplayer" button
-2. Create a room or join with a 6-character room code
-3. Share the room code with your friends
-4. Host starts the game when everyone has joined
-5. Players take turns clicking tiles across different devices
-6. Real-time updates keep everyone synchronized
+2. Enter your username
+3. **Create a room** or **Join an existing room** with a 6-character room code
+4. **Share the room link** or room code with your friends:
+   - Click "🔗 Share Link" to copy a full URL with the room code
+   - Click "📋 Copy Code" to copy just the room code
+   - Friends can join by pasting the link or entering the code
+5. Host starts the game when everyone has joined (minimum 2 players)
+6. Players take turns clicking tiles across different devices
+7. Real-time updates keep everyone synchronized
+
+**Enhanced Features**:
+
+- **Auto-Reconnection**: Refresh the page and automatically rejoin your game
+- **Session Persistence**: Your session is saved for 1 hour - you can close the tab and come back
+- **Share via Link**: Copy a full URL to share with friends (auto-fills the room code for them)
+- **Mobile Optimized**: Large tap targets, haptic feedback, and responsive design for phones and tablets
+- **Player Status**: See when players disconnect (shown with a 🔴 indicator)
+- **Better Loading**: Clear loading states and optimistic UI updates
+- **Your Turn Banner**: Prominent "🎯 Your Turn!" notification when it's your turn
+- **Game Progress**: Track tiles uncovered during the game
+- **Error Recovery**: User-friendly error messages with retry options
+
+**Troubleshooting**:
+
+- **"Room expired"**: Rooms are automatically deleted after 1 hour of inactivity to keep the platform clean
+- **"Can't join room"**: Check that the room code is correct and the room isn't full (max 4 players by default)
+- **"Lost connection"**: Refresh the page - you'll automatically reconnect if the room still exists
+- **Session expired**: If you see this message, the room was deleted. Create a new room to play again
 
 **Room Cleanup**: Inactive rooms are automatically deleted after 1 hour (or 2 hours if a game is in progress) to keep the platform clean.
 
