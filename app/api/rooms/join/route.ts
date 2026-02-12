@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
         joinedAt: FieldValue.serverTimestamp(),
         isHost: false,
       },
+      lastActivity: FieldValue.serverTimestamp(),
     });
 
     // Fetch updated room data

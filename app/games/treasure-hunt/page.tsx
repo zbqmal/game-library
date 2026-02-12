@@ -164,7 +164,7 @@ export default function TreasureHuntPage() {
         <p className="text-xl font-semibold text-gray-900">
           {interpolate(texts.treasureTurnMessage, { name: currentPlayerName })}
         </p>
-        <p className="text-sm text-gray-600 mt-1">{texts.treasureTurnHint}</p>
+        <p className="text-sm text-gray-700 mt-1">{texts.treasureTurnHint}</p>
       </div>
     );
   };
@@ -177,21 +177,14 @@ export default function TreasureHuntPage() {
         description={texts.treasureDescriptionConfig}
       >
         <div className="space-y-6 max-w-lg mx-auto">
-          {/* Online Multiplayer Button */}
-          <Link href="/games/treasure-hunt/online">
-            <button className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors font-bold text-xl shadow-lg">
-              🌐 Play Online Multiplayer
-            </button>
-          </Link>
-
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {texts.treasureConfigTitle}
             </h3>
 
             {/* Grid Size Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 {texts.treasureGridSizeLabel}
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -209,7 +202,7 @@ export default function TreasureHuntPage() {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-700 mt-1">
                 {interpolate(texts.treasureGridInfo, {
                   size: gridSize,
                   tiles: gridSize * gridSize,
@@ -219,7 +212,7 @@ export default function TreasureHuntPage() {
 
             {/* Player Count Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 {interpolate(texts.treasurePlayerCountLabel, {
                   max: maxPlayers,
                 })}
@@ -247,7 +240,7 @@ export default function TreasureHuntPage() {
             {/* Player Names - Only show when player count is valid */}
             {isValidPlayerCount && (
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   {texts.treasurePlayerNamesLabel}
                 </label>
                 <div className="space-y-2">
@@ -266,13 +259,13 @@ export default function TreasureHuntPage() {
                           },
                         )}
                         maxLength={20}
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 placeholder-gray-500 ${
                           name.trim().length <= 20
                             ? "border-gray-300 focus:ring-blue-500"
                             : "border-red-300 focus:ring-red-500"
                         }`}
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-700 mt-1">
                         {name.length}/20 {texts.characterCountLabel}
                       </p>
                     </div>
@@ -287,6 +280,13 @@ export default function TreasureHuntPage() {
                 {configError}
               </div>
             )}
+
+            {/* Online Multiplayer Button */}
+            <Link href="/games/treasure-hunt/online">
+              <button className="w-full py-3 mb-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors font-semibold text-lg shadow-md">
+                🌐 Play Online Multiplayer
+              </button>
+            </Link>
 
             {/* Start Game Button */}
             <button
@@ -303,7 +303,7 @@ export default function TreasureHuntPage() {
           </div>
 
           {/* Game Rules */}
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-800">
             <h3 className="font-semibold mb-2">{texts.treasureRulesTitle}</h3>
             <ul className="list-disc list-inside space-y-1">
               <li>{texts.treasureRuleTurns}</li>
@@ -359,7 +359,7 @@ export default function TreasureHuntPage() {
         )}
 
         {/* Game Info */}
-        <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+        <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-800">
           <div className="flex justify-between items-center">
             <div>
               <span className="font-semibold">{texts.treasureGridLabel}</span>{" "}
