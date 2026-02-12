@@ -7,6 +7,8 @@ export interface Player {
   playerNumber: number;
   joinedAt: Timestamp;
   isHost: boolean;
+  lastSeen?: Timestamp;
+  isConnected?: boolean;
 }
 
 export interface Room {

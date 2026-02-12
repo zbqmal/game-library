@@ -1,45 +1,178 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import GameShell from "@/app/components/common/GameShell";
+import LoadingSpinner from "@/app/components/common/LoadingSpinner";
+import SkeletonLoader from "@/app/components/common/SkeletonLoader";
+import ErrorToast from "@/app/components/common/ErrorToast";
 import { db } from "@/lib/firebase-client";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, Timestamp } from "firebase/firestore";
 import { Room } from "../types/room";
-import { GameState, TileState } from "../gameLogic";
+import { GameState } from "../gameLogic";
 
-export default function OnlineLobbyPage() {
-  const [view, setView] = useState<"landing" | "lobby">("landing");
+// Storage keys
+const STORAGE_KEYS = {
+  PLAYER_ID: "treasure-hunt-player-id",
+  ROOM_CODE: "treasure-hunt-room-code",
+  USERNAME: "treasure-hunt-username",
+  TIMESTAMP: "treasure-hunt-timestamp",
+};
+
+// Session expiration time (1 hour)
+const SESSION_EXPIRATION_MS = 60 * 60 * 1000;
+
+// Heartbeat interval (30 seconds)
+const HEARTBEAT_INTERVAL_MS = 30 * 1000;
+
+function OnlineLobbyPageContent() {
+  const searchParams = useSearchParams();
+  const roomFromUrl = searchParams?.get("room");
+
+  const [view, setView] = useState<"landing" | "lobby" | "reconnecting">(
+    "landing"
+  );
   const [roomCode, setRoomCode] = useState("");
   const [username, setUsername] = useState("");
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [toastError, setToastError] = useState("");
   const [joinCodeInput, setJoinCodeInput] = useState("");
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
+  const [optimisticTile, setOptimisticTile] = useState<number | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
-  // Define handleLeaveRoom early so it can be used in useEffect
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Memoize current player info
+  const currentPlayerInfo = useMemo(() => {
+    if (!room || !playerId) return null;
+    return room.players[playerId] || null;
+  }, [room, playerId]);
+
+  const currentPlayerNumber = currentPlayerInfo?.playerNumber;
+  const isHost = room && playerId === room.hostId;
+  const playerCount = room ? Object.keys(room.players).length : 0;
+  const maxPlayers = room?.config.maxPlayers || 4;
+  const canStartGame = isHost && playerCount >= 2;
+  const isCurrentPlayer =
+    room?.gameState && currentPlayerNumber
+      ? room.gameState.currentPlayer === currentPlayerNumber
+      : false;
+
+  // Clear session storage
+  const clearSession = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.PLAYER_ID);
+    localStorage.removeItem(STORAGE_KEYS.ROOM_CODE);
+    localStorage.removeItem(STORAGE_KEYS.USERNAME);
+    localStorage.removeItem(STORAGE_KEYS.TIMESTAMP);
+  }, []);
+
+  // Save session to localStorage
+  const saveSession = useCallback(
+    (newPlayerId: string, newRoomCode: string, newUsername: string) => {
+      localStorage.setItem(STORAGE_KEYS.PLAYER_ID, newPlayerId);
+      localStorage.setItem(STORAGE_KEYS.ROOM_CODE, newRoomCode);
+      localStorage.setItem(STORAGE_KEYS.USERNAME, newUsername);
+      localStorage.setItem(STORAGE_KEYS.TIMESTAMP, Date.now().toString());
+    },
+    []
+  );
+
+  // Handle leave room
   const handleLeaveRoom = useCallback(() => {
-    localStorage.removeItem("treasure-hunt-player-id");
-    localStorage.removeItem("treasure-hunt-room-code");
+    clearSession();
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
     setPlayerId(null);
     setRoomCode("");
     setRoom(null);
     setView("landing");
     setUsername("");
     setJoinCodeInput("");
+    setError("");
+    setToastError("");
+  }, [clearSession]);
+
+  // Update heartbeat
+  const updateHeartbeat = useCallback(async () => {
+    if (!db || !roomCode || !playerId) return;
+
+    try {
+      const roomRef = doc(db, "rooms", roomCode);
+      await updateDoc(roomRef, {
+        [`players.${playerId}.lastSeen`]: Timestamp.now(),
+      });
+    } catch (err) {
+      console.error("Failed to update heartbeat:", err);
+    }
+  }, [roomCode, playerId]);
+
+  // Check if player is disconnected (lastSeen > 1 minute ago)
+  const isPlayerDisconnected = useCallback((player: any) => {
+    if (!player.lastSeen) return false;
+    const lastSeenMs = player.lastSeen.toMillis();
+    const now = Date.now();
+    return now - lastSeenMs > 60 * 1000; // 1 minute
   }, []);
 
-  // Load playerId from localStorage on mount
+  // Auto-reconnection and URL parameter handling
   useEffect(() => {
-    const storedPlayerId = localStorage.getItem("treasure-hunt-player-id");
-    const storedRoomCode = localStorage.getItem("treasure-hunt-room-code");
-    
-    if (storedPlayerId && storedRoomCode) {
-      setPlayerId(storedPlayerId);
-      setRoomCode(storedRoomCode);
-      setView("lobby");
-    }
-  }, []);
+    const attemptReconnection = async () => {
+      // Check URL parameter first
+      if (roomFromUrl) {
+        setJoinCodeInput(roomFromUrl.toUpperCase());
+        return;
+      }
+
+      // Check localStorage for existing session
+      const storedPlayerId = localStorage.getItem(STORAGE_KEYS.PLAYER_ID);
+      const storedRoomCode = localStorage.getItem(STORAGE_KEYS.ROOM_CODE);
+      const storedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
+      const storedTimestamp = localStorage.getItem(STORAGE_KEYS.TIMESTAMP);
+
+      if (!storedPlayerId || !storedRoomCode || !storedUsername) return;
+
+      // Check if session is expired
+      const timestamp = parseInt(storedTimestamp || "0");
+      if (Date.now() - timestamp > SESSION_EXPIRATION_MS) {
+        clearSession();
+        setToastError("Your session has expired. Please create or join a new room.");
+        return;
+      }
+
+      // Try to reconnect
+      setIsReconnecting(true);
+      setView("reconnecting");
+
+      try {
+        // Verify room still exists
+        const response = await fetch(`/api/rooms/${storedRoomCode}`);
+        if (!response.ok) {
+          throw new Error("Room no longer exists");
+        }
+
+        // Room exists, reconnect
+        setPlayerId(storedPlayerId);
+        setRoomCode(storedRoomCode);
+        setUsername(storedUsername);
+        setView("lobby");
+      } catch (err) {
+        clearSession();
+        setToastError("This room has expired or no longer exists.");
+        setView("landing");
+      } finally {
+        setIsReconnecting(false);
+      }
+    };
+
+    attemptReconnection();
+  }, [roomFromUrl, clearSession]);
 
   // Set up real-time listener for room updates
   useEffect(() => {
@@ -54,22 +187,40 @@ export default function OnlineLobbyPage() {
           setRoom(data);
         } else {
           // Room was deleted
-          setError("Room no longer exists");
+          setToastError("This room has been closed or expired.");
           handleLeaveRoom();
         }
       },
       (err) => {
         console.error("Error listening to room updates:", err);
-        setError("Failed to sync with room");
+        setToastError("Lost connection to game server. Please refresh.");
       }
     );
 
     return () => unsubscribe();
   }, [roomCode, view, handleLeaveRoom]);
 
+  // Set up heartbeat
+  useEffect(() => {
+    if (!db || !roomCode || !playerId || view !== "lobby") return;
+
+    // Initial heartbeat
+    updateHeartbeat();
+
+    // Set up interval
+    heartbeatIntervalRef.current = setInterval(updateHeartbeat, HEARTBEAT_INTERVAL_MS);
+
+    return () => {
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+      }
+    };
+  }, [roomCode, playerId, view, updateHeartbeat]);
+
   const handleCreateRoom = async () => {
     if (!username.trim()) {
-      setError("Please enter your username");
+      setToastError("Please enter your username");
       return;
     }
 
@@ -93,15 +244,14 @@ export default function OnlineLobbyPage() {
         throw new Error(data.error || "Failed to create room");
       }
 
-      // Store in localStorage
-      localStorage.setItem("treasure-hunt-player-id", data.playerId);
-      localStorage.setItem("treasure-hunt-room-code", data.roomCode);
+      // Store in localStorage with timestamp
+      saveSession(data.playerId, data.roomCode, username.trim());
 
       setPlayerId(data.playerId);
       setRoomCode(data.roomCode);
       setView("lobby");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create room");
+      setToastError(err instanceof Error ? err.message : "Failed to create room. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -109,12 +259,12 @@ export default function OnlineLobbyPage() {
 
   const handleJoinRoom = async () => {
     if (!username.trim()) {
-      setError("Please enter your username");
+      setToastError("Please enter your username");
       return;
     }
 
     if (!joinCodeInput.trim()) {
-      setError("Please enter a room code");
+      setToastError("Please enter a room code");
       return;
     }
 
@@ -134,29 +284,68 @@ export default function OnlineLobbyPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("Room not found. Please check the code and try again.");
+        } else if (response.status === 400 && data.error?.includes("full")) {
+          throw new Error(`This room is full (${maxPlayers}/${maxPlayers} players). Please try a different room.`);
+        }
         throw new Error(data.error || "Failed to join room");
       }
 
-      // Store in localStorage
-      localStorage.setItem("treasure-hunt-player-id", data.playerId);
-      localStorage.setItem(
-        "treasure-hunt-room-code",
-        joinCodeInput.trim().toUpperCase()
-      );
+      // Store in localStorage with timestamp
+      const roomCodeUpper = joinCodeInput.trim().toUpperCase();
+      saveSession(data.playerId, roomCodeUpper, username.trim());
 
       setPlayerId(data.playerId);
-      setRoomCode(joinCodeInput.trim().toUpperCase());
+      setRoomCode(roomCodeUpper);
       setView("lobby");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to join room");
+      setToastError(err instanceof Error ? err.message : "Failed to join room. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopyRoomCode = () => {
-    navigator.clipboard.writeText(roomCode);
-    // Could add a toast notification here
+  const handleCopyRoomCode = async () => {
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      setToastError("Failed to copy room code");
+    }
+  };
+
+  const handleCopyRoomLink = async () => {
+    try {
+      const url = `${window.location.origin}/games/treasure-hunt/online?room=${roomCode}`;
+
+      // Try native share API on mobile
+      if (navigator.share && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        try {
+          await navigator.share({
+            title: "Join my Treasure Hunt game!",
+            text: `Join my game with room code: ${roomCode}`,
+            url: url,
+          });
+          return;
+        } catch (shareErr) {
+          // Fall back to clipboard if share is cancelled
+          if ((shareErr as Error).name !== "AbortError") {
+            console.error("Share failed:", shareErr);
+          }
+        }
+      }
+
+      // Fallback to clipboard
+      await navigator.clipboard.writeText(url);
+      setCopyLinkSuccess(true);
+      setTimeout(() => setCopyLinkSuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      setToastError("Failed to copy room link");
+    }
   };
 
   const handleStartGame = async () => {
@@ -180,7 +369,7 @@ export default function OnlineLobbyPage() {
 
       // Room listener will pick up the status change
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start game");
+      setToastError(err instanceof Error ? err.message : "Failed to start game. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -190,9 +379,8 @@ export default function OnlineLobbyPage() {
     if (!playerId || !roomCode || !room?.gameState) return;
 
     // Check if it's this player's turn
-    const currentPlayerNumber = room.players[playerId]?.playerNumber;
     if (room.gameState.currentPlayer !== currentPlayerNumber) {
-      setError("It's not your turn!");
+      setToastError("It's not your turn!");
       return;
     }
 
@@ -201,6 +389,18 @@ export default function OnlineLobbyPage() {
       return;
     }
 
+    // Prevent double-click
+    if (loading || optimisticTile !== null) {
+      return;
+    }
+
+    // Haptic feedback on mobile
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+
+    // Optimistic update
+    setOptimisticTile(tilePosition);
     setLoading(true);
     setError("");
 
@@ -214,12 +414,17 @@ export default function OnlineLobbyPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Revert optimistic update
+        setOptimisticTile(null);
         throw new Error(data.error || "Failed to make move");
       }
 
       // Room listener will pick up the game state change
+      // Keep optimistic update until real update arrives
+      setTimeout(() => setOptimisticTile(null), 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to make move");
+      setOptimisticTile(null);
+      setToastError(err instanceof Error ? err.message : "That move couldn't be completed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -246,7 +451,7 @@ export default function OnlineLobbyPage() {
 
       // Room listener will pick up the status change
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to restart game");
+      setToastError(err instanceof Error ? err.message : "Failed to restart game. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -255,15 +460,27 @@ export default function OnlineLobbyPage() {
   const getTileContent = (index: number, gameState: GameState) => {
     const tileState = gameState.tiles[index];
 
+    // Show optimistic update
+    if (optimisticTile === index && tileState === "covered") {
+      return (
+        <div className="relative">
+          <div className="text-6xl opacity-30">🌳</div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <LoadingSpinner size="sm" />
+          </div>
+        </div>
+      );
+    }
+
     if (tileState === "covered") {
-      return <div className="text-6xl">🌳</div>;
+      return <div className="text-5xl sm:text-6xl">🌳</div>;
     }
 
     if (tileState === "uncovered-treasure") {
-      return <div className="text-6xl">💎</div>;
+      return <div className="text-5xl sm:text-6xl">💎</div>;
     }
 
-    return <div className="text-6xl opacity-30">🕳️</div>;
+    return <div className="text-5xl sm:text-6xl opacity-30">🕳️</div>;
   };
 
   const getTileClassName = (
@@ -273,10 +490,10 @@ export default function OnlineLobbyPage() {
   ) => {
     const tileState = gameState.tiles[index];
     const baseClasses =
-      "aspect-square flex items-center justify-center rounded-lg transition-all";
+      "aspect-square flex items-center justify-center rounded-lg transition-all min-h-[80px] sm:min-h-[100px] touch-manipulation";
 
     if (tileState === "covered") {
-      const canClick = isCurrentPlayer && !gameState.isGameOver && !loading;
+      const canClick = isCurrentPlayer && !gameState.isGameOver && !loading && optimisticTile === null;
       return `${baseClasses} bg-green-100 border-4 border-green-400 ${
         canClick
           ? "hover:border-green-600 hover:bg-green-200 cursor-pointer active:scale-95"
@@ -291,15 +508,27 @@ export default function OnlineLobbyPage() {
     return `${baseClasses} bg-gray-100 border-4 border-gray-300`;
   };
 
-  const isHost = room && playerId === room.hostId;
-  const playerCount = room ? Object.keys(room.players).length : 0;
-  const maxPlayers = room?.config.maxPlayers || 4;
-  const canStartGame = isHost && playerCount >= 2;
-  const currentPlayerNumber = room && playerId ? room.players[playerId]?.playerNumber : null;
-  const isCurrentPlayer =
-    room?.gameState && currentPlayerNumber
-      ? room.gameState.currentPlayer === currentPlayerNumber
-      : false;
+  // Calculate game progress
+  const gameProgress = useMemo(() => {
+    if (!room?.gameState) return null;
+    const uncovered = room.gameState.tiles.filter((t) => t !== "covered").length;
+    const total = room.gameState.tiles.length;
+    return { uncovered, total };
+  }, [room?.gameState]);
+
+  // Reconnecting screen
+  if (view === "reconnecting" || isReconnecting) {
+    return (
+      <GameShell
+        title="Treasure Hunt - Reconnecting"
+        description="Please wait while we reconnect you to your game"
+      >
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner text="Reconnecting..." size="lg" />
+        </div>
+      </GameShell>
+    );
+  }
 
   // Landing screen
   if (view === "landing") {
@@ -308,19 +537,24 @@ export default function OnlineLobbyPage() {
         title="Treasure Hunt - Online Multiplayer"
         description="Create or join a room to play with friends online"
       >
-        <div className="space-y-6 max-w-lg mx-auto">
+        <div className="space-y-4 sm:space-y-6 max-w-lg mx-auto px-4">
           {/* Username Input */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+          <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
+            <label
+              className="block text-sm font-medium text-gray-900 mb-2"
+              htmlFor="username-input"
+            >
               Your Username
             </label>
             <input
+              id="username-input"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter your name"
               maxLength={20}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="off"
             />
             <p className="text-xs text-gray-500 mt-1">
               {username.length}/20 characters
@@ -328,60 +562,102 @@ export default function OnlineLobbyPage() {
           </div>
 
           {/* Create Room */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">Create New Room</h3>
+          <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+              Create New Room
+            </h3>
             <button
               onClick={handleCreateRoom}
               disabled={loading || !username.trim()}
-              className={`w-full py-3 rounded-lg transition-colors font-semibold text-lg ${
+              className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
                 loading || !username.trim()
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-green-600 text-white hover:bg-green-700 active:scale-98"
               }`}
+              aria-label="Create a new game room"
             >
-              {loading ? "Creating..." : "Create Room"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  Creating...
+                </span>
+              ) : (
+                "Create Room"
+              )}
             </button>
           </div>
 
           {/* Join Room */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">Join Existing Room</h3>
+          <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+              Join Existing Room
+            </h3>
             <input
               type="text"
               value={joinCodeInput}
-              onChange={(e) =>
-                setJoinCodeInput(e.target.value.toUpperCase())
-              }
+              onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
               placeholder="Enter 6-character room code"
               maxLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 uppercase"
+              className="w-full px-3 py-2 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 uppercase"
+              autoComplete="off"
+              aria-label="Room code input"
             />
             <button
               onClick={handleJoinRoom}
               disabled={loading || !username.trim() || !joinCodeInput.trim()}
-              className={`w-full py-3 rounded-lg transition-colors font-semibold text-lg ${
+              className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
                 loading || !username.trim() || !joinCodeInput.trim()
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-blue-600 text-white hover:bg-blue-700 active:scale-98"
               }`}
+              aria-label="Join game room"
             >
-              {loading ? "Joining..." : "Join Room"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  Joining...
+                </span>
+              ) : (
+                "Join Room"
+              )}
             </button>
+          </div>
+
+          {/* Help Section */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
+            <div className="flex items-start gap-2">
+              <span className="text-xl">💡</span>
+              <div className="flex-1">
+                <p className="font-medium mb-1">Quick Tips:</p>
+                <ul className="text-xs space-y-1 text-blue-800">
+                  <li>• Rooms expire after 1 hour of inactivity</li>
+                  <li>• You can share room links with friends</li>
+                  <li>• Your session is automatically saved</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+            <div
+              className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm"
+              role="alert"
+            >
               {error}
             </div>
           )}
         </div>
+
+        {/* Error Toast */}
+        {toastError && (
+          <ErrorToast message={toastError} onDismiss={() => setToastError("")} />
+        )}
       </GameShell>
     );
   }
 
   // Lobby/Game screen
-  // Show lobby when waiting, game board when playing or finished
   const showGameBoard = room?.status === "playing" || room?.status === "finished";
 
   return (
@@ -397,60 +673,98 @@ export default function OnlineLobbyPage() {
           : "Waiting for players to join"
       }
     >
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-4 sm:space-y-6 max-w-2xl mx-auto px-4">
         {/* Room Code Display */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white text-center">
-          <p className="text-sm font-medium mb-2">Room Code</p>
-          <p className="text-5xl font-bold tracking-wider mb-4">{roomCode}</p>
-          <button
-            onClick={handleCopyRoomCode}
-            className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
-          >
-            📋 Copy Room Code
-          </button>
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 sm:p-6 text-white text-center">
+          <p className="text-xs sm:text-sm font-medium mb-2">Room Code</p>
+          <p className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-wider mb-3 sm:mb-4">
+            {roomCode}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <button
+              onClick={handleCopyRoomCode}
+              className="bg-white text-blue-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm sm:text-base min-h-[44px] touch-manipulation"
+              aria-label="Copy room code to clipboard"
+            >
+              {copySuccess ? "✓ Copied!" : "📋 Copy Code"}
+            </button>
+            <button
+              onClick={handleCopyRoomLink}
+              className="bg-white text-blue-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm sm:text-base min-h-[44px] touch-manipulation"
+              aria-label="Copy room link to share"
+            >
+              {copyLinkSuccess ? "✓ Link Copied!" : "🔗 Share Link"}
+            </button>
+          </div>
         </div>
 
         {/* Player List */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4">Players</h3>
-          <div className="space-y-2">
-            {room &&
-              Object.values(room.players)
+        <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+            Players ({playerCount}/{maxPlayers})
+          </h3>
+          {!room ? (
+            <SkeletonLoader type="player-list" />
+          ) : (
+            <div className="space-y-2">
+              {Object.values(room.players)
                 .sort((a, b) => a.playerNumber - b.playerNumber)
                 .map((player) => {
                   const isPlayerTurn =
                     room.gameState &&
                     room.gameState.currentPlayer === player.playerNumber;
+                  const isDisconnected = isPlayerDisconnected(player);
                   return (
                     <div
                       key={player.playerId}
-                      className={`flex items-center justify-between p-3 rounded-lg ${
+                      className={`flex items-center justify-between p-3 rounded-lg transition-all ${
                         isPlayerTurn && showGameBoard
-                          ? "bg-green-100 border-2 border-green-400"
-                          : "bg-gray-50"
+                          ? "bg-green-100 border-2 border-green-400 animate-pulse"
+                          : isDisconnected
+                            ? "bg-gray-100 opacity-60"
+                            : "bg-gray-50"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-sm sm:text-base">
                           Player {player.playerNumber}:
                         </span>
-                        <span>{player.username}</span>
+                        <span className="text-sm sm:text-base">
+                          {player.username}
+                        </span>
                         {player.isHost && (
-                          <span className="text-yellow-500 text-lg">⭐</span>
+                          <span
+                            className="text-yellow-500 text-base sm:text-lg"
+                            title="Host"
+                            aria-label="Host"
+                          >
+                            ⭐
+                          </span>
                         )}
                         {isPlayerTurn && showGameBoard && (
-                          <span className="text-green-600 text-sm font-bold">
-                            (Current Turn)
+                          <span className="text-green-600 text-xs sm:text-sm font-bold">
+                            (Turn)
+                          </span>
+                        )}
+                        {isDisconnected && (
+                          <span
+                            className="text-red-500 text-xs flex items-center gap-1"
+                            title="Disconnected"
+                          >
+                            🔴 Disconnected
                           </span>
                         )}
                       </div>
                       {player.playerId === playerId && (
-                        <span className="text-sm text-gray-500">(You)</span>
+                        <span className="text-xs sm:text-sm text-gray-500">
+                          (You)
+                        </span>
                       )}
                     </div>
                   );
                 })}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Game Board - Only show when playing or finished */}
@@ -460,62 +774,102 @@ export default function OnlineLobbyPage() {
             <div className="bg-blue-50 rounded-lg p-4">
               {room.gameState.isGameOver && room.gameState.winner ? (
                 <div className="text-center py-2">
-                  <div className="text-5xl mb-2">🎉</div>
-                  <p className="text-2xl font-bold text-green-600">
+                  <div className="text-4xl sm:text-5xl mb-2">🎉</div>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600 mb-2">
                     {room.gameState.playerNames[room.gameState.winner - 1]} wins!
                   </p>
+                  {gameProgress && (
+                    <p className="text-sm text-gray-600">
+                      Found after {gameProgress.uncovered} tiles uncovered
+                    </p>
+                  )}
                 </div>
               ) : (
-                <div className="text-center py-2">
-                  <p className="text-xl font-semibold text-gray-900">
-                    {isCurrentPlayer
-                      ? "🎯 Your turn! Click a tile."
-                      : `Waiting for ${
-                          room.gameState.playerNames[
-                            room.gameState.currentPlayer - 1
-                          ]
-                        }'s turn...`}
-                  </p>
-                </div>
+                <>
+                  {isCurrentPlayer && (
+                    <div className="text-center py-2 mb-3 bg-green-100 border-2 border-green-400 rounded-lg">
+                      <p className="text-xl sm:text-2xl font-bold text-green-700">
+                        🎯 Your Turn!
+                      </p>
+                      <p className="text-sm text-green-600">
+                        Click a tile to uncover it
+                      </p>
+                    </div>
+                  )}
+                  <div className="text-center py-2">
+                    <p className="text-base sm:text-xl font-semibold text-gray-900">
+                      {isCurrentPlayer
+                        ? "Choose a tile"
+                        : `Waiting for ${
+                            room.gameState.playerNames[
+                              room.gameState.currentPlayer - 1
+                            ]
+                          }...`}
+                    </p>
+                    {gameProgress && (
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                        Progress: {gameProgress.uncovered}/{gameProgress.total}{" "}
+                        tiles
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
             </div>
 
             {/* Game Grid */}
-            <div
-              className="grid gap-4 max-w-2xl mx-auto"
-              style={{
-                gridTemplateColumns: `repeat(${room.gameState.gridSize}, minmax(0, 1fr))`,
-              }}
-            >
-              {room.gameState.tiles.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleTileClick(index)}
-                  disabled={
-                    !isCurrentPlayer ||
-                    room.gameState!.tiles[index] !== "covered" ||
-                    room.gameState!.isGameOver ||
-                    loading
-                  }
-                  className={getTileClassName(
-                    index,
-                    room.gameState!,
-                    isCurrentPlayer
-                  )}
-                >
-                  {getTileContent(index, room.gameState!)}
-                </button>
-              ))}
-            </div>
+            {!room.gameState ? (
+              <SkeletonLoader
+                type="game-board"
+                gridSize={room.config.gridSize}
+              />
+            ) : (
+              <div
+                className="grid gap-3 sm:gap-4 max-w-2xl mx-auto"
+                style={{
+                  gridTemplateColumns: `repeat(${room.gameState.gridSize}, minmax(0, 1fr))`,
+                }}
+              >
+                {room.gameState.tiles.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleTileClick(index)}
+                    disabled={
+                      !isCurrentPlayer ||
+                      room.gameState!.tiles[index] !== "covered" ||
+                      room.gameState!.isGameOver ||
+                      loading ||
+                      optimisticTile !== null
+                    }
+                    className={getTileClassName(
+                      index,
+                      room.gameState!,
+                      isCurrentPlayer
+                    )}
+                    aria-label={`Tile ${index + 1}`}
+                  >
+                    {getTileContent(index, room.gameState!)}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Play Again Button - Only show when game is over and user is host */}
             {room.gameState.isGameOver && isHost && (
               <button
                 onClick={handlePlayAgain}
                 disabled={loading}
-                className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
+                className="w-full py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
+                aria-label="Start a new game"
               >
-                {loading ? "Starting new game..." : "Play Again"}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Starting...
+                  </span>
+                ) : (
+                  "Play Again"
+                )}
               </button>
             )}
           </>
@@ -528,21 +882,29 @@ export default function OnlineLobbyPage() {
               <button
                 onClick={handleStartGame}
                 disabled={!canStartGame || loading}
-                className={`w-full py-3 rounded-lg transition-colors font-semibold text-lg ${
+                className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
                   canStartGame && !loading
-                    ? "bg-green-600 text-white hover:bg-green-700"
+                    ? "bg-green-600 text-white hover:bg-green-700 active:scale-98"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
+                aria-label={canStartGame ? "Start the game" : "Waiting for players"}
               >
-                {loading
-                  ? "Starting..."
-                  : canStartGame
-                    ? "Start Game"
-                    : "Waiting for at least 2 players..."}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    Starting...
+                  </span>
+                ) : canStartGame ? (
+                  "Start Game"
+                ) : (
+                  "Waiting for at least 2 players..."
+                )}
               </button>
             ) : (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-blue-700">
-                Waiting for host to start the game...
+                <div className="animate-pulse">
+                  Waiting for host to start the game...
+                </div>
               </div>
             )}
           </div>
@@ -551,18 +913,47 @@ export default function OnlineLobbyPage() {
         {/* Leave Room Button */}
         <button
           onClick={handleLeaveRoom}
-          className="w-full py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+          className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
+          aria-label="Leave the game room"
         >
           Leave Room
         </button>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+          <div
+            className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm"
+            role="alert"
+          >
             {error}
           </div>
         )}
       </div>
+
+      {/* Error Toast */}
+      {toastError && (
+        <ErrorToast message={toastError} onDismiss={() => setToastError("")} />
+      )}
     </GameShell>
   );
 }
+
+export default function OnlineLobbyPage() {
+  return (
+    <Suspense
+      fallback={
+        <GameShell
+          title="Treasure Hunt - Loading"
+          description="Loading multiplayer game..."
+        >
+          <div className="flex items-center justify-center min-h-[400px]">
+            <LoadingSpinner text="Loading..." size="lg" />
+          </div>
+        </GameShell>
+      }
+    >
+      <OnlineLobbyPageContent />
+    </Suspense>
+  );
+}
+
