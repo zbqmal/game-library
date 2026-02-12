@@ -114,7 +114,7 @@ function OnlineLobbyPageContent() {
   }, [roomCode, playerId]);
 
   // Check if player is disconnected (lastSeen > 1 minute ago)
-  const isPlayerDisconnected = useCallback((player: any) => {
+  const isPlayerDisconnected = useCallback((player: Room['players'][string]) => {
     if (!player.lastSeen) return false;
     const lastSeenMs = player.lastSeen.toMillis();
     const now = Date.now();
@@ -287,7 +287,7 @@ function OnlineLobbyPageContent() {
         if (response.status === 404) {
           throw new Error("Room not found. Please check the code and try again.");
         } else if (response.status === 400 && data.error?.includes("full")) {
-          throw new Error(`This room is full (${maxPlayers}/${maxPlayers} players). Please try a different room.`);
+          throw new Error("This room is full. Please try a different room.");
         }
         throw new Error(data.error || "Failed to join room");
       }
@@ -572,7 +572,7 @@ function OnlineLobbyPageContent() {
               className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
                 loading || !username.trim()
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-green-600 text-white hover:bg-green-700 active:scale-98"
+                  : "bg-green-600 text-white hover:bg-green-700 active:scale-95"
               }`}
               aria-label="Create a new game room"
             >
@@ -608,7 +608,7 @@ function OnlineLobbyPageContent() {
               className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
                 loading || !username.trim() || !joinCodeInput.trim()
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 active:scale-98"
+                  : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
               }`}
               aria-label="Join game room"
             >
@@ -884,7 +884,7 @@ function OnlineLobbyPageContent() {
                 disabled={!canStartGame || loading}
                 className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
                   canStartGame && !loading
-                    ? "bg-green-600 text-white hover:bg-green-700 active:scale-98"
+                    ? "bg-green-600 text-white hover:bg-green-700 active:scale-95"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
                 aria-label={canStartGame ? "Start the game" : "Waiting for players"}
