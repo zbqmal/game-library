@@ -45,6 +45,8 @@ function OnlineLobbyPageContent() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(false);
+  const [playAgainLoading, setPlayAgainLoading] = useState(false);
+  const [backToLobbyLoading, setBackToLobbyLoading] = useState(false);
   const [error, setError] = useState("");
   const [toastError, setToastError] = useState("");
   const [joinCodeInput, setJoinCodeInput] = useState("");
@@ -515,7 +517,7 @@ function OnlineLobbyPageContent() {
   const handlePlayAgain = async () => {
     if (!playerId || !roomCode) return;
 
-    setLoading(true);
+    setPlayAgainLoading(true);
     setError("");
 
     try {
@@ -539,14 +541,14 @@ function OnlineLobbyPageContent() {
           : "Failed to restart game. Please try again.",
       );
     } finally {
-      setLoading(false);
+      setPlayAgainLoading(false);
     }
   };
 
   const handleBackToLobby = async () => {
     if (!roomCode) return;
 
-    setLoading(true);
+    setBackToLobbyLoading(true);
     setError("");
 
     try {
@@ -569,7 +571,7 @@ function OnlineLobbyPageContent() {
           : "Failed to return to lobby. Please try again.",
       );
     } finally {
-      setLoading(false);
+      setBackToLobbyLoading(false);
     }
   };
 
@@ -1047,11 +1049,11 @@ function OnlineLobbyPageContent() {
                   <div className="flex gap-3">
                     <button
                       onClick={handlePlayAgain}
-                      disabled={loading}
+                      disabled={playAgainLoading || backToLobbyLoading}
                       className="flex-1 py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Start a new game"
                     >
-                      {loading ? (
+                      {playAgainLoading ? (
                         <span className="flex items-center justify-center gap-2">
                           <LoadingSpinner size="sm" />
                           Starting...
@@ -1062,11 +1064,11 @@ function OnlineLobbyPageContent() {
                     </button>
                     <button
                       onClick={handleBackToLobby}
-                      disabled={loading}
+                      disabled={playAgainLoading || backToLobbyLoading}
                       className="flex-1 py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Return to lobby"
                     >
-                      {loading ? (
+                      {backToLobbyLoading ? (
                         <span className="flex items-center justify-center gap-2">
                           <LoadingSpinner size="sm" />
                           Returning...
@@ -1080,11 +1082,11 @@ function OnlineLobbyPageContent() {
                   <>
                     <button
                       onClick={handleBackToLobby}
-                      disabled={loading}
+                      disabled={backToLobbyLoading}
                       className="w-full py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Return to lobby"
                     >
-                      {loading ? (
+                      {backToLobbyLoading ? (
                         <span className="flex items-center justify-center gap-2">
                           <LoadingSpinner size="sm" />
                           Returning...
@@ -1094,7 +1096,7 @@ function OnlineLobbyPageContent() {
                       )}
                     </button>
                     <p className="text-sm text-gray-600 text-center">
-                      Waiting for host to start next game...
+                      Waiting for host...
                     </p>
                   </>
                 )}
