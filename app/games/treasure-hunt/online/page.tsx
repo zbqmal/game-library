@@ -795,7 +795,7 @@ function OnlineLobbyPageContent() {
 
         {/* Player List */}
         <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
-          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-900">
             Players ({playerCount}/{maxPlayers})
           </h3>
           {!room ? (
@@ -821,10 +821,10 @@ function OnlineLobbyPageContent() {
                       }`}
                     >
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm sm:text-base">
+                        <span className="font-semibold text-sm sm:text-base text-gray-900">
                           Player {player.playerNumber}:
                         </span>
-                        <span className="text-sm sm:text-base">
+                        <span className="text-sm sm:text-base text-gray-900">
                           {player.username}
                         </span>
                         {player.isHost && (
