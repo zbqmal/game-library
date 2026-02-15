@@ -152,11 +152,13 @@ export default function RockPaperScissorsPage() {
                 <div className="text-6xl">
                   {getChoiceEmoji(gameState.playerChoice)}
                 </div>
-                <p className="text-lg font-semibold capitalize mt-2">
+                <p className="text-lg font-semibold text-gray-900 capitalize mt-2">
                   {getChoiceLabel(gameState.playerChoice)}
                 </p>
               </div>
-              <div className="text-center text-4xl">{texts.rpsVsLabel}</div>
+              <div className="text-center text-gray-900 text-4xl">
+                {texts.rpsVsLabel}
+              </div>
               <div className="text-center">
                 <p className="text-sm text-gray-900 font-medium mb-2">
                   {texts.rpsComputerLabel}
@@ -164,7 +166,7 @@ export default function RockPaperScissorsPage() {
                 <div className="text-6xl">
                   {getChoiceEmoji(gameState.computerChoice)}
                 </div>
-                <p className="text-lg font-semibold capitalize mt-2">
+                <p className="text-lg font-semibold text-gray-900 capitalize mt-2">
                   {getChoiceLabel(gameState.computerChoice)}
                 </p>
               </div>
@@ -189,7 +191,7 @@ export default function RockPaperScissorsPage() {
                   className="flex flex-col items-center justify-center p-6 bg-white border-4 border-purple-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all transform hover:scale-105 active:scale-95"
                 >
                   <div className="text-6xl mb-2">{getChoiceEmoji(choice)}</div>
-                  <p className="text-lg font-semibold capitalize">
+                  <p className="text-lg font-semibold text-gray-900 capitalize">
                     {getChoiceLabel(choice)}
                   </p>
                 </button>

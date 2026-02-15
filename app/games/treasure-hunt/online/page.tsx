@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  Suspense,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import GameShell from "@/app/components/common/GameShell";
 import LoadingSpinner from "@/app/components/common/LoadingSpinner";
@@ -30,7 +37,7 @@ function OnlineLobbyPageContent() {
   const roomFromUrl = searchParams?.get("room");
 
   const [view, setView] = useState<"landing" | "lobby" | "reconnecting">(
-    "landing"
+    "landing",
   );
   const [roomCode, setRoomCode] = useState("");
   const [username, setUsername] = useState("");
@@ -79,11 +86,27 @@ function OnlineLobbyPageContent() {
       localStorage.setItem(STORAGE_KEYS.USERNAME, newUsername);
       localStorage.setItem(STORAGE_KEYS.TIMESTAMP, Date.now().toString());
     },
-    []
+    [],
   );
 
   // Handle leave room
-  const handleLeaveRoom = useCallback(() => {
+  const handleLeaveRoom = useCallback(async () => {
+    // Call API to remove player from room (if we have the necessary info)
+    if (roomCode && playerId) {
+      try {
+        await fetch(`/api/rooms/${roomCode}/leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerId }),
+        });
+        // Don't need to check response - we're leaving anyway
+      } catch (err) {
+        console.error("Failed to notify server of leave:", err);
+        // Continue with local cleanup even if API call fails
+      }
+    }
+
+    // Clean up local state
     clearSession();
     if (heartbeatIntervalRef.current) {
       clearInterval(heartbeatIntervalRef.current);
@@ -97,7 +120,7 @@ function OnlineLobbyPageContent() {
     setJoinCodeInput("");
     setError("");
     setToastError("");
-  }, [clearSession]);
+  }, [clearSession, roomCode, playerId]);
 
   // Update heartbeat
   const updateHeartbeat = useCallback(async () => {
@@ -114,12 +137,15 @@ function OnlineLobbyPageContent() {
   }, [roomCode, playerId]);
 
   // Check if player is disconnected (lastSeen > 1 minute ago)
-  const isPlayerDisconnected = useCallback((player: Room['players'][string]) => {
-    if (!player.lastSeen) return false;
-    const lastSeenMs = player.lastSeen.toMillis();
-    const now = Date.now();
-    return now - lastSeenMs > 60 * 1000; // 1 minute
-  }, []);
+  const isPlayerDisconnected = useCallback(
+    (player: Room["players"][string]) => {
+      if (!player.lastSeen) return false;
+      const lastSeenMs = player.lastSeen.toMillis();
+      const now = Date.now();
+      return now - lastSeenMs > 60 * 1000; // 1 minute
+    },
+    [],
+  );
 
   // Auto-reconnection and URL parameter handling
   useEffect(() => {
@@ -142,7 +168,9 @@ function OnlineLobbyPageContent() {
       const timestamp = parseInt(storedTimestamp || "0");
       if (Date.now() - timestamp > SESSION_EXPIRATION_MS) {
         clearSession();
-        setToastError("Your session has expired. Please create or join a new room.");
+        setToastError(
+          "Your session has expired. Please create or join a new room.",
+        );
         return;
       }
 
@@ -194,7 +222,7 @@ function OnlineLobbyPageContent() {
       (err) => {
         console.error("Error listening to room updates:", err);
         setToastError("Lost connection to game server. Please refresh.");
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -208,7 +236,10 @@ function OnlineLobbyPageContent() {
     updateHeartbeat();
 
     // Set up interval
-    heartbeatIntervalRef.current = setInterval(updateHeartbeat, HEARTBEAT_INTERVAL_MS);
+    heartbeatIntervalRef.current = setInterval(
+      updateHeartbeat,
+      HEARTBEAT_INTERVAL_MS,
+    );
 
     return () => {
       if (heartbeatIntervalRef.current) {
@@ -251,7 +282,11 @@ function OnlineLobbyPageContent() {
       setRoomCode(data.roomCode);
       setView("lobby");
     } catch (err) {
-      setToastError(err instanceof Error ? err.message : "Failed to create room. Please try again.");
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create room. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -285,7 +320,9 @@ function OnlineLobbyPageContent() {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error("Room not found. Please check the code and try again.");
+          throw new Error(
+            "Room not found. Please check the code and try again.",
+          );
         } else if (response.status === 400 && data.error?.includes("full")) {
           throw new Error("This room is full. Please try a different room.");
         }
@@ -300,7 +337,11 @@ function OnlineLobbyPageContent() {
       setRoomCode(roomCodeUpper);
       setView("lobby");
     } catch (err) {
-      setToastError(err instanceof Error ? err.message : "Failed to join room. Please try again.");
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "Failed to join room. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -322,7 +363,10 @@ function OnlineLobbyPageContent() {
       const url = `${window.location.origin}/games/treasure-hunt/online?room=${roomCode}`;
 
       // Try native share API on mobile
-      if (navigator.share && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      if (
+        navigator.share &&
+        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      ) {
         try {
           await navigator.share({
             title: "Join my Treasure Hunt game!",
@@ -369,7 +413,11 @@ function OnlineLobbyPageContent() {
 
       // Room listener will pick up the status change
     } catch (err) {
-      setToastError(err instanceof Error ? err.message : "Failed to start game. Please try again.");
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "Failed to start game. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -424,7 +472,11 @@ function OnlineLobbyPageContent() {
       setTimeout(() => setOptimisticTile(null), 1000);
     } catch (err) {
       setOptimisticTile(null);
-      setToastError(err instanceof Error ? err.message : "That move couldn't be completed. Please try again.");
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "That move couldn't be completed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -451,7 +503,11 @@ function OnlineLobbyPageContent() {
 
       // Room listener will pick up the status change
     } catch (err) {
-      setToastError(err instanceof Error ? err.message : "Failed to restart game. Please try again.");
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "Failed to restart game. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -486,14 +542,18 @@ function OnlineLobbyPageContent() {
   const getTileClassName = (
     index: number,
     gameState: GameState,
-    isCurrentPlayer: boolean
+    isCurrentPlayer: boolean,
   ) => {
     const tileState = gameState.tiles[index];
     const baseClasses =
       "aspect-square flex items-center justify-center rounded-lg transition-all min-h-[80px] sm:min-h-[100px] touch-manipulation";
 
     if (tileState === "covered") {
-      const canClick = isCurrentPlayer && !gameState.isGameOver && !loading && optimisticTile === null;
+      const canClick =
+        isCurrentPlayer &&
+        !gameState.isGameOver &&
+        !loading &&
+        optimisticTile === null;
       return `${baseClasses} bg-green-100 border-4 border-green-400 ${
         canClick
           ? "hover:border-green-600 hover:bg-green-200 cursor-pointer active:scale-95"
@@ -511,7 +571,9 @@ function OnlineLobbyPageContent() {
   // Calculate game progress
   const gameProgress = useMemo(() => {
     if (!room?.gameState) return null;
-    const uncovered = room.gameState.tiles.filter((t) => t !== "covered").length;
+    const uncovered = room.gameState.tiles.filter(
+      (t) => t !== "covered",
+    ).length;
     const total = room.gameState.tiles.length;
     return { uncovered, total };
   }, [room?.gameState]);
@@ -553,7 +615,7 @@ function OnlineLobbyPageContent() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter your name"
               maxLength={20}
-              className="w-full px-3 py-2 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-gray-900"
               autoComplete="off"
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -563,7 +625,7 @@ function OnlineLobbyPageContent() {
 
           {/* Create Room */}
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-900">
               Create New Room
             </h3>
             <button
@@ -589,7 +651,7 @@ function OnlineLobbyPageContent() {
 
           {/* Join Room */}
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-900">
               Join Existing Room
             </h3>
             <input
@@ -598,7 +660,7 @@ function OnlineLobbyPageContent() {
               onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
               placeholder="Enter 6-character room code"
               maxLength={6}
-              className="w-full px-3 py-2 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 uppercase"
+              className="w-full px-3 py-2 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 uppercase placeholder-gray-400 text-gray-900"
               autoComplete="off"
               aria-label="Room code input"
             />
@@ -651,14 +713,18 @@ function OnlineLobbyPageContent() {
 
         {/* Error Toast */}
         {toastError && (
-          <ErrorToast message={toastError} onDismiss={() => setToastError("")} />
+          <ErrorToast
+            message={toastError}
+            onDismiss={() => setToastError("")}
+          />
         )}
       </GameShell>
     );
   }
 
   // Lobby/Game screen
-  const showGameBoard = room?.status === "playing" || room?.status === "finished";
+  const showGameBoard =
+    room?.status === "playing" || room?.status === "finished";
 
   return (
     <GameShell
@@ -776,7 +842,8 @@ function OnlineLobbyPageContent() {
                 <div className="text-center py-2">
                   <div className="text-4xl sm:text-5xl mb-2">🎉</div>
                   <p className="text-xl sm:text-2xl font-bold text-green-600 mb-2">
-                    {room.gameState.playerNames[room.gameState.winner - 1]} wins!
+                    {room.gameState.playerNames[room.gameState.winner - 1]}{" "}
+                    wins!
                   </p>
                   {gameProgress && (
                     <p className="text-sm text-gray-600">
@@ -844,7 +911,7 @@ function OnlineLobbyPageContent() {
                     className={getTileClassName(
                       index,
                       room.gameState!,
-                      isCurrentPlayer
+                      isCurrentPlayer,
                     )}
                     aria-label={`Tile ${index + 1}`}
                   >
@@ -887,7 +954,9 @@ function OnlineLobbyPageContent() {
                     ? "bg-green-600 text-white hover:bg-green-700 active:scale-95"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
-                aria-label={canStartGame ? "Start the game" : "Waiting for players"}
+                aria-label={
+                  canStartGame ? "Start the game" : "Waiting for players"
+                }
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -956,4 +1025,3 @@ export default function OnlineLobbyPage() {
     </Suspense>
   );
 }
-
