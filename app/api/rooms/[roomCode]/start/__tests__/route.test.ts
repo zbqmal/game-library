@@ -527,6 +527,138 @@ describe("POST /api/rooms/[roomCode]/start", () => {
     });
   });
 
+  it("starts game with 6x6 grid and creates 36 tiles", async () => {
+    // Mock initializeGame to return a 6x6 grid state
+    (initializeGame as jest.Mock).mockReturnValueOnce({
+      tiles: new Array(36).fill("covered"),
+      treasurePosition: 20,
+      currentPlayer: 1,
+      winner: null,
+      isGameOver: false,
+      playerCount: 2,
+      playerNames: ["Player1", "Player2"],
+      gridSize: 6,
+    });
+
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "waiting",
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+          },
+          config: { gridSize: 6, maxPlayers: 6 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "playing",
+          gameState: {
+            tiles: new Array(36).fill("covered"),
+            treasurePosition: 20,
+            currentPlayer: 1,
+            winner: null,
+            isGameOver: false,
+            playerCount: 2,
+            playerNames: ["Player1", "Player2"],
+            gridSize: 6,
+          },
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+          },
+          config: { gridSize: 6, maxPlayers: 6 },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/start",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player1-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(initializeGame).toHaveBeenCalledWith({
+      playerCount: 2,
+      playerNames: ["Player1", "Player2"],
+      gridSize: 6,
+    });
+    expect(data.room.gameState.tiles.length).toBe(36);
+    expect(data.room.gameState.gridSize).toBe(6);
+  });
+
+  it("defaults to gridSize 3 when config.gridSize is not set", async () => {
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "waiting",
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+          },
+          config: { maxPlayers: 4 }, // No gridSize
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "playing",
+          gameState: {
+            tiles: new Array(9).fill("covered"),
+            treasurePosition: 4,
+            currentPlayer: 1,
+            winner: null,
+            isGameOver: false,
+            playerCount: 2,
+            playerNames: ["Player1", "Player2"],
+            gridSize: 3,
+          },
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+          },
+          config: { maxPlayers: 4 },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/start",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player1-id" }),
+      },
+    );
+
+    await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+
+    expect(initializeGame).toHaveBeenCalledWith({
+      playerCount: 2,
+      playerNames: ["Player1", "Player2"],
+      gridSize: 3, // Should default to 3
+    });
+  });
+
   it("handles errors gracefully", async () => {
     mockGet.mockRejectedValue(new Error("Firestore error"));
 

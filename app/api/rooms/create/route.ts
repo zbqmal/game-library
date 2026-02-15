@@ -3,6 +3,7 @@ import { db } from '@/lib/firebase-admin';
 import { generateUniqueRoomCode } from '@/lib/roomCodeGenerator';
 import { FieldValue } from 'firebase-admin/firestore';
 import crypto from 'crypto';
+import { validateGridSize } from '@/app/games/treasure-hunt/gameLogic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, gridSize = 3, maxPlayers = 4 } = body;
+    const { username, gridSize = 3 } = body;
 
     // Validate request body
     if (!username || typeof username !== 'string') {
@@ -39,23 +40,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate gridSize
-    if (gridSize < 3 || gridSize > 6) {
+    if (typeof gridSize !== 'number' || !validateGridSize(gridSize)) {
       return NextResponse.json(
         { error: 'Grid size must be between 3 and 6' },
         { status: 400 }
       );
     }
 
-    // Validate maxPlayers
-    const maxPossiblePlayers = Math.min(6, Math.floor((gridSize * gridSize) / 2));
-    if (maxPlayers < 2 || maxPlayers > maxPossiblePlayers) {
-      return NextResponse.json(
-        {
-          error: `Max players must be between 2 and ${maxPossiblePlayers} for a ${gridSize}x${gridSize} grid`,
-        },
-        { status: 400 }
-      );
-    }
+    // Calculate maxPlayers based on gridSize
+    const maxPlayers = Math.min(6, Math.floor((gridSize * gridSize) / 2));
 
     // Generate unique room code
     const roomCode = await generateUniqueRoomCode();

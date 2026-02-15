@@ -109,7 +109,7 @@ describe('POST /api/rooms/create', () => {
     expect(data.error).toContain('Username must be between 1 and 20 characters');
   });
 
-  it('returns 400 when gridSize is invalid', async () => {
+  it('returns 400 when gridSize is invalid (too small)', async () => {
     const request = new NextRequest('http://localhost:3000/api/rooms/create', {
       method: 'POST',
       body: JSON.stringify({ username: 'TestUser', gridSize: 2 }),
@@ -122,17 +122,43 @@ describe('POST /api/rooms/create', () => {
     expect(data.error).toContain('Grid size must be between 3 and 6');
   });
 
-  it('returns 400 when maxPlayers is invalid', async () => {
+  it('returns 400 when gridSize is invalid (too large)', async () => {
     const request = new NextRequest('http://localhost:3000/api/rooms/create', {
       method: 'POST',
-      body: JSON.stringify({ username: 'TestUser', gridSize: 3, maxPlayers: 10 }),
+      body: JSON.stringify({ username: 'TestUser', gridSize: 7 }),
     });
 
     const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('Max players must be between 2 and');
+    expect(data.error).toContain('Grid size must be between 3 and 6');
+  });
+
+  it('returns 400 when gridSize is invalid (negative)', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'TestUser', gridSize: -1 }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('Grid size must be between 3 and 6');
+  });
+
+  it('returns 400 when gridSize is invalid (string)', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'TestUser', gridSize: 'abc' }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('Grid size must be between 3 and 6');
   });
 
   it('successfully creates a room with valid data', async () => {
@@ -141,7 +167,6 @@ describe('POST /api/rooms/create', () => {
       body: JSON.stringify({
         username: 'TestUser',
         gridSize: 3,
-        maxPlayers: 4,
       }),
     });
 
@@ -162,6 +187,70 @@ describe('POST /api/rooms/create', () => {
     expect(roomData.config.maxPlayers).toBe(4);
     expect(roomData.players).toBeDefined();
     expect(roomData.lastActivity).toBeDefined();
+  });
+
+  it('creates room with default gridSize 3 when not provided', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'TestUser' }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(201);
+
+    const roomData = mockSet.mock.calls[0][0];
+    expect(roomData.config.gridSize).toBe(3);
+    expect(roomData.config.maxPlayers).toBe(4);
+  });
+
+  it('creates room with gridSize 4 and calculates correct maxPlayers', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'TestUser', gridSize: 4 }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(201);
+
+    const roomData = mockSet.mock.calls[0][0];
+    expect(roomData.config.gridSize).toBe(4);
+    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(16/2)) = 6
+  });
+
+  it('creates room with gridSize 5 and calculates correct maxPlayers', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'TestUser', gridSize: 5 }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(201);
+
+    const roomData = mockSet.mock.calls[0][0];
+    expect(roomData.config.gridSize).toBe(5);
+    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(25/2)) = 6 (capped at 6)
+  });
+
+  it('creates room with gridSize 6 and calculates correct maxPlayers', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'TestUser', gridSize: 6 }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(201);
+
+    const roomData = mockSet.mock.calls[0][0];
+    expect(roomData.config.gridSize).toBe(6);
+    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(36/2)) = 6 (capped at 6)
   });
 
   it('creates room with host player correctly', async () => {
