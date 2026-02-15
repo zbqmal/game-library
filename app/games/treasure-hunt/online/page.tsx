@@ -41,6 +41,7 @@ function OnlineLobbyPageContent() {
   );
   const [roomCode, setRoomCode] = useState("");
   const [username, setUsername] = useState("");
+  const [gridSize, setGridSize] = useState(3);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(false);
@@ -264,8 +265,7 @@ function OnlineLobbyPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
-          gridSize: 3,
-          maxPlayers: 4,
+          gridSize: gridSize,
         }),
       });
 
@@ -628,6 +628,33 @@ function OnlineLobbyPageContent() {
             <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-900">
               Create New Room
             </h3>
+            
+            {/* Grid Size Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Grid Size
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[3, 4, 5, 6].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setGridSize(size)}
+                    className={`py-2 px-4 rounded-lg border-2 transition-colors ${
+                      gridSize === size
+                        ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
+                        : "border-gray-300 hover:border-gray-400 text-gray-700"
+                    }`}
+                    type="button"
+                  >
+                    {size}×{size}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-600 mt-1">
+                Grid size: {gridSize}×{gridSize} = {gridSize * gridSize} tiles
+              </p>
+            </div>
+
             <button
               onClick={handleCreateRoom}
               disabled={loading || !username.trim()}
@@ -832,6 +859,23 @@ function OnlineLobbyPageContent() {
             </div>
           )}
         </div>
+
+        {/* Room Info */}
+        {room && (
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="font-semibold">Grid Size:</span>{" "}
+                {room.config.gridSize}×{room.config.gridSize} (
+                {room.config.gridSize * room.config.gridSize} tiles)
+              </div>
+              <div>
+                <span className="font-semibold">Max Players:</span>{" "}
+                {room.config.maxPlayers}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Game Board - Only show when playing or finished */}
         {showGameBoard && room?.gameState && (
