@@ -109,39 +109,11 @@ describe('POST /api/rooms/create', () => {
     expect(data.error).toContain('Username must be between 1 and 20 characters');
   });
 
-  it('returns 400 when gridSize is invalid', async () => {
-    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
-      method: 'POST',
-      body: JSON.stringify({ username: 'TestUser', gridSize: 2 }),
-    });
-
-    const response = await POST(request);
-    const data = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(data.error).toContain('Grid size must be between 3 and 6');
-  });
-
-  it('returns 400 when maxPlayers is invalid', async () => {
-    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
-      method: 'POST',
-      body: JSON.stringify({ username: 'TestUser', gridSize: 3, maxPlayers: 10 }),
-    });
-
-    const response = await POST(request);
-    const data = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(data.error).toContain('Max players must be between 2 and');
-  });
-
-  it('successfully creates a room with valid data', async () => {
+  it('successfully creates a room with default gridSize of 3', async () => {
     const request = new NextRequest('http://localhost:3000/api/rooms/create', {
       method: 'POST',
       body: JSON.stringify({
         username: 'TestUser',
-        gridSize: 3,
-        maxPlayers: 4,
       }),
     });
 
@@ -162,6 +134,20 @@ describe('POST /api/rooms/create', () => {
     expect(roomData.config.maxPlayers).toBe(4);
     expect(roomData.players).toBeDefined();
     expect(roomData.lastActivity).toBeDefined();
+  });
+
+  it('creates room with default maxPlayers of 4', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'TestUser' }),
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(201);
+
+    const roomData = mockSet.mock.calls[0][0];
+    expect(roomData.config.maxPlayers).toBe(4);
   });
 
   it('creates room with host player correctly', async () => {

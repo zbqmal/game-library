@@ -51,6 +51,7 @@ function OnlineLobbyPageContent() {
   const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
   const [optimisticTile, setOptimisticTile] = useState<number | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [isUpdatingGridSize, setIsUpdatingGridSize] = useState(false);
 
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -63,6 +64,7 @@ function OnlineLobbyPageContent() {
   const currentPlayerNumber = currentPlayerInfo?.playerNumber;
   const isHost = room && playerId === room.hostId;
   const playerCount = room ? Object.keys(room.players).length : 0;
+  const gridSize = room?.config?.gridSize || 3;
   const maxPlayers = room?.config.maxPlayers || 4;
   const canStartGame = isHost && playerCount >= 2;
   const isCurrentPlayer =
@@ -264,8 +266,6 @@ function OnlineLobbyPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
-          gridSize: 3,
-          maxPlayers: 4,
         }),
       });
 
@@ -420,6 +420,35 @@ function OnlineLobbyPageContent() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGridSizeChange = async (newGridSize: number) => {
+    if (!isHost || !roomCode || room?.status !== "waiting") return; // Safety check
+
+    setIsUpdatingGridSize(true);
+
+    try {
+      const response = await fetch(`/api/rooms/${roomCode}/update-config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gridSize: newGridSize }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update grid size");
+      }
+
+      // Success - real-time listener will update UI automatically
+    } catch (err) {
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update grid size. Please try again.",
+      );
+    } finally {
+      setIsUpdatingGridSize(false);
     }
   };
 
@@ -766,7 +795,7 @@ function OnlineLobbyPageContent() {
 
         {/* Player List */}
         <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
-          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-900">
             Players ({playerCount}/{maxPlayers})
           </h3>
           {!room ? (
@@ -792,10 +821,10 @@ function OnlineLobbyPageContent() {
                       }`}
                     >
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm sm:text-base">
+                        <span className="font-semibold text-sm sm:text-base text-gray-900">
                           Player {player.playerNumber}:
                         </span>
-                        <span className="text-sm sm:text-base">
+                        <span className="text-sm sm:text-base text-gray-900">
                           {player.username}
                         </span>
                         {player.isHost && (
@@ -832,6 +861,53 @@ function OnlineLobbyPageContent() {
             </div>
           )}
         </div>
+
+        {/* Grid Size Configuration - Only show in lobby before game starts */}
+        {!showGameBoard && (
+          <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
+            {isHost ? (
+              <>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Grid Size
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[3, 4, 5, 6].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => handleGridSizeChange(size)}
+                      disabled={isUpdatingGridSize}
+                      className={`py-2 px-4 rounded-lg border-2 transition-colors min-h-[44px] touch-manipulation ${
+                        gridSize === size
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-300 hover:border-gray-400 text-gray-700"
+                      } ${
+                        isUpdatingGridSize
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                      aria-label={`Select ${size}×${size} grid`}
+                      aria-pressed={gridSize === size}
+                    >
+                      {size}×{size}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-700 mt-2">
+                  {gridSize}×{gridSize} grid = {gridSize * gridSize} tiles (max{" "}
+                  {maxPlayers} players)
+                  {isUpdatingGridSize && (
+                    <span className="ml-2 text-blue-600">Updating...</span>
+                  )}
+                </p>
+              </>
+            ) : (
+              <div className="text-sm text-gray-700">
+                <span className="font-semibold">Grid Size:</span> {gridSize}×
+                {gridSize} ({gridSize * gridSize} tiles)
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Game Board - Only show when playing or finished */}
         {showGameBoard && room?.gameState && (

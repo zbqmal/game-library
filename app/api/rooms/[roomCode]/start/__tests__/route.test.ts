@@ -655,4 +655,212 @@ describe("POST /api/rooms/[roomCode]/start", () => {
 
     expect(data.room).toEqual(expectedRoomData);
   });
+
+  it("starts game with gridSize from room config (4x4)", async () => {
+    (initializeGame as jest.Mock).mockReturnValue({
+      tiles: new Array(16).fill("covered"),
+      treasurePosition: 8,
+      currentPlayer: 1,
+      winner: null,
+      isGameOver: false,
+      playerCount: 3,
+      playerNames: ["Player1", "Player2", "Player3"],
+      gridSize: 4,
+    });
+
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "waiting",
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+            "player3-id": { playerNumber: 3, username: "Player3" },
+          },
+          config: { gridSize: 4, maxPlayers: 6 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "playing",
+          gameState: {
+            tiles: new Array(16).fill("covered"),
+            treasurePosition: 8,
+            currentPlayer: 1,
+            winner: null,
+            isGameOver: false,
+            playerCount: 3,
+            playerNames: ["Player1", "Player2", "Player3"],
+            gridSize: 4,
+          },
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+            "player3-id": { playerNumber: 3, username: "Player3" },
+          },
+          config: { gridSize: 4, maxPlayers: 6 },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/start",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player1-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(initializeGame).toHaveBeenCalledWith({
+      playerCount: 3,
+      playerNames: ["Player1", "Player2", "Player3"],
+      gridSize: 4,
+    });
+    expect(data.room.gameState.gridSize).toBe(4);
+    expect(data.room.gameState.tiles.length).toBe(16);
+  });
+
+  it("starts game with gridSize from room config (6x6)", async () => {
+    (initializeGame as jest.Mock).mockReturnValue({
+      tiles: new Array(36).fill("covered"),
+      treasurePosition: 18,
+      currentPlayer: 1,
+      winner: null,
+      isGameOver: false,
+      playerCount: 2,
+      playerNames: ["Player1", "Player2"],
+      gridSize: 6,
+    });
+
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "waiting",
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+          },
+          config: { gridSize: 6, maxPlayers: 6 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "playing",
+          gameState: {
+            tiles: new Array(36).fill("covered"),
+            treasurePosition: 18,
+            currentPlayer: 1,
+            winner: null,
+            isGameOver: false,
+            playerCount: 2,
+            playerNames: ["Player1", "Player2"],
+            gridSize: 6,
+          },
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+          },
+          config: { gridSize: 6, maxPlayers: 6 },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/start",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player1-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(initializeGame).toHaveBeenCalledWith({
+      playerCount: 2,
+      playerNames: ["Player1", "Player2"],
+      gridSize: 6,
+    });
+    expect(data.room.gameState.gridSize).toBe(6);
+    expect(data.room.gameState.tiles.length).toBe(36);
+  });
+
+  it("uses default gridSize 3 if config.gridSize is missing", async () => {
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "waiting",
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+          },
+          config: { maxPlayers: 4 }, // gridSize missing
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "playing",
+          gameState: {
+            tiles: new Array(9).fill("covered"),
+            treasurePosition: 4,
+            currentPlayer: 1,
+            winner: null,
+            isGameOver: false,
+            playerCount: 2,
+            playerNames: ["Player1", "Player2"],
+            gridSize: 3,
+          },
+          players: {
+            "player1-id": { playerNumber: 1, username: "Player1" },
+            "player2-id": { playerNumber: 2, username: "Player2" },
+          },
+          config: { maxPlayers: 4 },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/start",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player1-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(initializeGame).toHaveBeenCalledWith({
+      playerCount: 2,
+      playerNames: ["Player1", "Player2"],
+      gridSize: 3,
+    });
+  });
 });
