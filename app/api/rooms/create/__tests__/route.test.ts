@@ -218,7 +218,7 @@ describe('POST /api/rooms/create', () => {
 
     const roomData = mockSet.mock.calls[0][0];
     expect(roomData.config.gridSize).toBe(4);
-    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(16/2)) = 6
+    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(16/2)) = min(6, 8) = 6
   });
 
   it('creates room with gridSize 5 and calculates correct maxPlayers', async () => {
@@ -234,7 +234,7 @@ describe('POST /api/rooms/create', () => {
 
     const roomData = mockSet.mock.calls[0][0];
     expect(roomData.config.gridSize).toBe(5);
-    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(25/2)) = 6 (capped at 6)
+    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(25/2)) = min(6, 12) = 6
   });
 
   it('creates room with gridSize 6 and calculates correct maxPlayers', async () => {
@@ -250,7 +250,7 @@ describe('POST /api/rooms/create', () => {
 
     const roomData = mockSet.mock.calls[0][0];
     expect(roomData.config.gridSize).toBe(6);
-    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(36/2)) = 6 (capped at 6)
+    expect(roomData.config.maxPlayers).toBe(6); // min(6, floor(36/2)) = min(6, 18) = 6
   });
 
   it('creates room with host player correctly', async () => {
