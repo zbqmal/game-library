@@ -424,7 +424,7 @@ function OnlineLobbyPageContent() {
   };
 
   const handleGridSizeChange = async (newGridSize: number) => {
-    if (!isHost || !roomCode) return; // Safety check
+    if (!isHost || !roomCode || room?.status !== "waiting") return; // Safety check
 
     setIsUpdatingGridSize(true);
 

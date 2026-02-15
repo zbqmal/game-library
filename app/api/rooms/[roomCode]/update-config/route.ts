@@ -53,11 +53,11 @@ export async function POST(
     const maxPlayers = Math.min(6, Math.floor((gridSize * gridSize) / 2));
 
     // Check if current player count exceeds new maxPlayers
-    const currentPlayerCount = Object.keys(room.players || {}).length;
+    const currentPlayerCount = Object.keys(room?.players || {}).length;
     if (currentPlayerCount > maxPlayers) {
       return NextResponse.json(
         {
-          error: `Cannot set grid size to ${gridSize}×${gridSize}. Too many players (${currentPlayerCount}/${maxPlayers})`,
+          error: `Cannot set grid size to ${gridSize}x${gridSize}. Too many players (${currentPlayerCount}/${maxPlayers})`,
         },
         { status: 400 }
       );
