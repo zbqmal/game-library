@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import { initializeGame } from "@/app/games/treasure-hunt/gameLogic";
 
 export async function POST(
   request: NextRequest,
@@ -44,71 +43,82 @@ export async function POST(
 
     const roomData = roomDoc.data();
 
-    // Check if player is the host
-    if (roomData?.hostId !== playerId) {
+    // Check if player is in the room
+    if (!roomData?.players?.[playerId]) {
       return NextResponse.json(
-        { error: "Only the host can start the game" },
-        { status: 403 },
+        { error: "Player not in room" },
+        { status: 404 },
       );
     }
 
-    // Check if room is in waiting or finished status (allow restarting finished games)
-    if (roomData?.status !== "waiting" && roomData?.status !== "finished") {
-      return NextResponse.json(
-        { error: "Game is currently in progress" },
-        { status: 400 },
-      );
-    }
-
-    // Check if there are at least 2 players
+    const isHost = roomData.hostId === playerId;
     const playerCount = Object.keys(roomData.players || {}).length;
-    if (playerCount < 2) {
+
+    // If host is leaving and there are other players, reassign host
+    if (isHost && playerCount > 1) {
+      // Find the next player to become host (first non-host player)
+      const nextHost = Object.entries(roomData.players).find(
+        ([id]) => id !== playerId,
+      );
+
+      if (nextHost) {
+        const [nextHostId] = nextHost;
+
+        // Remove player and reassign host
+        await roomRef.update({
+          [`players.${playerId}`]: FieldValue.delete(),
+          hostId: nextHostId,
+          [`players.${nextHostId}.isHost`]: true,
+          lastActivity: FieldValue.serverTimestamp(),
+        });
+      }
+    } else if (playerCount === 1) {
+      // Last player leaving, delete the room
+      await roomRef.delete();
       return NextResponse.json(
-        { error: "At least 2 players are required to start the game" },
-        { status: 400 },
+        {
+          success: true,
+          roomDeleted: true,
+          message: "Room closed as last player left",
+        },
+        { status: 200 },
+      );
+    } else {
+      // Non-host leaving, just remove player
+      await roomRef.update({
+        [`players.${playerId}`]: FieldValue.delete(),
+        lastActivity: FieldValue.serverTimestamp(),
+      });
+    }
+
+    // Fetch updated room data (if room wasn't deleted)
+    const updatedRoomDoc = await roomRef.get();
+    if (!updatedRoomDoc.exists) {
+      return NextResponse.json(
+        {
+          success: true,
+          roomDeleted: true,
+          message: "Room closed",
+        },
+        { status: 200 },
       );
     }
 
-    // Get player names in order of player number
-    const players = Object.values(roomData.players || {}) as Array<{
-      playerNumber: number;
-      username: string;
-    }>;
-    const sortedPlayers = players.sort(
-      (a, b) => a.playerNumber - b.playerNumber,
-    );
-    const playerNames = sortedPlayers.map((p) => p.username);
-
-    // Initialize game state
-    const gameState = initializeGame({
-      playerCount,
-      playerNames,
-      gridSize: roomData.config?.gridSize || 3,
-    });
-
-    // Update room status to playing and set game state
-    await roomRef.update({
-      status: "playing",
-      gameState,
-      lastActivity: FieldValue.serverTimestamp(),
-    });
-
-    // Fetch updated room data
-    const updatedRoomDoc = await roomRef.get();
     const updatedRoomData = updatedRoomDoc.data();
 
     return NextResponse.json(
       {
         success: true,
+        roomDeleted: false,
         room: updatedRoomData,
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error starting game:", error);
+    console.error("Error leaving room:", error);
     return NextResponse.json(
       {
-        error: "Failed to start game",
+        error: "Failed to leave room",
         message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
