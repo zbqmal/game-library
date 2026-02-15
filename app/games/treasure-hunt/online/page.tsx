@@ -8,7 +8,7 @@ import {
   useRef,
   Suspense,
 } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import GameShell from "@/app/components/common/GameShell";
 import LoadingSpinner from "@/app/components/common/LoadingSpinner";
 import SkeletonLoader from "@/app/components/common/SkeletonLoader";
@@ -34,6 +34,7 @@ const HEARTBEAT_INTERVAL_MS = 30 * 1000;
 
 function OnlineLobbyPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const roomFromUrl = searchParams?.get("room");
 
   const [view, setView] = useState<"landing" | "lobby" | "reconnecting">(
@@ -542,6 +543,36 @@ function OnlineLobbyPageContent() {
     }
   };
 
+  const handleBackToLobby = async () => {
+    if (!roomCode) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`/api/rooms/${roomCode}/back-to-lobby`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to return to lobby");
+      }
+
+      // Real-time listener will update UI automatically
+      // (room.status changes to 'waiting', gameState becomes null)
+    } catch (err) {
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "Failed to return to lobby. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getTileContent = (index: number, gameState: GameState) => {
     const tileState = gameState.tiles[index];
 
@@ -629,6 +660,18 @@ function OnlineLobbyPageContent() {
         description="Create or join a room to play with friends online"
       >
         <div className="space-y-4 sm:space-y-6 max-w-lg mx-auto px-4">
+          {/* Back Button */}
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => router.push('/games/treasure-hunt')}
+              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              aria-label="Back to TreasureHunt"
+            >
+              <span className="text-xl">←</span>
+              <span>Back to TreasureHunt</span>
+            </button>
+          </div>
+
           {/* Username Input */}
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
             <label
@@ -997,23 +1040,65 @@ function OnlineLobbyPageContent() {
               </div>
             )}
 
-            {/* Play Again Button - Only show when game is over and user is host */}
-            {room.gameState.isGameOver && isHost && (
-              <button
-                onClick={handlePlayAgain}
-                disabled={loading}
-                className="w-full py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
-                aria-label="Start a new game"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Starting...
-                  </span>
+            {/* Game Over Action Buttons */}
+            {room.gameState.isGameOver && (
+              <div className="space-y-3">
+                {isHost ? (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handlePlayAgain}
+                      disabled={loading}
+                      className="flex-1 py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Start a new game"
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <LoadingSpinner size="sm" />
+                          Starting...
+                        </span>
+                      ) : (
+                        "Play Again"
+                      )}
+                    </button>
+                    <button
+                      onClick={handleBackToLobby}
+                      disabled={loading}
+                      className="flex-1 py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Return to lobby"
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <LoadingSpinner size="sm" />
+                          Returning...
+                        </span>
+                      ) : (
+                        "Back to Lobby"
+                      )}
+                    </button>
+                  </div>
                 ) : (
-                  "Play Again"
+                  <>
+                    <button
+                      onClick={handleBackToLobby}
+                      disabled={loading}
+                      className="w-full py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Return to lobby"
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <LoadingSpinner size="sm" />
+                          Returning...
+                        </span>
+                      ) : (
+                        "Back to Lobby"
+                      )}
+                    </button>
+                    <p className="text-sm text-gray-600 text-center">
+                      Waiting for host to start next game...
+                    </p>
+                  </>
                 )}
-              </button>
+              </div>
             )}
           </>
         )}
@@ -1022,47 +1107,56 @@ function OnlineLobbyPageContent() {
         {!showGameBoard && (
           <div className="space-y-3">
             {isHost ? (
-              <button
-                onClick={handleStartGame}
-                disabled={!canStartGame || loading}
-                className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
-                  canStartGame && !loading
-                    ? "bg-green-600 text-white hover:bg-green-700 active:scale-95"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-                aria-label={
-                  canStartGame ? "Start the game" : "Waiting for players"
-                }
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Starting...
-                  </span>
-                ) : canStartGame ? (
-                  "Start Game"
-                ) : (
-                  "Waiting for at least 2 players..."
-                )}
-              </button>
+              <>
+                <button
+                  onClick={handleStartGame}
+                  disabled={!canStartGame || loading}
+                  className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
+                    canStartGame && !loading
+                      ? "bg-green-600 text-white hover:bg-green-700 active:scale-95"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                  aria-label={
+                    canStartGame ? "Start the game" : "Waiting for players"
+                  }
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <LoadingSpinner size="sm" />
+                      Starting...
+                    </span>
+                  ) : canStartGame ? (
+                    "Start Game"
+                  ) : (
+                    "Waiting for at least 2 players..."
+                  )}
+                </button>
+                <button
+                  onClick={handleLeaveRoom}
+                  className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
+                  aria-label="Leave the game room"
+                >
+                  Leave Room
+                </button>
+              </>
             ) : (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-blue-700">
-                <div className="animate-pulse">
-                  Waiting for host to start the game...
+              <>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-blue-700">
+                  <div className="animate-pulse">
+                    Waiting for host to start the game...
+                  </div>
                 </div>
-              </div>
+                <button
+                  onClick={handleLeaveRoom}
+                  className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
+                  aria-label="Leave the game room"
+                >
+                  Leave Room
+                </button>
+              </>
             )}
           </div>
         )}
-
-        {/* Leave Room Button */}
-        <button
-          onClick={handleLeaveRoom}
-          className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
-          aria-label="Leave the game room"
-        >
-          Leave Room
-        </button>
 
         {/* Error Message */}
         {error && (
