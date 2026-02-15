@@ -264,8 +264,6 @@ function OnlineLobbyPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
-          gridSize: 3,
-          maxPlayers: 4,
         }),
       });
 
