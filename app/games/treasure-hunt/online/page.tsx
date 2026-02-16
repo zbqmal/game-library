@@ -77,19 +77,19 @@ function OnlineLobbyPageContent() {
 
   // Clear session storage
   const clearSession = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.PLAYER_ID);
-    localStorage.removeItem(STORAGE_KEYS.ROOM_CODE);
-    localStorage.removeItem(STORAGE_KEYS.USERNAME);
-    localStorage.removeItem(STORAGE_KEYS.TIMESTAMP);
+    sessionStorage.removeItem(STORAGE_KEYS.PLAYER_ID);
+    sessionStorage.removeItem(STORAGE_KEYS.ROOM_CODE);
+    sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+    sessionStorage.removeItem(STORAGE_KEYS.TIMESTAMP);
   }, []);
 
-  // Save session to localStorage
+  // Save session to sessionStorage
   const saveSession = useCallback(
     (newPlayerId: string, newRoomCode: string, newUsername: string) => {
-      localStorage.setItem(STORAGE_KEYS.PLAYER_ID, newPlayerId);
-      localStorage.setItem(STORAGE_KEYS.ROOM_CODE, newRoomCode);
-      localStorage.setItem(STORAGE_KEYS.USERNAME, newUsername);
-      localStorage.setItem(STORAGE_KEYS.TIMESTAMP, Date.now().toString());
+      sessionStorage.setItem(STORAGE_KEYS.PLAYER_ID, newPlayerId);
+      sessionStorage.setItem(STORAGE_KEYS.ROOM_CODE, newRoomCode);
+      sessionStorage.setItem(STORAGE_KEYS.USERNAME, newUsername);
+      sessionStorage.setItem(STORAGE_KEYS.TIMESTAMP, Date.now().toString());
     },
     [],
   );
@@ -161,11 +161,11 @@ function OnlineLobbyPageContent() {
         return;
       }
 
-      // Check localStorage for existing session
-      const storedPlayerId = localStorage.getItem(STORAGE_KEYS.PLAYER_ID);
-      const storedRoomCode = localStorage.getItem(STORAGE_KEYS.ROOM_CODE);
-      const storedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
-      const storedTimestamp = localStorage.getItem(STORAGE_KEYS.TIMESTAMP);
+      // Check sessionStorage for existing session
+      const storedPlayerId = sessionStorage.getItem(STORAGE_KEYS.PLAYER_ID);
+      const storedRoomCode = sessionStorage.getItem(STORAGE_KEYS.ROOM_CODE);
+      const storedUsername = sessionStorage.getItem(STORAGE_KEYS.USERNAME);
+      const storedTimestamp = sessionStorage.getItem(STORAGE_KEYS.TIMESTAMP);
 
       if (!storedPlayerId || !storedRoomCode || !storedUsername) return;
 
@@ -278,7 +278,7 @@ function OnlineLobbyPageContent() {
         throw new Error(data.error || "Failed to create room");
       }
 
-      // Store in localStorage with timestamp
+      // Store in sessionStorage with timestamp
       saveSession(data.playerId, data.roomCode, username.trim());
 
       setPlayerId(data.playerId);
@@ -332,7 +332,7 @@ function OnlineLobbyPageContent() {
         throw new Error(data.error || "Failed to join room");
       }
 
-      // Store in localStorage with timestamp
+      // Store in sessionStorage with timestamp
       const roomCodeUpper = joinCodeInput.trim().toUpperCase();
       saveSession(data.playerId, roomCodeUpper, username.trim());
 
@@ -665,7 +665,7 @@ function OnlineLobbyPageContent() {
           {/* Back Button */}
           <div className="flex items-center mb-4">
             <button
-              onClick={() => router.push('/games/treasure-hunt')}
+              onClick={() => router.push("/games/treasure-hunt")}
               className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
               aria-label="Back to TreasureHunt"
             >
@@ -856,7 +856,7 @@ function OnlineLobbyPageContent() {
                   const isDisconnected = isPlayerDisconnected(player);
                   return (
                     <div
-                      key={player.playerId}
+                      key={player.playerId || `player-${player.playerNumber}`}
                       className={`flex items-center justify-between p-3 rounded-lg transition-all ${
                         isPlayerTurn && showGameBoard
                           ? "bg-green-100 border-2 border-green-400 animate-pulse"
@@ -1046,8 +1046,9 @@ function OnlineLobbyPageContent() {
             {room.gameState.isGameOver && (
               <div className="space-y-3">
                 {isHost ? (
-                  <div className="flex gap-3">
+                  <div key="host-actions" className="flex gap-3">
                     <button
+                      key="play-again-btn"
                       onClick={handlePlayAgain}
                       disabled={playAgainLoading || backToLobbyLoading}
                       className="flex-1 py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1063,6 +1064,7 @@ function OnlineLobbyPageContent() {
                       )}
                     </button>
                     <button
+                      key="back-to-lobby-btn"
                       onClick={handleBackToLobby}
                       disabled={playAgainLoading || backToLobbyLoading}
                       className="flex-1 py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1079,8 +1081,9 @@ function OnlineLobbyPageContent() {
                     </button>
                   </div>
                 ) : (
-                  <>
+                  <div key="non-host-actions">
                     <button
+                      key="back-to-lobby-btn"
                       onClick={handleBackToLobby}
                       disabled={backToLobbyLoading}
                       className="w-full py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1095,10 +1098,13 @@ function OnlineLobbyPageContent() {
                         "Back to Lobby"
                       )}
                     </button>
-                    <p className="text-sm text-gray-600 text-center">
+                    <p
+                      key="waiting-text"
+                      className="text-sm text-gray-600 text-center"
+                    >
                       Waiting for host...
                     </p>
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -1109,8 +1115,9 @@ function OnlineLobbyPageContent() {
         {!showGameBoard && (
           <div className="space-y-3">
             {isHost ? (
-              <>
+              <div key="host-lobby-actions">
                 <button
+                  key="start-game-btn"
                   onClick={handleStartGame}
                   disabled={!canStartGame || loading}
                   className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
@@ -1134,28 +1141,33 @@ function OnlineLobbyPageContent() {
                   )}
                 </button>
                 <button
+                  key="leave-room-btn"
                   onClick={handleLeaveRoom}
                   className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
                   aria-label="Leave the game room"
                 >
                   Leave Room
                 </button>
-              </>
+              </div>
             ) : (
-              <>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-blue-700">
+              <div key="non-host-lobby-actions">
+                <div
+                  key="waiting-message"
+                  className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-blue-700"
+                >
                   <div className="animate-pulse">
                     Waiting for host to start the game...
                   </div>
                 </div>
                 <button
+                  key="leave-room-btn"
                   onClick={handleLeaveRoom}
                   className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
                   aria-label="Leave the game room"
                 >
                   Leave Room
                 </button>
-              </>
+              </div>
             )}
           </div>
         )}
