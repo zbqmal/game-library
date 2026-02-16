@@ -53,7 +53,6 @@ export async function POST(
     // (maxPlayers is set at room creation and never changes)
     const currentPlayerCount = Object.keys(room?.players || {}).length;
     const existingMaxPlayers = room?.config?.maxPlayers || 4;
-    
     if (currentPlayerCount > existingMaxPlayers) {
       return NextResponse.json(
         {

@@ -725,7 +725,7 @@ function OnlineLobbyPageContent() {
               Maximum {selectedMaxPlayers} players can join this room
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              ℹ️ The number of players cannot be changed after the room is created.
+              <span aria-label="Information">ℹ</span> The number of players cannot be changed after the room is created.
               The grid size can be adjusted in the lobby.
             </p>
           </div>
