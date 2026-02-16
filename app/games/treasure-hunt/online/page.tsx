@@ -8,7 +8,7 @@ import {
   useRef,
   Suspense,
 } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import GameShell from "@/app/components/common/GameShell";
 import LoadingSpinner from "@/app/components/common/LoadingSpinner";
 import SkeletonLoader from "@/app/components/common/SkeletonLoader";
@@ -34,6 +34,7 @@ const HEARTBEAT_INTERVAL_MS = 30 * 1000;
 
 function OnlineLobbyPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const roomFromUrl = searchParams?.get("room");
 
   const [view, setView] = useState<"landing" | "lobby" | "reconnecting">(
@@ -44,6 +45,8 @@ function OnlineLobbyPageContent() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(false);
+  const [playAgainLoading, setPlayAgainLoading] = useState(false);
+  const [backToLobbyLoading, setBackToLobbyLoading] = useState(false);
   const [error, setError] = useState("");
   const [toastError, setToastError] = useState("");
   const [joinCodeInput, setJoinCodeInput] = useState("");
@@ -74,19 +77,19 @@ function OnlineLobbyPageContent() {
 
   // Clear session storage
   const clearSession = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.PLAYER_ID);
-    localStorage.removeItem(STORAGE_KEYS.ROOM_CODE);
-    localStorage.removeItem(STORAGE_KEYS.USERNAME);
-    localStorage.removeItem(STORAGE_KEYS.TIMESTAMP);
+    sessionStorage.removeItem(STORAGE_KEYS.PLAYER_ID);
+    sessionStorage.removeItem(STORAGE_KEYS.ROOM_CODE);
+    sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+    sessionStorage.removeItem(STORAGE_KEYS.TIMESTAMP);
   }, []);
 
-  // Save session to localStorage
+  // Save session to sessionStorage
   const saveSession = useCallback(
     (newPlayerId: string, newRoomCode: string, newUsername: string) => {
-      localStorage.setItem(STORAGE_KEYS.PLAYER_ID, newPlayerId);
-      localStorage.setItem(STORAGE_KEYS.ROOM_CODE, newRoomCode);
-      localStorage.setItem(STORAGE_KEYS.USERNAME, newUsername);
-      localStorage.setItem(STORAGE_KEYS.TIMESTAMP, Date.now().toString());
+      sessionStorage.setItem(STORAGE_KEYS.PLAYER_ID, newPlayerId);
+      sessionStorage.setItem(STORAGE_KEYS.ROOM_CODE, newRoomCode);
+      sessionStorage.setItem(STORAGE_KEYS.USERNAME, newUsername);
+      sessionStorage.setItem(STORAGE_KEYS.TIMESTAMP, Date.now().toString());
     },
     [],
   );
@@ -158,11 +161,11 @@ function OnlineLobbyPageContent() {
         return;
       }
 
-      // Check localStorage for existing session
-      const storedPlayerId = localStorage.getItem(STORAGE_KEYS.PLAYER_ID);
-      const storedRoomCode = localStorage.getItem(STORAGE_KEYS.ROOM_CODE);
-      const storedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
-      const storedTimestamp = localStorage.getItem(STORAGE_KEYS.TIMESTAMP);
+      // Check sessionStorage for existing session
+      const storedPlayerId = sessionStorage.getItem(STORAGE_KEYS.PLAYER_ID);
+      const storedRoomCode = sessionStorage.getItem(STORAGE_KEYS.ROOM_CODE);
+      const storedUsername = sessionStorage.getItem(STORAGE_KEYS.USERNAME);
+      const storedTimestamp = sessionStorage.getItem(STORAGE_KEYS.TIMESTAMP);
 
       if (!storedPlayerId || !storedRoomCode || !storedUsername) return;
 
@@ -275,7 +278,7 @@ function OnlineLobbyPageContent() {
         throw new Error(data.error || "Failed to create room");
       }
 
-      // Store in localStorage with timestamp
+      // Store in sessionStorage with timestamp
       saveSession(data.playerId, data.roomCode, username.trim());
 
       setPlayerId(data.playerId);
@@ -329,7 +332,7 @@ function OnlineLobbyPageContent() {
         throw new Error(data.error || "Failed to join room");
       }
 
-      // Store in localStorage with timestamp
+      // Store in sessionStorage with timestamp
       const roomCodeUpper = joinCodeInput.trim().toUpperCase();
       saveSession(data.playerId, roomCodeUpper, username.trim());
 
@@ -514,7 +517,7 @@ function OnlineLobbyPageContent() {
   const handlePlayAgain = async () => {
     if (!playerId || !roomCode) return;
 
-    setLoading(true);
+    setPlayAgainLoading(true);
     setError("");
 
     try {
@@ -538,7 +541,37 @@ function OnlineLobbyPageContent() {
           : "Failed to restart game. Please try again.",
       );
     } finally {
-      setLoading(false);
+      setPlayAgainLoading(false);
+    }
+  };
+
+  const handleBackToLobby = async () => {
+    if (!roomCode) return;
+
+    setBackToLobbyLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`/api/rooms/${roomCode}/back-to-lobby`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to return to lobby");
+      }
+
+      // Real-time listener will update UI automatically
+      // (room.status changes to 'waiting', gameState becomes null)
+    } catch (err) {
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "Failed to return to lobby. Please try again.",
+      );
+    } finally {
+      setBackToLobbyLoading(false);
     }
   };
 
@@ -629,6 +662,18 @@ function OnlineLobbyPageContent() {
         description="Create or join a room to play with friends online"
       >
         <div className="space-y-4 sm:space-y-6 max-w-lg mx-auto px-4">
+          {/* Back Button */}
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => router.push("/games/treasure-hunt")}
+              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              aria-label="Back to TreasureHunt"
+            >
+              <span className="text-xl">←</span>
+              <span>Back to TreasureHunt</span>
+            </button>
+          </div>
+
           {/* Username Input */}
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
             <label
@@ -811,7 +856,7 @@ function OnlineLobbyPageContent() {
                   const isDisconnected = isPlayerDisconnected(player);
                   return (
                     <div
-                      key={player.playerId}
+                      key={player.playerId || `player-${player.playerNumber}`}
                       className={`flex items-center justify-between p-3 rounded-lg transition-all ${
                         isPlayerTurn && showGameBoard
                           ? "bg-green-100 border-2 border-green-400 animate-pulse"
@@ -997,23 +1042,71 @@ function OnlineLobbyPageContent() {
               </div>
             )}
 
-            {/* Play Again Button - Only show when game is over and user is host */}
-            {room.gameState.isGameOver && isHost && (
-              <button
-                onClick={handlePlayAgain}
-                disabled={loading}
-                className="w-full py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
-                aria-label="Start a new game"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Starting...
-                  </span>
+            {/* Game Over Action Buttons */}
+            {room.gameState.isGameOver && (
+              <div className="space-y-3">
+                {isHost ? (
+                  <div key="host-actions" className="flex gap-3">
+                    <button
+                      key="play-again-btn"
+                      onClick={handlePlayAgain}
+                      disabled={playAgainLoading || backToLobbyLoading}
+                      className="flex-1 py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Start a new game"
+                    >
+                      {playAgainLoading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <LoadingSpinner size="sm" />
+                          Starting...
+                        </span>
+                      ) : (
+                        "Play Again"
+                      )}
+                    </button>
+                    <button
+                      key="back-to-lobby-btn"
+                      onClick={handleBackToLobby}
+                      disabled={playAgainLoading || backToLobbyLoading}
+                      className="flex-1 py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Return to lobby"
+                    >
+                      {backToLobbyLoading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <LoadingSpinner size="sm" />
+                          Returning...
+                        </span>
+                      ) : (
+                        "Back to Lobby"
+                      )}
+                    </button>
+                  </div>
                 ) : (
-                  "Play Again"
+                  <div key="non-host-actions">
+                    <button
+                      key="back-to-lobby-btn"
+                      onClick={handleBackToLobby}
+                      disabled={backToLobbyLoading}
+                      className="w-full py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Return to lobby"
+                    >
+                      {backToLobbyLoading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <LoadingSpinner size="sm" />
+                          Returning...
+                        </span>
+                      ) : (
+                        "Back to Lobby"
+                      )}
+                    </button>
+                    <p
+                      key="waiting-text"
+                      className="text-sm text-gray-600 text-center"
+                    >
+                      Waiting for host...
+                    </p>
+                  </div>
                 )}
-              </button>
+              </div>
             )}
           </>
         )}
@@ -1022,47 +1115,62 @@ function OnlineLobbyPageContent() {
         {!showGameBoard && (
           <div className="space-y-3">
             {isHost ? (
-              <button
-                onClick={handleStartGame}
-                disabled={!canStartGame || loading}
-                className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
-                  canStartGame && !loading
-                    ? "bg-green-600 text-white hover:bg-green-700 active:scale-95"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-                aria-label={
-                  canStartGame ? "Start the game" : "Waiting for players"
-                }
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Starting...
-                  </span>
-                ) : canStartGame ? (
-                  "Start Game"
-                ) : (
-                  "Waiting for at least 2 players..."
-                )}
-              </button>
+              <div key="host-lobby-actions">
+                <button
+                  key="start-game-btn"
+                  onClick={handleStartGame}
+                  disabled={!canStartGame || loading}
+                  className={`w-full py-3 sm:py-4 rounded-lg transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation ${
+                    canStartGame && !loading
+                      ? "bg-green-600 text-white hover:bg-green-700 active:scale-95"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                  aria-label={
+                    canStartGame ? "Start the game" : "Waiting for players"
+                  }
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <LoadingSpinner size="sm" />
+                      Starting...
+                    </span>
+                  ) : canStartGame ? (
+                    "Start Game"
+                  ) : (
+                    "Waiting for at least 2 players..."
+                  )}
+                </button>
+                <button
+                  key="leave-room-btn"
+                  onClick={handleLeaveRoom}
+                  className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
+                  aria-label="Leave the game room"
+                >
+                  Leave Room
+                </button>
+              </div>
             ) : (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-blue-700">
-                <div className="animate-pulse">
-                  Waiting for host to start the game...
+              <div key="non-host-lobby-actions">
+                <div
+                  key="waiting-message"
+                  className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-blue-700"
+                >
+                  <div className="animate-pulse">
+                    Waiting for host to start the game...
+                  </div>
                 </div>
+                <button
+                  key="leave-room-btn"
+                  onClick={handleLeaveRoom}
+                  className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
+                  aria-label="Leave the game room"
+                >
+                  Leave Room
+                </button>
               </div>
             )}
           </div>
         )}
-
-        {/* Leave Room Button */}
-        <button
-          onClick={handleLeaveRoom}
-          className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation"
-          aria-label="Leave the game room"
-        >
-          Leave Room
-        </button>
 
         {/* Error Message */}
         {error && (
