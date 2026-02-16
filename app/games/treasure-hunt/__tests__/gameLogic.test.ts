@@ -95,11 +95,11 @@ describe("Treasure Hunt Game Logic", () => {
       const config: GameConfig = {
         playerCount: 5,
         playerNames: ["A", "B", "C", "D", "E"],
-        gridSize: 3, // 9 tiles, max 4 players
+        gridSize: 3, // 3x3 grid, max 4 players
       };
       const result = validateGameConfig(config);
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("Player count must be between 2 and 4");
+      expect(result.error).toContain("Maximum 4 players allowed for 3×3 grid");
     });
 
     it("returns error for mismatched player names count", () => {

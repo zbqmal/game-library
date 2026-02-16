@@ -197,12 +197,13 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
     expect(data.error).toContain('Cannot change grid size after game has started');
   });
 
-  it('returns 400 when too many players for new grid size', async () => {
-    // 5 players in room, trying to set 3x3 (max 4 players)
+  it('returns 400 when too many players for existing maxPlayers', async () => {
+    // 5 players in room with maxPlayers=4
     mockGet.mockResolvedValue({
       exists: true,
       data: () => ({
         status: 'waiting',
+        config: { gridSize: 3, maxPlayers: 4 },
         players: {
           player1: { username: 'Player 1' },
           player2: { username: 'Player 2' },
@@ -217,7 +218,7 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
       'http://localhost:3000/api/rooms/ABC123/update-config',
       {
         method: 'POST',
-        body: JSON.stringify({ gridSize: 3 }),
+        body: JSON.stringify({ gridSize: 4 }),
       }
     );
 
@@ -227,8 +228,48 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('Too many players');
-    expect(data.error).toContain('5/4');
+    expect(data.error).toContain('Current player count');
+    expect(data.error).toContain('exceeds room capacity');
+  });
+
+  it('does NOT change maxPlayers when grid size changes', async () => {
+    const roomData = {
+      roomCode: 'ABC123',
+      status: 'waiting',
+      hostId: 'host-id',
+      config: { gridSize: 3, maxPlayers: 4 },
+      players: {
+        'player1-id': { username: 'Player1', playerNumber: 1 },
+      },
+    };
+
+    mockGet.mockResolvedValue({
+      exists: true,
+      data: () => roomData,
+    });
+
+    const request = new NextRequest(
+      'http://localhost:3000/api/rooms/ABC123/update-config',
+      {
+        method: 'POST',
+        body: JSON.stringify({ gridSize: 5 }),
+      }
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: 'ABC123' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      'config.gridSize': 5,
+      // maxPlayers should NOT be in the update
+      lastActivity: expect.anything(),
+    });
+
+    // Verify maxPlayers was NOT updated
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall).not.toHaveProperty('config.maxPlayers');
   });
 
   it('successfully updates grid size from 3 to 4', async () => {
@@ -236,6 +277,7 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
       exists: true,
       data: () => ({
         status: 'waiting',
+        config: { gridSize: 3, maxPlayers: 4 },
         players: {
           player1: { username: 'Player 1' },
           player2: { username: 'Player 2' },
@@ -259,10 +301,9 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
     expect(data.gridSize).toBe(4);
-    expect(data.maxPlayers).toBe(6); // 4x4 = 16 tiles / 2 = 8, but capped at 6
+    expect(data.maxPlayers).toBe(4); // Should remain unchanged from room config
     expect(mockUpdate).toHaveBeenCalledWith({
       'config.gridSize': 4,
-      'config.maxPlayers': 6,
       lastActivity: expect.anything(),
     });
   });
@@ -272,6 +313,7 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
       exists: true,
       data: () => ({
         status: 'waiting',
+        config: { gridSize: 4, maxPlayers: 6 },
         players: {
           player1: { username: 'Player 1' },
           player2: { username: 'Player 2' },
@@ -296,14 +338,15 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
     expect(data.gridSize).toBe(6);
-    expect(data.maxPlayers).toBe(6); // 6x6 = 36 tiles / 2 = 18, but capped at 6
+    expect(data.maxPlayers).toBe(6); // Should remain unchanged from room config
   });
 
-  it('calculates correct maxPlayers for 3x3 grid', async () => {
+  it('keeps maxPlayers at room config value for 3x3 grid', async () => {
     mockGet.mockResolvedValue({
       exists: true,
       data: () => ({
         status: 'waiting',
+        config: { gridSize: 4, maxPlayers: 5 },
         players: {
           player1: { username: 'Player 1' },
         },
@@ -324,14 +367,15 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.maxPlayers).toBe(4); // 3x3 = 9 tiles / 2 = 4
+    expect(data.maxPlayers).toBe(5); // Should remain at 5, not change to 4
   });
 
-  it('calculates correct maxPlayers for 5x5 grid', async () => {
+  it('keeps maxPlayers at room config value for 5x5 grid', async () => {
     mockGet.mockResolvedValue({
       exists: true,
       data: () => ({
         status: 'waiting',
+        config: { gridSize: 3, maxPlayers: 3 },
         players: {
           player1: { username: 'Player 1' },
           player2: { username: 'Player 2' },
@@ -353,7 +397,7 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.maxPlayers).toBe(6); // 5x5 = 25 tiles / 2 = 12, but capped at 6
+    expect(data.maxPlayers).toBe(3); // Should remain at 3, not change to 6
   });
 
   it('updates lastActivity timestamp', async () => {
@@ -361,6 +405,7 @@ describe('POST /api/rooms/[roomCode]/update-config', () => {
       exists: true,
       data: () => ({
         status: 'waiting',
+        config: { gridSize: 3, maxPlayers: 4 },
         players: {
           player1: { username: 'Player 1' },
         },

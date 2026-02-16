@@ -150,6 +150,77 @@ describe('POST /api/rooms/create', () => {
     expect(roomData.config.maxPlayers).toBe(4);
   });
 
+  it('creates room with custom maxPlayers', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: 'Alice',
+        maxPlayers: 6,
+      }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          gridSize: 3,
+          maxPlayers: 6,
+        }),
+      })
+    );
+  });
+
+  it('rejects invalid maxPlayers (too low)', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: 'Alice',
+        maxPlayers: 1,
+      }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('maxPlayers must be a number between 2 and 6');
+  });
+
+  it('rejects invalid maxPlayers (too high)', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: 'Alice',
+        maxPlayers: 7,
+      }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('maxPlayers must be a number between 2 and 6');
+  });
+
+  it('rejects invalid maxPlayers (not a number)', async () => {
+    const request = new NextRequest('http://localhost:3000/api/rooms/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: 'Alice',
+        maxPlayers: 'invalid',
+      }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('maxPlayers must be a number between 2 and 6');
+  });
+
   it('creates room with host player correctly', async () => {
     const request = new NextRequest('http://localhost:3000/api/rooms/create', {
       method: 'POST',
