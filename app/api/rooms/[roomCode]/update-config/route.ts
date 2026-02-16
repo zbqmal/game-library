@@ -49,28 +49,27 @@ export async function POST(
       );
     }
 
-    // Calculate new maxPlayers based on new grid size
-    const maxPlayers = Math.min(6, Math.floor((gridSize * gridSize) / 2));
-
-    // Check if current player count exceeds new maxPlayers
+    // Check if current player count exceeds existing maxPlayers
+    // (maxPlayers is set at room creation and never changes)
     const currentPlayerCount = Object.keys(room?.players || {}).length;
-    if (currentPlayerCount > maxPlayers) {
+    const existingMaxPlayers = room?.config?.maxPlayers || 4;
+    
+    if (currentPlayerCount > existingMaxPlayers) {
       return NextResponse.json(
         {
-          error: `Cannot set grid size to ${gridSize}x${gridSize}. Too many players (${currentPlayerCount}/${maxPlayers})`,
+          error: `Cannot change grid size. Current player count (${currentPlayerCount}) exceeds room capacity.`,
         },
         { status: 400 }
       );
     }
 
-    // Update room config
+    // Update ONLY gridSize, keep maxPlayers unchanged
     await roomRef.update({
       'config.gridSize': gridSize,
-      'config.maxPlayers': maxPlayers,
       lastActivity: FieldValue.serverTimestamp(),
     });
 
-    return NextResponse.json({ success: true, gridSize, maxPlayers });
+    return NextResponse.json({ success: true, gridSize, maxPlayers: existingMaxPlayers });
   } catch (error) {
     console.error('Error updating room config:', error);
     return NextResponse.json(

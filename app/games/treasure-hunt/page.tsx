@@ -24,7 +24,8 @@ export default function TreasureHuntPage() {
   ]);
   const [configError, setConfigError] = useState<string>("");
 
-  const maxPlayers = Math.min(6, Math.floor((gridSize * gridSize) / 2));
+  // 3x3 grid allows max 4 players, all other sizes allow max 6 players
+  const maxPlayers = gridSize === 3 ? 4 : 6;
   const isValidPlayerCount =
     playerCount >= 2 && playerCount <= 6 && playerCount <= maxPlayers;
   const isValidPlayerNames =
@@ -230,9 +231,11 @@ export default function TreasureHuntPage() {
               />
               {playerCount > 0 && !isValidPlayerCount && (
                 <p className="text-xs text-red-600 mt-1">
-                  {interpolate(texts.treasurePlayerCountError, {
-                    max: maxPlayers,
-                  })}
+                  {playerCount < 2
+                    ? "At least 2 players required"
+                    : playerCount > maxPlayers
+                      ? `Maximum ${maxPlayers} players for ${gridSize}×${gridSize} grid`
+                      : "Invalid player count"}
                 </p>
               )}
             </div>
