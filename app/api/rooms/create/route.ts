@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username } = body;
+    const { username, maxPlayers = 4 } = body;
 
     // Validate request body
     if (!username || typeof username !== 'string') {
@@ -38,10 +38,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use default gridSize and maxPlayers
-    // Grid size can be changed in lobby before game starts
+    // Validate maxPlayers
+    if (typeof maxPlayers !== 'number' || maxPlayers < 2 || maxPlayers > 6) {
+      return NextResponse.json(
+        { error: 'maxPlayers must be a number between 2 and 6' },
+        { status: 400 }
+      );
+    }
+
+    // Use default gridSize (3x3) - can be changed in lobby
     const gridSize = 3;
-    const maxPlayers = 4;
 
     // Generate unique room code
     const roomCode = await generateUniqueRoomCode();

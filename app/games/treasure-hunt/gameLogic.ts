@@ -99,31 +99,44 @@ export function validateGameConfig(config: GameConfig): {
   valid: boolean;
   error?: string;
 } {
-  const totalTiles = config.gridSize * config.gridSize;
+  const { playerCount, playerNames, gridSize } = config;
 
-  if (!validateGridSize(config.gridSize)) {
-    return { valid: false, error: "Grid size must be between 3 and 6" };
+  // Validate grid size
+  if (!validateGridSize(gridSize)) {
+    return { valid: false, error: 'Grid size must be between 3 and 6' };
   }
 
-  if (!validatePlayerCount(config.playerCount, totalTiles)) {
-    const maxPlayers = Math.min(6, Math.floor(totalTiles / 2));
+  // Calculate max players based on grid size
+  // 3x3 grid allows max 4 players, all other sizes allow max 6 players
+  const maxPlayers = gridSize === 3 ? 4 : 6;
+
+  // Validate player count
+  if (playerCount < 2) {
+    return { valid: false, error: 'At least 2 players are required' };
+  }
+
+  if (playerCount > 6) {
+    return { valid: false, error: 'Maximum 6 players allowed' };
+  }
+
+  if (playerCount > maxPlayers) {
     return {
       valid: false,
-      error: `Player count must be between 2 and ${maxPlayers} for a ${config.gridSize}x${config.gridSize} grid`,
+      error: `Maximum ${maxPlayers} players allowed for ${gridSize}×${gridSize} grid`,
     };
   }
 
-  if (config.playerNames.length !== config.playerCount) {
+  if (playerNames.length !== playerCount) {
     return {
       valid: false,
-      error: "Number of player names must match player count",
+      error: 'Number of player names must match player count',
     };
   }
 
-  if (!validatePlayerNames(config.playerNames)) {
+  if (!validatePlayerNames(playerNames)) {
     return {
       valid: false,
-      error: "Each player name must not exceed 20 characters",
+      error: 'Each player name must not exceed 20 characters',
     };
   }
 

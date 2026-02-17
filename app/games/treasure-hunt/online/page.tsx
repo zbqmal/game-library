@@ -55,6 +55,7 @@ function OnlineLobbyPageContent() {
   const [optimisticTile, setOptimisticTile] = useState<number | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [isUpdatingGridSize, setIsUpdatingGridSize] = useState(false);
+  const [selectedMaxPlayers, setSelectedMaxPlayers] = useState(4); // Default 4
 
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -269,6 +270,7 @@ function OnlineLobbyPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
+          maxPlayers: selectedMaxPlayers,
         }),
       });
 
@@ -697,6 +699,37 @@ function OnlineLobbyPageContent() {
             </p>
           </div>
 
+          {/* Number of Players Selector */}
+          <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Number of Players
+            </label>
+            <div className="grid grid-cols-5 gap-2 mb-4">
+              {[2, 3, 4, 5, 6].map((count) => (
+                <button
+                  key={count}
+                  onClick={() => setSelectedMaxPlayers(count)}
+                  className={`py-2 px-3 rounded-lg border-2 transition-colors font-semibold min-h-[44px] touch-manipulation ${
+                    selectedMaxPlayers === count
+                      ? "border-blue-500 bg-blue-50 text-blue-700"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                  aria-label={`Select ${count} players`}
+                  aria-pressed={selectedMaxPlayers === count}
+                >
+                  {count}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-600">
+              Maximum {selectedMaxPlayers} players can join this room
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
+              <span aria-label="Information">ℹ</span> The number of players cannot be changed after the room is created.
+              The grid size can be adjusted in the lobby.
+            </p>
+          </div>
+
           {/* Create Room */}
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-900">
@@ -910,6 +943,20 @@ function OnlineLobbyPageContent() {
         {/* Grid Size Configuration - Only show in lobby before game starts */}
         {!showGameBoard && (
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-semibold text-gray-900">Grid Size:</span>
+                  <span className="text-gray-700"> {gridSize}×{gridSize}</span>
+                  {isHost && <span className="text-xs text-gray-500 block">Can be changed</span>}
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Players:</span>
+                  <span className="text-gray-700"> {playerCount}/{maxPlayers}</span>
+                  <span className="text-xs text-gray-500 block">Set at creation</span>
+                </div>
+              </div>
+            </div>
             {isHost ? (
               <>
                 <label className="block text-sm font-medium text-gray-900 mb-2">
