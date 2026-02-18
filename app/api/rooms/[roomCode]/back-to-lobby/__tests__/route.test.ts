@@ -66,6 +66,10 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
       "http://localhost:3000/api/rooms/NOTFOUND/back-to-lobby",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "some-player-id" }),
       },
     );
 
@@ -78,6 +82,82 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
     expect(data.error).toBe("Room not found");
     expect(mockCollection).toHaveBeenCalledWith("rooms");
     expect(mockDoc).toHaveBeenCalledWith("NOTFOUND");
+  });
+
+  it("returns 400 when playerId is missing", async () => {
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain("playerId field is required");
+  });
+
+  it("returns 400 when playerId is not a string", async () => {
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: 123 }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain("playerId field is required");
+  });
+
+  it("returns 403 when non-host tries to return to lobby", async () => {
+    mockGet.mockResolvedValue({
+      exists: true,
+      data: () => ({
+        roomCode: "ABC123",
+        status: "finished",
+        hostId: "host-id",
+        players: {
+          "host-id": { username: "Host", playerNumber: 1, isHost: true },
+          "player2-id": { username: "Player2", playerNumber: 2, isHost: false },
+        },
+      }),
+    });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "player2-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(data.error).toBe("Only the host can return to lobby");
   });
 
   it("returns 400 when room status is not 'finished' or 'playing'", async () => {
@@ -97,6 +177,10 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
       "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "host-id" }),
       },
     );
 
@@ -151,6 +235,10 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
       "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "host-id" }),
       },
     );
 
@@ -213,6 +301,10 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
       "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "host-id" }),
       },
     );
 
@@ -257,6 +349,10 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
       "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "host-id" }),
       },
     );
 
@@ -278,6 +374,10 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
       "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "host-id" }),
       },
     );
 
@@ -298,6 +398,10 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
       "http://localhost:3000/api/rooms/ABC123/back-to-lobby",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "host-id" }),
       },
     );
 
@@ -327,6 +431,10 @@ describe("POST /api/rooms/[roomCode]/back-to-lobby", () => {
       "http://localhost:3000/api/rooms/abc123/back-to-lobby",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId: "host-id" }),
       },
     );
 

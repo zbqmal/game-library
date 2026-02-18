@@ -548,7 +548,7 @@ function OnlineLobbyPageContent() {
   };
 
   const handleBackToLobby = async () => {
-    if (!roomCode) return;
+    if (!roomCode || !playerId) return;
 
     setBackToLobbyLoading(true);
     setError("");
@@ -556,6 +556,10 @@ function OnlineLobbyPageContent() {
     try {
       const response = await fetch(`/api/rooms/${roomCode}/back-to-lobby`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId }),
       });
 
       const data = await response.json();
@@ -1128,28 +1132,20 @@ function OnlineLobbyPageContent() {
                     </button>
                   </div>
                 ) : (
-                  <div key="non-host-actions">
+                  <div key="non-host-actions" className="space-y-2">
                     <button
                       key="back-to-lobby-btn"
-                      onClick={handleBackToLobby}
-                      disabled={backToLobbyLoading}
-                      className="w-full py-3 sm:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Return to lobby"
+                      disabled={true}
+                      className="w-full py-3 sm:py-4 bg-gray-400 text-white rounded-lg cursor-not-allowed font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation opacity-50"
+                      aria-label="Waiting for host to return to lobby"
                     >
-                      {backToLobbyLoading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <LoadingSpinner size="sm" />
-                          Returning...
-                        </span>
-                      ) : (
-                        "Back to Lobby"
-                      )}
+                      Waiting for host...
                     </button>
                     <p
                       key="waiting-text"
                       className="text-sm text-gray-600 text-center"
                     >
-                      Waiting for host...
+                      Only the host can return to the lobby
                     </p>
                   </div>
                 )}
