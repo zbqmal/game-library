@@ -474,4 +474,234 @@ describe("POST /api/rooms/[roomCode]/leave", () => {
     expect(data1.success).toBe(true);
     expect(data1.roomDeleted).toBe(false);
   });
+
+  it("resets game to waiting when player leaves during active game", async () => {
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "playing",
+          gameState: {
+            tiles: ["covered", "covered", "covered"],
+            currentPlayer: 1,
+            isGameOver: false,
+          },
+          players: {
+            "player1-id": {
+              playerNumber: 1,
+              username: "Player1",
+              isHost: true,
+            },
+            "player2-id": {
+              playerNumber: 2,
+              username: "Player2",
+              isHost: false,
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "waiting",
+          gameState: null,
+          lastLeaverMessage: "Player2 left the game",
+          players: {
+            "player1-id": {
+              playerNumber: 1,
+              username: "Player1",
+              isHost: true,
+            },
+          },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/leave",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player2-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.roomDeleted).toBe(false);
+    expect(mockUpdate).toHaveBeenCalled();
+
+    // Verify the update includes game reset
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.status).toBe("waiting");
+    expect(updateCall.gameState).toBeNull();
+    expect(updateCall.lastLeaverMessage).toBe("Player2 left the game");
+  });
+
+  it("transfers host and resets game when host leaves during active game", async () => {
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "playing",
+          gameState: {
+            tiles: ["covered", "covered", "covered"],
+            currentPlayer: 2,
+            isGameOver: false,
+          },
+          players: {
+            "player1-id": {
+              playerNumber: 1,
+              username: "Player1",
+              isHost: true,
+            },
+            "player2-id": {
+              playerNumber: 2,
+              username: "Player2",
+              isHost: false,
+            },
+            "player3-id": {
+              playerNumber: 3,
+              username: "Player3",
+              isHost: false,
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player2-id",
+          status: "waiting",
+          gameState: null,
+          lastLeaverMessage: "Player1 left the game",
+          players: {
+            "player2-id": {
+              playerNumber: 2,
+              username: "Player2",
+              isHost: true,
+            },
+            "player3-id": {
+              playerNumber: 3,
+              username: "Player3",
+              isHost: false,
+            },
+          },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/leave",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player1-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.roomDeleted).toBe(false);
+    expect(mockUpdate).toHaveBeenCalled();
+
+    // Verify the update includes game reset and host transfer
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.status).toBe("waiting");
+    expect(updateCall.gameState).toBeNull();
+    expect(updateCall.lastLeaverMessage).toBe("Player1 left the game");
+    expect(updateCall.hostId).toBe("player2-id");
+    expect(updateCall["players.player2-id.isHost"]).toBe(true);
+  });
+
+  it("selects host by lowest playerNumber when host leaves during game", async () => {
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player3-id",
+          status: "playing",
+          gameState: {
+            tiles: ["covered", "covered", "covered"],
+            currentPlayer: 1,
+            isGameOver: false,
+          },
+          players: {
+            "player1-id": {
+              playerNumber: 4,
+              username: "Player4",
+              isHost: false,
+            },
+            "player2-id": {
+              playerNumber: 2,
+              username: "Player2",
+              isHost: false,
+            },
+            "player3-id": {
+              playerNumber: 3,
+              username: "Player3",
+              isHost: true,
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player2-id",
+          status: "waiting",
+          gameState: null,
+          lastLeaverMessage: "Player3 left the game",
+          players: {
+            "player1-id": {
+              playerNumber: 4,
+              username: "Player4",
+              isHost: false,
+            },
+            "player2-id": {
+              playerNumber: 2,
+              username: "Player2",
+              isHost: true,
+            },
+          },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/leave",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player3-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalled();
+
+    // Verify host is assigned to player with lowest playerNumber (2, not 4)
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.hostId).toBe("player2-id");
+    expect(updateCall["players.player2-id.isHost"]).toBe(true);
+  });
 });

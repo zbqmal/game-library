@@ -53,27 +53,11 @@ export async function POST(
 
     const isHost = roomData.hostId === playerId;
     const playerCount = Object.keys(roomData.players || {}).length;
+    const isPlayingGame = roomData.status === "playing";
+    const leavingPlayerUsername = roomData.players[playerId].username;
 
-    // If host is leaving and there are other players, reassign host
-    if (isHost && playerCount > 1) {
-      // Find the next player to become host (first non-host player)
-      const nextHost = Object.entries(roomData.players).find(
-        ([id]) => id !== playerId,
-      );
-
-      if (nextHost) {
-        const [nextHostId] = nextHost;
-
-        // Remove player and reassign host
-        await roomRef.update({
-          [`players.${playerId}`]: FieldValue.delete(),
-          hostId: nextHostId,
-          [`players.${nextHostId}.isHost`]: true,
-          lastActivity: FieldValue.serverTimestamp(),
-        });
-      }
-    } else if (playerCount === 1) {
-      // Last player leaving, delete the room
+    // If last player is leaving, delete the room
+    if (playerCount === 1) {
       await roomRef.delete();
       return NextResponse.json(
         {
@@ -83,13 +67,38 @@ export async function POST(
         },
         { status: 200 },
       );
-    } else {
-      // Non-host leaving, just remove player
-      await roomRef.update({
-        [`players.${playerId}`]: FieldValue.delete(),
-        lastActivity: FieldValue.serverTimestamp(),
-      });
     }
+
+    // Prepare update object
+    const updateData: any = {
+      [`players.${playerId}`]: FieldValue.delete(),
+      lastActivity: FieldValue.serverTimestamp(),
+    };
+
+    // If leaving during active game, reset to lobby with message
+    if (isPlayingGame) {
+      updateData.status = "waiting";
+      updateData.gameState = null;
+      updateData.lastLeaverMessage = `${leavingPlayerUsername} left the game`;
+    }
+
+    // If host is leaving and there are other players, reassign host
+    if (isHost && playerCount > 1) {
+      // Find the next player to become host (lowest playerNumber among remaining players)
+      const remainingPlayers = Object.entries(roomData.players)
+        .filter(([id]) => id !== playerId)
+        .map(([id, player]: [string, any]) => ({ id, player }))
+        .sort((a, b) => a.player.playerNumber - b.player.playerNumber);
+
+      if (remainingPlayers.length > 0) {
+        const nextHostId = remainingPlayers[0].id;
+        updateData.hostId = nextHostId;
+        updateData[`players.${nextHostId}.isHost`] = true;
+      }
+    }
+
+    // Apply the update
+    await roomRef.update(updateData);
 
     // Fetch updated room data (if room wasn't deleted)
     const updatedRoomDoc = await roomRef.get();

@@ -128,6 +128,32 @@ function OnlineLobbyPageContent() {
     setToastError("");
   }, [clearSession, roomCode, playerId]);
 
+  // Handle back to TreasureHunt (mid-game leave)
+  const handleBackToTreasureHunt = useCallback(async () => {
+    // Call API to remove player from room during game
+    if (roomCode && playerId) {
+      try {
+        await fetch(`/api/rooms/${roomCode}/leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerId }),
+        });
+      } catch (err) {
+        console.error("Failed to notify server of leave:", err);
+      }
+    }
+
+    // Clean up local state
+    clearSession();
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+
+    // Navigate to treasure hunt page
+    router.push("/games/treasure-hunt");
+  }, [clearSession, roomCode, playerId, router]);
+
   // Update heartbeat
   const updateHeartbeat = useCallback(async () => {
     if (!db || !roomCode || !playerId) return;
@@ -944,6 +970,16 @@ function OnlineLobbyPageContent() {
           )}
         </div>
 
+        {/* Banner Message - Show when player left during game */}
+        {!showGameBoard && room?.lastLeaverMessage && (
+          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 text-center">
+            <p className="text-yellow-800 font-semibold">⚠️ {room.lastLeaverMessage}</p>
+            <p className="text-yellow-700 text-sm mt-1">
+              Game was reset to lobby. Host can start a new game.
+            </p>
+          </div>
+        )}
+
         {/* Grid Size Configuration - Only show in lobby before game starts */}
         {!showGameBoard && (
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
@@ -1090,6 +1126,35 @@ function OnlineLobbyPageContent() {
                     {getTileContent(index, room.gameState!)}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Mid-Game "Back to TreasureHunt" Button - Only show during active play (not game over) */}
+            {!room.gameState.isGameOver && (
+              <div className="space-y-3">
+                <button
+                  onClick={handleBackToTreasureHunt}
+                  className="w-full py-3 sm:py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation flex items-center justify-center gap-2"
+                  aria-label="Leave game and return to TreasureHunt"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
+                  Back to TreasureHunt
+                </button>
+                <p className="text-xs text-gray-600 text-center">
+                  Leaving will end the game for all players
+                </p>
               </div>
             )}
 
