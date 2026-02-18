@@ -13,6 +13,7 @@ import GameShell from "@/app/components/common/GameShell";
 import LoadingSpinner from "@/app/components/common/LoadingSpinner";
 import SkeletonLoader from "@/app/components/common/SkeletonLoader";
 import ErrorToast from "@/app/components/common/ErrorToast";
+import DismissibleLeaverMessage from "@/app/games/treasure-hunt/online/DismissibleLeaverMessage";
 import { db } from "@/lib/firebase-client";
 import { doc, onSnapshot, updateDoc, Timestamp } from "firebase/firestore";
 import { Room } from "../types/room";
@@ -222,7 +223,7 @@ function OnlineLobbyPageContent() {
         setRoomCode(storedRoomCode);
         setUsername(storedUsername);
         setView("lobby");
-      } catch (err) {
+      } catch {
         clearSession();
         setToastError("This room has expired or no longer exists.");
         setView("landing");
@@ -755,8 +756,9 @@ function OnlineLobbyPageContent() {
               Maximum {selectedMaxPlayers} players can join this room
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              <span aria-label="Information">ℹ</span> The number of players cannot be changed after the room is created.
-              The grid size can be adjusted in the lobby.
+              <span aria-label="Information">ℹ</span> The number of players
+              cannot be changed after the room is created. The grid size can be
+              adjusted in the lobby.
             </p>
           </div>
 
@@ -971,13 +973,8 @@ function OnlineLobbyPageContent() {
         </div>
 
         {/* Banner Message - Show when player left during game */}
-        {!showGameBoard && room?.lastLeaverMessage && (
-          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 text-center">
-            <p className="text-yellow-800 font-semibold">⚠️ {room.lastLeaverMessage}</p>
-            <p className="text-yellow-700 text-sm mt-1">
-              Game was reset to lobby. Host can start a new game.
-            </p>
-          </div>
+        {!showGameBoard && (
+          <DismissibleLeaverMessage message={room?.lastLeaverMessage} />
         )}
 
         {/* Grid Size Configuration - Only show in lobby before game starts */}
@@ -986,14 +983,28 @@ function OnlineLobbyPageContent() {
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-semibold text-gray-900">Grid Size:</span>
-                  <span className="text-gray-700"> {gridSize}×{gridSize}</span>
-                  {isHost && <span className="text-xs text-gray-500 block">Can be changed</span>}
+                  <span className="font-semibold text-gray-900">
+                    Grid Size:
+                  </span>
+                  <span className="text-gray-700">
+                    {" "}
+                    {gridSize}×{gridSize}
+                  </span>
+                  {isHost && (
+                    <span className="text-xs text-gray-500 block">
+                      Can be changed
+                    </span>
+                  )}
                 </div>
                 <div>
                   <span className="font-semibold text-gray-900">Players:</span>
-                  <span className="text-gray-700"> {playerCount}/{maxPlayers}</span>
-                  <span className="text-xs text-gray-500 block">Set at creation</span>
+                  <span className="text-gray-700">
+                    {" "}
+                    {playerCount}/{maxPlayers}
+                  </span>
+                  <span className="text-xs text-gray-500 block">
+                    Set at creation
+                  </span>
                 </div>
               </div>
             </div>
