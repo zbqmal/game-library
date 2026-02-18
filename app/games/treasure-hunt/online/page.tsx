@@ -57,6 +57,8 @@ function OnlineLobbyPageContent() {
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [isUpdatingGridSize, setIsUpdatingGridSize] = useState(false);
   const [selectedMaxPlayers, setSelectedMaxPlayers] = useState(4); // Default 4
+  const [stopGameLoading, setStopGameLoading] = useState(false);
+  const [stopGameBanner, setStopGameBanner] = useState<string | null>(null);
 
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -127,6 +129,7 @@ function OnlineLobbyPageContent() {
     setJoinCodeInput("");
     setError("");
     setToastError("");
+    setStopGameBanner(null); // Clear banner on leave
   }, [clearSession, roomCode, playerId]);
 
   // Handle back to TreasureHunt (mid-game leave)
@@ -239,12 +242,26 @@ function OnlineLobbyPageContent() {
   useEffect(() => {
     if (!db || !roomCode || view !== "lobby") return;
 
+    let previousStatus: string | null = null;
+
     const roomRef = doc(db, "rooms", roomCode);
     const unsubscribe = onSnapshot(
       roomRef,
       (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data() as Room;
+          
+          // Detect if game was stopped (transition from 'playing' to 'waiting')
+          if (previousStatus === "playing" && data.status === "waiting" && !data.gameState) {
+            // Show banner for all players (not just host)
+            setStopGameBanner("The game was stopped by the host.");
+            // Auto-dismiss after 10 seconds
+            setTimeout(() => {
+              setStopGameBanner(null);
+            }, 10000);
+          }
+          
+          previousStatus = data.status;
           setRoom(data);
         } else {
           // Room was deleted
@@ -429,6 +446,7 @@ function OnlineLobbyPageContent() {
 
     setLoading(true);
     setError("");
+    setStopGameBanner(null); // Clear banner when starting new game
 
     try {
       const response = await fetch(`/api/rooms/${roomCode}/start`, {
@@ -605,6 +623,58 @@ function OnlineLobbyPageContent() {
       );
     } finally {
       setBackToLobbyLoading(false);
+    }
+  };
+
+  const handleStopGame = async () => {
+    if (!roomCode || !playerId) return;
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      "Are you sure you want to stop the game? This will end the game for all players and return everyone to the lobby.",
+    );
+
+    if (!confirmed) {
+      // If canceled, do nothing
+      return;
+    }
+
+    setStopGameLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`/api/rooms/${roomCode}/stop-game`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playerId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to stop game");
+      }
+
+      // Set local banner message for all players
+      setStopGameBanner("The game was stopped by the host.");
+
+      // Auto-dismiss banner after 10 seconds
+      setTimeout(() => {
+        setStopGameBanner(null);
+      }, 10000);
+
+      // Real-time listener will update UI automatically
+      // (room.status changes to 'waiting', gameState becomes null)
+    } catch (err) {
+      setToastError(
+        err instanceof Error
+          ? err.message
+          : "Failed to stop game. Please try again.",
+      );
+    } finally {
+      setStopGameLoading(false);
     }
   };
 
@@ -977,6 +1047,35 @@ function OnlineLobbyPageContent() {
           <DismissibleLeaverMessage message={room?.lastLeaverMessage} />
         )}
 
+        {/* Stop Game Banner - Show when host stopped the game */}
+        {!showGameBoard && stopGameBanner && (
+          <div className="bg-orange-50 border-2 border-orange-400 rounded-lg p-4 text-center relative">
+            <button
+              onClick={() => setStopGameBanner(null)}
+              className="absolute top-2 right-2 text-orange-700 hover:text-orange-900 hover:bg-orange-100 rounded-full p-1 transition-colors"
+              aria-label="Dismiss message"
+              title="Dismiss message"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+            <p className="text-orange-800 font-semibold">🛑 {stopGameBanner}</p>
+            <p className="text-orange-700 text-sm mt-1">
+              You are back in the lobby. Host can start a new game.
+            </p>
+          </div>
+        )}
+
         {/* Grid Size Configuration - Only show in lobby before game starts */}
         {!showGameBoard && (
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
@@ -1137,6 +1236,53 @@ function OnlineLobbyPageContent() {
                     {getTileContent(index, room.gameState!)}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Stop Game Button - Only show to host during active play (not game over) */}
+            {!room.gameState.isGameOver && isHost && (
+              <div className="space-y-3">
+                <button
+                  onClick={handleStopGame}
+                  disabled={stopGameLoading}
+                  className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  aria-label="Stop game and return all players to lobby"
+                >
+                  {stopGameLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <LoadingSpinner size="sm" />
+                      Stopping...
+                    </span>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
+                        />
+                      </svg>
+                      Stop Game
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-red-600 text-center">
+                  This will end the game for all players and return everyone to
+                  the lobby
+                </p>
               </div>
             )}
 
