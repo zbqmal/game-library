@@ -91,6 +91,7 @@ export async function POST(
       status: "playing",
       gameState,
       lastActivity: FieldValue.serverTimestamp(),
+      lastLeaverMessage: FieldValue.delete(), // Clear any previous leave message
     });
 
     // Fetch updated room data

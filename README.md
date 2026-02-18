@@ -140,11 +140,13 @@ A timing challenge where you must stop the timer at exactly 47.0 seconds!
 The game library supports three languages: English (default), Spanish, and Korean. Users can switch between languages using the dropdown selector in the top-right corner of the header.
 
 **Supported Languages:**
+
 - 🇺🇸 English
 - 🇪🇸 Spanish (Español)
 - 🇰🇷 Korean (한국어)
 
 **Features:**
+
 - Language preference is persisted in browser localStorage
 - All UI text, game titles, and descriptions are translated
 - Seamless language switching without page reload
@@ -163,7 +165,7 @@ To add support for a new language, update the `TranslationEngine.ts` file:
 ### Setup
 
 1. Clone the repository
-2. Install dependencies: `npm install` or `yarn install`
+2. Install dependencies: `yarn install`
 3. (Optional) Configure Firebase for visit tracking:
    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
    - Generate a service account key
@@ -175,7 +177,7 @@ To add support for a new language, update the `TranslationEngine.ts` file:
      ```
    - Note: The app will work without Firebase credentials, but visit tracking will not function
 
-4. Run the development server: `npm run dev` or `yarn dev`
+4. Run the development server: `yarn dev`
 
 ### Room Cleanup (Optional)
 
@@ -186,18 +188,22 @@ For online multiplayer, rooms are automatically cleaned up to prevent database c
 To enable automatic room cleanup on Vercel deployments:
 
 1. Create a `vercel.json` file in the root directory:
+
 ```json
 {
-  "crons": [{
-    "path": "/api/rooms/cleanup",
-    "schedule": "0 * * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/rooms/cleanup",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
 ```
 
 2. Deploy to Vercel - the cron job will run hourly
 
 **Cleanup Rules:**
+
 - Rooms with status "waiting" or "finished" are deleted after 1 hour of inactivity
 - Active games (status "playing") are deleted after 2 hours of inactivity
 - "lastActivity" is updated on every player action (join, start, move)
@@ -205,6 +211,7 @@ To enable automatic room cleanup on Vercel deployments:
 **Manual Cleanup:**
 
 You can also call the cleanup endpoint manually:
+
 ```bash
 curl https://your-domain.com/api/rooms/cleanup
 ```
@@ -214,6 +221,7 @@ curl https://your-domain.com/api/rooms/cleanup
 The homepage displays a daily visit counter that automatically resets at 00:00:00 EST (Eastern Standard Time) every day. This feature uses Firebase Firestore to track and persist visit counts.
 
 **How it works:**
+
 - Each time the homepage is loaded, a visit is recorded
 - The counter displays the total number of visits for the current day (EST timezone)
 - At midnight EST (00:00:00), the counter automatically resets to zero for the new day
@@ -231,7 +239,7 @@ yarn test:e2e      # Run end-to-end tests
 
 ### Continuous Integration
 
-This project includes a GitHub Actions workflow that automatically runs all unit tests on every pull request. 
+This project includes a GitHub Actions workflow that automatically runs all unit tests on every pull request.
 
 **To make this workflow required for PR merges:**
 

@@ -24,4 +24,5 @@ export interface Room {
   };
   gameState: GameState | null;
   players: Record<string, Player>;
+  lastLeaverMessage?: string; // Message shown in lobby after a player leaves mid-game
 }

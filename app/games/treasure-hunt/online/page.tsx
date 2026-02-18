@@ -13,6 +13,7 @@ import GameShell from "@/app/components/common/GameShell";
 import LoadingSpinner from "@/app/components/common/LoadingSpinner";
 import SkeletonLoader from "@/app/components/common/SkeletonLoader";
 import ErrorToast from "@/app/components/common/ErrorToast";
+import DismissibleLeaverMessage from "@/app/games/treasure-hunt/online/DismissibleLeaverMessage";
 import { db } from "@/lib/firebase-client";
 import { doc, onSnapshot, updateDoc, Timestamp } from "firebase/firestore";
 import { Room } from "../types/room";
@@ -128,6 +129,32 @@ function OnlineLobbyPageContent() {
     setToastError("");
   }, [clearSession, roomCode, playerId]);
 
+  // Handle back to TreasureHunt (mid-game leave)
+  const handleBackToTreasureHunt = useCallback(async () => {
+    // Call API to remove player from room during game
+    if (roomCode && playerId) {
+      try {
+        await fetch(`/api/rooms/${roomCode}/leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerId }),
+        });
+      } catch (err) {
+        console.error("Failed to notify server of leave:", err);
+      }
+    }
+
+    // Clean up local state
+    clearSession();
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+
+    // Navigate to treasure hunt page
+    router.push("/games/treasure-hunt");
+  }, [clearSession, roomCode, playerId, router]);
+
   // Update heartbeat
   const updateHeartbeat = useCallback(async () => {
     if (!db || !roomCode || !playerId) return;
@@ -196,7 +223,7 @@ function OnlineLobbyPageContent() {
         setRoomCode(storedRoomCode);
         setUsername(storedUsername);
         setView("lobby");
-      } catch (err) {
+      } catch {
         clearSession();
         setToastError("This room has expired or no longer exists.");
         setView("landing");
@@ -729,8 +756,9 @@ function OnlineLobbyPageContent() {
               Maximum {selectedMaxPlayers} players can join this room
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              <span aria-label="Information">ℹ</span> The number of players cannot be changed after the room is created.
-              The grid size can be adjusted in the lobby.
+              <span aria-label="Information">ℹ</span> The number of players
+              cannot be changed after the room is created. The grid size can be
+              adjusted in the lobby.
             </p>
           </div>
 
@@ -944,20 +972,39 @@ function OnlineLobbyPageContent() {
           )}
         </div>
 
+        {/* Banner Message - Show when player left during game */}
+        {!showGameBoard && (
+          <DismissibleLeaverMessage message={room?.lastLeaverMessage} />
+        )}
+
         {/* Grid Size Configuration - Only show in lobby before game starts */}
         {!showGameBoard && (
           <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-semibold text-gray-900">Grid Size:</span>
-                  <span className="text-gray-700"> {gridSize}×{gridSize}</span>
-                  {isHost && <span className="text-xs text-gray-500 block">Can be changed</span>}
+                  <span className="font-semibold text-gray-900">
+                    Grid Size:
+                  </span>
+                  <span className="text-gray-700">
+                    {" "}
+                    {gridSize}×{gridSize}
+                  </span>
+                  {isHost && (
+                    <span className="text-xs text-gray-500 block">
+                      Can be changed
+                    </span>
+                  )}
                 </div>
                 <div>
                   <span className="font-semibold text-gray-900">Players:</span>
-                  <span className="text-gray-700"> {playerCount}/{maxPlayers}</span>
-                  <span className="text-xs text-gray-500 block">Set at creation</span>
+                  <span className="text-gray-700">
+                    {" "}
+                    {playerCount}/{maxPlayers}
+                  </span>
+                  <span className="text-xs text-gray-500 block">
+                    Set at creation
+                  </span>
                 </div>
               </div>
             </div>
@@ -1090,6 +1137,35 @@ function OnlineLobbyPageContent() {
                     {getTileContent(index, room.gameState!)}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Mid-Game "Back to TreasureHunt" Button - Only show during active play (not game over) */}
+            {!room.gameState.isGameOver && (
+              <div className="space-y-3">
+                <button
+                  onClick={handleBackToTreasureHunt}
+                  className="w-full py-3 sm:py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation flex items-center justify-center gap-2"
+                  aria-label="Leave game and return to TreasureHunt"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
+                  Back to TreasureHunt
+                </button>
+                <p className="text-xs text-gray-600 text-center">
+                  Leaving will end the game for all players
+                </p>
               </div>
             )}
 
