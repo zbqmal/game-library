@@ -1135,7 +1135,7 @@ function OnlineLobbyPageContent() {
                   <div key="non-host-actions" className="space-y-2">
                     <button
                       key="back-to-lobby-btn"
-                      disabled={true}
+                      disabled
                       className="w-full py-3 sm:py-4 bg-gray-400 text-white rounded-lg cursor-not-allowed font-semibold text-base sm:text-lg min-h-[44px] touch-manipulation opacity-50"
                       aria-label="Waiting for host to return to lobby"
                     >
