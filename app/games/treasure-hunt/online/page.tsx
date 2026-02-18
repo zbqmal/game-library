@@ -61,6 +61,8 @@ function OnlineLobbyPageContent() {
   const [stopGameBanner, setStopGameBanner] = useState<string | null>(null);
 
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const bannerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previousStatusRef = useRef<string | null>(null);
 
   // Memoize current player info
   const currentPlayerInfo = useMemo(() => {
@@ -120,6 +122,10 @@ function OnlineLobbyPageContent() {
     if (heartbeatIntervalRef.current) {
       clearInterval(heartbeatIntervalRef.current);
       heartbeatIntervalRef.current = null;
+    }
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current);
+      bannerTimeoutRef.current = null;
     }
     setPlayerId(null);
     setRoomCode("");
@@ -242,8 +248,6 @@ function OnlineLobbyPageContent() {
   useEffect(() => {
     if (!db || !roomCode || view !== "lobby") return;
 
-    let previousStatus: string | null = null;
-
     const roomRef = doc(db, "rooms", roomCode);
     const unsubscribe = onSnapshot(
       roomRef,
@@ -252,16 +256,23 @@ function OnlineLobbyPageContent() {
           const data = snapshot.data() as Room;
           
           // Detect if game was stopped (transition from 'playing' to 'waiting')
-          if (previousStatus === "playing" && data.status === "waiting" && !data.gameState) {
+          if (previousStatusRef.current === "playing" && data.status === "waiting" && !data.gameState) {
+            // Clear any existing banner timeout
+            if (bannerTimeoutRef.current) {
+              clearTimeout(bannerTimeoutRef.current);
+            }
+            
             // Show banner for all players (not just host)
             setStopGameBanner("The game was stopped by the host.");
+            
             // Auto-dismiss after 10 seconds
-            setTimeout(() => {
+            bannerTimeoutRef.current = setTimeout(() => {
               setStopGameBanner(null);
+              bannerTimeoutRef.current = null;
             }, 10000);
           }
           
-          previousStatus = data.status;
+          previousStatusRef.current = data.status;
           setRoom(data);
         } else {
           // Room was deleted
@@ -275,7 +286,14 @@ function OnlineLobbyPageContent() {
       },
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      // Clean up banner timeout on unmount
+      if (bannerTimeoutRef.current) {
+        clearTimeout(bannerTimeoutRef.current);
+        bannerTimeoutRef.current = null;
+      }
+    };
   }, [roomCode, view, handleLeaveRoom]);
 
   // Set up heartbeat
@@ -446,7 +464,13 @@ function OnlineLobbyPageContent() {
 
     setLoading(true);
     setError("");
-    setStopGameBanner(null); // Clear banner when starting new game
+    
+    // Clear banner and timeout when starting new game
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current);
+      bannerTimeoutRef.current = null;
+    }
+    setStopGameBanner(null);
 
     try {
       const response = await fetch(`/api/rooms/${roomCode}/start`, {
@@ -657,12 +681,18 @@ function OnlineLobbyPageContent() {
         throw new Error(data.error || "Failed to stop game");
       }
 
+      // Clear any existing banner timeout
+      if (bannerTimeoutRef.current) {
+        clearTimeout(bannerTimeoutRef.current);
+      }
+
       // Set local banner message for all players
       setStopGameBanner("The game was stopped by the host.");
 
       // Auto-dismiss banner after 10 seconds
-      setTimeout(() => {
+      bannerTimeoutRef.current = setTimeout(() => {
         setStopGameBanner(null);
+        bannerTimeoutRef.current = null;
       }, 10000);
 
       // Real-time listener will update UI automatically
@@ -1051,7 +1081,13 @@ function OnlineLobbyPageContent() {
         {!showGameBoard && stopGameBanner && (
           <div className="bg-orange-50 border-2 border-orange-400 rounded-lg p-4 text-center relative">
             <button
-              onClick={() => setStopGameBanner(null)}
+              onClick={() => {
+                if (bannerTimeoutRef.current) {
+                  clearTimeout(bannerTimeoutRef.current);
+                  bannerTimeoutRef.current = null;
+                }
+                setStopGameBanner(null);
+              }}
               className="absolute top-2 right-2 text-orange-700 hover:text-orange-900 hover:bg-orange-100 rounded-full p-1 transition-colors"
               aria-label="Dismiss message"
               title="Dismiss message"
