@@ -19,6 +19,19 @@ export async function POST(
     }
 
     const { roomCode } = await params;
+    const body = await request.json();
+    const { playerId } = body;
+
+    // Validate request body
+    if (!playerId || typeof playerId !== "string") {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid request: playerId field is required and must be a string",
+        },
+        { status: 400 },
+      );
+    }
 
     // Get room document
     const roomRef = db.collection("rooms").doc(roomCode.toUpperCase());
@@ -29,6 +42,14 @@ export async function POST(
     }
 
     const roomData = roomDoc.data();
+
+    // Check if player is the host
+    if (roomData?.hostId !== playerId) {
+      return NextResponse.json(
+        { error: "Only the host can return to lobby" },
+        { status: 403 },
+      );
+    }
 
     // Allow returning to lobby from 'finished' or 'playing' status
     if (roomData?.status !== "finished" && roomData?.status !== "playing") {
