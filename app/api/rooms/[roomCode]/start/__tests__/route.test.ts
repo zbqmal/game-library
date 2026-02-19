@@ -527,6 +527,77 @@ describe("POST /api/rooms/[roomCode]/start", () => {
     });
   });
 
+  it("renumbers players sequentially when playerNumbers are non-sequential (host re-join bug)", async () => {
+    // Scenario: Player1 (playerNumber=1) leaves, Player2 (playerNumber=2) becomes host,
+    // Player1 re-joins and gets playerNumber=3. When game starts, players have numbers 2 and 3
+    // which would prevent any moves since gameState.currentPlayer starts at 1.
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player2-id",
+          status: "waiting",
+          players: {
+            "player2-id": { playerNumber: 2, username: "PlayerB", isHost: true },
+            "player3-id": { playerNumber: 3, username: "PlayerA", isHost: false },
+          },
+          config: { gridSize: 3, maxPlayers: 4 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player2-id",
+          status: "playing",
+          gameState: {
+            tiles: new Array(9).fill("covered"),
+            treasurePosition: 4,
+            currentPlayer: 1,
+            winner: null,
+            isGameOver: false,
+            playerCount: 2,
+            playerNames: ["PlayerB", "PlayerA"],
+            gridSize: 3,
+          },
+          players: {
+            "player2-id": { playerNumber: 1, username: "PlayerB", isHost: true },
+            "player3-id": { playerNumber: 2, username: "PlayerA", isHost: false },
+          },
+          config: { gridSize: 3, maxPlayers: 4 },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/start",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player2-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+
+    expect(response.status).toBe(200);
+
+    // Verify initializeGame called with correct sequential names
+    expect(initializeGame).toHaveBeenCalledWith({
+      playerCount: 2,
+      playerNames: ["PlayerB", "PlayerA"],
+      gridSize: 3,
+    });
+
+    // Verify update includes renumbering: PlayerB (was 2) → 1, PlayerA (was 3) → 2
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall["players.player2-id.playerNumber"]).toBe(1);
+    expect(updateCall["players.player3-id.playerNumber"]).toBe(2);
+    expect(updateCall.status).toBe("playing");
+    expect(updateCall.gameState).toBeDefined();
+  });
+
   it("handles errors gracefully", async () => {
     mockGet.mockRejectedValue(new Error("Firestore error"));
 
