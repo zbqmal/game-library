@@ -128,6 +128,8 @@ class TranslationEngine {
       treasureGridLabel: "Grid:",
       treasurePlayersLabel: "Players:",
       treasureInvalidConfig: "Invalid configuration",
+      treasureTabOffline: "Offline Multiplayer",
+      treasureTabOnline: "Online Multiplayer",
       game47PageDescription:
         "A timing challenge! Stop the timer at exactly 47.0 seconds. The timer will fade out after 3 seconds—trust your instincts!",
       game47SelectDifficultyTitle: "Select Difficulty",
@@ -272,6 +274,8 @@ class TranslationEngine {
       treasureGridLabel: "Cuadrícula:",
       treasurePlayersLabel: "Jugadores:",
       treasureInvalidConfig: "Configuración inválida",
+      treasureTabOffline: "Multijugador Sin Conexión",
+      treasureTabOnline: "Multijugador En Línea",
       game47PageDescription:
         "¡Un desafío de tiempo! Detén el temporizador exactamente a los 47.0 segundos. El temporizador se desvanecerá después de 3 segundos—confía en tu instinto.",
       game47SelectDifficultyTitle: "Seleccionar dificultad",
@@ -413,6 +417,8 @@ class TranslationEngine {
       treasureGridLabel: "격자:",
       treasurePlayersLabel: "플레이어:",
       treasureInvalidConfig: "잘못된 설정입니다",
+      treasureTabOffline: "오프라인 멀티플레이어",
+      treasureTabOnline: "온라인 멀티플레이어",
       game47PageDescription:
         "타이밍 챌린지! 정확히 47.0초에 타이머를 멈추세요. 타이머는 3초 후 사라집니다—감각을 믿어보세요.",
       game47SelectDifficultyTitle: "난이도 선택",

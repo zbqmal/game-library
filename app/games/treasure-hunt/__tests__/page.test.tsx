@@ -3,6 +3,21 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import TreasureHuntPage from "../page";
 
+// Mock next/navigation
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+  })),
+}));
+
+// Mock the LoadingSpinner component
+jest.mock("@/app/components/common/LoadingSpinner", () => {
+  return function MockLoadingSpinner() {
+    return <span data-testid="loading-spinner">Loading</span>;
+  };
+});
+
 // Mock the GameShell component
 jest.mock("@/app/components/common/GameShell", () => {
   return function MockGameShell({
@@ -30,6 +45,10 @@ describe("TreasureHuntPage", () => {
     const startButton = screen.getByText("Start Game");
     fireEvent.click(startButton);
   };
+
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
 
   it("renders the game title and configuration screen", () => {
     render(<TreasureHuntPage />);
@@ -609,6 +628,83 @@ describe("TreasureHuntPage", () => {
       // Max players label should update
       const label = screen.getByText(/Number of Players \(2-\d+\)/);
       expect(label.textContent).toContain("Number of Players (2-");
+    });
+  });
+
+  describe("Tab Navigation", () => {
+    it("renders both Offline and Online Multiplayer tabs", () => {
+      render(<TreasureHuntPage />);
+
+      expect(screen.getByText("Offline Multiplayer")).toBeInTheDocument();
+      expect(screen.getByText(/Online Multiplayer/)).toBeInTheDocument();
+    });
+
+    it("shows Offline Multiplayer tab as active by default", () => {
+      render(<TreasureHuntPage />);
+
+      // Offline tab content (config + start game) should be visible by default
+      expect(screen.getByText("Start Game")).toBeInTheDocument();
+      expect(screen.getByText("Game Configuration")).toBeInTheDocument();
+    });
+
+    it("does not show online lobby UI when offline tab is active", () => {
+      render(<TreasureHuntPage />);
+
+      expect(screen.queryByText("Create New Room")).not.toBeInTheDocument();
+      expect(screen.queryByText("Join Existing Room")).not.toBeInTheDocument();
+    });
+
+    it("switches to Online Multiplayer tab and shows online UI", () => {
+      render(<TreasureHuntPage />);
+
+      const onlineTab = screen.getByText(/Online Multiplayer/);
+      fireEvent.click(onlineTab);
+
+      expect(screen.getByText("Create New Room")).toBeInTheDocument();
+      expect(screen.getByText("Join Existing Room")).toBeInTheDocument();
+      expect(screen.getByText("Your Username")).toBeInTheDocument();
+    });
+
+    it("hides offline config UI when online tab is active", () => {
+      render(<TreasureHuntPage />);
+
+      const onlineTab = screen.getByText(/Online Multiplayer/);
+      fireEvent.click(onlineTab);
+
+      expect(screen.queryByText("Start Game")).not.toBeInTheDocument();
+      expect(screen.queryByText("Game Configuration")).not.toBeInTheDocument();
+    });
+
+    it("switching back to offline tab restores config UI", () => {
+      render(<TreasureHuntPage />);
+
+      // Switch to online
+      fireEvent.click(screen.getByText(/Online Multiplayer/));
+      expect(screen.queryByText("Start Game")).not.toBeInTheDocument();
+
+      // Switch back to offline
+      fireEvent.click(screen.getByText("Offline Multiplayer"));
+      expect(screen.getByText("Start Game")).toBeInTheDocument();
+    });
+
+    it("online tab shows Number of Players selector in Create New Room section", () => {
+      render(<TreasureHuntPage />);
+
+      fireEvent.click(screen.getByText(/Online Multiplayer/));
+
+      expect(screen.getByText("Number of Players")).toBeInTheDocument();
+      // Should have buttons for 2-6 players in the create room section
+      expect(screen.getByRole("button", { name: "Select 4 players" })).toBeInTheDocument();
+    });
+
+    it("loads persisted username from session storage", () => {
+      sessionStorage.setItem("treasure-hunt-username", "TestUser");
+      render(<TreasureHuntPage />);
+
+      fireEvent.click(screen.getByText(/Online Multiplayer/));
+
+      const usernameInput = screen.getByPlaceholderText("Enter your name") as HTMLInputElement;
+      expect(usernameInput.value).toBe("TestUser");
     });
   });
 });
