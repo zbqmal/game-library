@@ -1058,9 +1058,9 @@ document.addEventListener('visibilitychange', () => {
 });
 ```
 
-#### Scenario 9.7: Player re-joins previous room (host re-join bug to be fixed)
+#### Scenario 9.7: Player re-joins previous room (host re-join bug)
 
-**Context**: Known issue - Host leaves and tries to re-join
+**Context**: Host leaves and tries to re-join
 
 **Steps:**
 1. Alice (host) leaves room "XYZ789"
@@ -1072,16 +1072,16 @@ document.addEventListener('visibilitychange', () => {
 - Alice is NOT host (Bob is host)
 - Room continues normally
 
-**Current Bug (if exists):**
-- Potential conflicts with playerId reuse
-- May show Alice as host incorrectly
-- May have permission conflicts
+**Root Cause (Fixed):**
+- When Alice rejoins, she gets a new playerNumber (e.g., 3) since the join logic
+  assigns max(existing playerNumbers) + 1. Bob still has playerNumber=2.
+- When the game starts, `initializeGame` sets `currentPlayer=1`, but no player
+  has playerNumber=1. Neither player can make a move.
 
-**Fix Needed:**
-- On leave: Fully remove player from room.players
-- On re-join: Generate new playerId
-- Treat as completely new player
-- Clear sessionStorage on leave
+**Fix Applied:**
+- On game start: Players are renumbered sequentially (1..N) sorted by their
+  existing playerNumber. This ensures game logic's 1..N player indexing matches
+  the room's player numbers regardless of leave/rejoin history.
 
 ### 10. UI State Transitions
 
@@ -1788,21 +1788,21 @@ Future considerations:
 ## Known Issues
 
 ### 1. Host Re-Join Bug
-**Description:** If host leaves and re-joins same room, may encounter permission conflicts.
+**Description:** If host leaves and re-joins same room, the game gets stuck after the new host starts it.
 
-**Symptoms:**
-- May appear as host incorrectly
-- May not be able to start game
-- May cause duplicate player entries
+**Symptoms (Fixed):**
+- Game screen says "Waiting for [Player]" but tiles are disabled for all players
+- No player can click any tile
 
-**Workaround:**
-- Don't re-join rooms after leaving
-- Create new room instead
+**Root Cause:**
+- When a player rejoins, they receive a new `playerNumber` = max(existing) + 1.
+- After the original host (playerNumber=1) leaves, remaining players have numbers starting at 2.
+- `initializeGame` always sets `currentPlayer=1`, but no player has `playerNumber=1`, so no moves can be made.
 
-**Fix Status:** Needs investigation
-- Ensure playerId is regenerated on re-join
-- Clear sessionStorage completely on leave
-- Validate player doesn't exist before re-adding
+**Fix Applied:**
+- On game start, all players are renumbered sequentially (1..N) sorted by their existing playerNumber. This ensures game logic's 1..N player indexing always matches room player numbers.
+
+**Fix Status:** Fixed
 
 ### 2. Race Condition: Simultaneous Joins to Full Room
 **Description:** Two players might join simultaneously when room is at max capacity.

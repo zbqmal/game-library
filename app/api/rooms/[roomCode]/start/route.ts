@@ -69,15 +69,14 @@ export async function POST(
       );
     }
 
-    // Get player names in order of player number
-    const players = Object.values(roomData.players || {}) as Array<{
-      playerNumber: number;
-      username: string;
-    }>;
-    const sortedPlayers = players.sort(
-      (a, b) => a.playerNumber - b.playerNumber,
+    // Get player entries sorted by player number to determine turn order
+    const playerEntries = Object.entries(roomData.players || {}) as Array<
+      [string, { playerNumber: number; username: string }]
+    >;
+    const sortedPlayerEntries = playerEntries.sort(
+      ([, a], [, b]) => a.playerNumber - b.playerNumber,
     );
-    const playerNames = sortedPlayers.map((p) => p.username);
+    const playerNames = sortedPlayerEntries.map(([, p]) => p.username);
 
     // Initialize game state
     const gameState = initializeGame({
@@ -86,8 +85,15 @@ export async function POST(
       gridSize: roomData.config?.gridSize || 3,
     });
 
-    // Update room status to playing and set game state
+    // Renumber players sequentially (1..N) to match game logic, preserving turn order
+    const renumberUpdates: Record<string, unknown> = {};
+    sortedPlayerEntries.forEach(([id], index) => {
+      renumberUpdates[`players.${id}.playerNumber`] = index + 1;
+    });
+
+    // Update room status to playing, renumber players, and set game state
     await roomRef.update({
+      ...renumberUpdates,
       status: "playing",
       gameState,
       lastActivity: FieldValue.serverTimestamp(),
