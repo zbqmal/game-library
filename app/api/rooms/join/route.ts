@@ -3,6 +3,9 @@ import { db } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import crypto from 'crypto';
 
+// Duration to keep former player history for re-joining (10 minutes in milliseconds)
+const FORMER_PLAYER_RETENTION_MS = 10 * 60 * 1000;
+
 interface PlayerData {
   playerId: string;
   username: string;
@@ -100,17 +103,16 @@ export async function POST(request: NextRequest) {
     // Generate temporary player ID
     const playerId = crypto.randomUUID();
 
-    // Check if this username matches a recently left player (within 10 minutes)
+    // Check if this username matches a recently left player
     // If so, reuse their playerNumber for consistent turn order
     const formerPlayers = roomData.formerPlayers || [];
-    const TEN_MINUTES_MS = 10 * 60 * 1000;
     const now = Date.now();
     
-    // Clean up expired former players (older than 10 minutes)
+    // Clean up expired former players (older than retention period)
     const validFormerPlayers = formerPlayers.filter((fp: any) => {
       if (!fp.leftAt) return false;
       const leftAtMs = fp.leftAt.toMillis ? fp.leftAt.toMillis() : fp.leftAt;
-      return now - leftAtMs < TEN_MINUTES_MS;
+      return now - leftAtMs < FORMER_PLAYER_RETENTION_MS;
     });
 
     // Find if this username was a former player
@@ -125,8 +127,9 @@ export async function POST(request: NextRequest) {
       // Reuse the previous playerNumber
       playerNumber = formerPlayer.playerNumber;
       // Remove this entry from formerPlayers since they're rejoining
+      const usernameToRemove = username.trim().toLowerCase();
       updatedFormerPlayers = validFormerPlayers.filter(
-        (fp: any) => !(fp.username.toLowerCase() === username.trim().toLowerCase() && fp.playerNumber === playerNumber)
+        (fp: any) => fp.username.toLowerCase() !== usernameToRemove || fp.playerNumber !== playerNumber
       );
     } else {
       // Assign next available player number
