@@ -86,27 +86,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for name collision with current players
+    const existingPlayerUsernames = Object.values(roomData.players || {}).map(
+      (p: any) => p.username.toLowerCase()
+    );
+    if (existingPlayerUsernames.includes(username.trim().toLowerCase())) {
+      return NextResponse.json(
+        { error: 'A player with this username is already in the room' },
+        { status: 400 }
+      );
+    }
+
     // Generate temporary player ID
     const playerId = crypto.randomUUID();
 
-    // Assign next available player number
-    // Note: This uses Math.max to find the highest existing player number and adds 1.
-    // For Phase 1, this is sufficient since players don't leave during gameplay.
-    // Future phases should track the highest player number separately if player removal is needed.
-    const playerNumbers = (Object.values(roomData.players || {}) as PlayerData[]).map(
-      (p) => p.playerNumber
+    // Check if this username matches a recently left player (within 10 minutes)
+    // If so, reuse their playerNumber for consistent turn order
+    const formerPlayers = roomData.formerPlayers || [];
+    const TEN_MINUTES_MS = 10 * 60 * 1000;
+    const now = Date.now();
+    
+    // Clean up expired former players (older than 10 minutes)
+    const validFormerPlayers = formerPlayers.filter((fp: any) => {
+      if (!fp.leftAt) return false;
+      const leftAtMs = fp.leftAt.toMillis ? fp.leftAt.toMillis() : fp.leftAt;
+      return now - leftAtMs < TEN_MINUTES_MS;
+    });
+
+    // Find if this username was a former player
+    const formerPlayer = validFormerPlayers.find(
+      (fp: any) => fp.username.toLowerCase() === username.trim().toLowerCase()
     );
-    const nextPlayerNumber = Math.max(0, ...playerNumbers) + 1;
+
+    let playerNumber: number;
+    let updatedFormerPlayers = validFormerPlayers;
+
+    if (formerPlayer) {
+      // Reuse the previous playerNumber
+      playerNumber = formerPlayer.playerNumber;
+      // Remove this entry from formerPlayers since they're rejoining
+      updatedFormerPlayers = validFormerPlayers.filter(
+        (fp: any) => !(fp.username.toLowerCase() === username.trim().toLowerCase() && fp.playerNumber === playerNumber)
+      );
+    } else {
+      // Assign next available player number
+      // Note: This uses Math.max to find the highest existing player number and adds 1.
+      const playerNumbers = (Object.values(roomData.players || {}) as any[]).map(
+        (p) => p.playerNumber
+      );
+      playerNumber = Math.max(0, ...playerNumbers) + 1;
+    }
 
     // Add player to room
     await roomRef.update({
       [`players.${playerId}`]: {
         playerId,
         username: username.trim(),
-        playerNumber: nextPlayerNumber,
+        playerNumber: playerNumber,
         joinedAt: FieldValue.serverTimestamp(),
         isHost: false,
       },
+      formerPlayers: updatedFormerPlayers,
       lastActivity: FieldValue.serverTimestamp(),
     });
 

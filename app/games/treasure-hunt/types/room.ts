@@ -11,6 +11,12 @@ export interface Player {
   isConnected?: boolean;
 }
 
+export interface FormerPlayer {
+  username: string;
+  playerNumber: number;
+  leftAt: Timestamp;
+}
+
 export interface Room {
   roomCode: string;
   hostId: string;
@@ -25,4 +31,5 @@ export interface Room {
   gameState: GameState | null;
   players: Record<string, Player>;
   lastLeaverMessage?: string; // Message shown in lobby after a player leaves mid-game
+  formerPlayers?: FormerPlayer[]; // Track recently left players for re-join (kept for 10 minutes)
 }

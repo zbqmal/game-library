@@ -54,7 +54,8 @@ export async function POST(
     const isHost = roomData.hostId === playerId;
     const playerCount = Object.keys(roomData.players || {}).length;
     const isPlayingGame = roomData.status === "playing";
-    const leavingPlayerUsername = roomData.players[playerId].username;
+    const leavingPlayer = roomData.players[playerId];
+    const leavingPlayerUsername = leavingPlayer.username;
 
     // If last player is leaving, delete the room
     if (playerCount === 1) {
@@ -69,9 +70,22 @@ export async function POST(
       );
     }
 
+    // Add leaving player to formerPlayers history for potential re-join
+    // Keep history for 10 minutes to allow rejoining with same playerNumber
+    const formerPlayers = roomData.formerPlayers || [];
+    const updatedFormerPlayers = [
+      ...formerPlayers,
+      {
+        username: leavingPlayer.username,
+        playerNumber: leavingPlayer.playerNumber,
+        leftAt: FieldValue.serverTimestamp(),
+      },
+    ];
+
     // Prepare update object
     const updateData: any = {
       [`players.${playerId}`]: FieldValue.delete(),
+      formerPlayers: updatedFormerPlayers,
       lastActivity: FieldValue.serverTimestamp(),
     };
 

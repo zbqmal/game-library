@@ -194,17 +194,29 @@ describe('POST /api/rooms/join', () => {
   });
 
   it('assigns correct player number', async () => {
-    mockGet.mockResolvedValueOnce({
-      exists: true,
-      data: () => ({
-        status: 'waiting',
-        players: {
-          'player1-id': { playerNumber: 1 },
-          'player2-id': { playerNumber: 2 },
-        },
-        config: { maxPlayers: 4 },
-      }),
-    });
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player1-id': { playerNumber: 1, username: 'Player1' },
+            'player2-id': { playerNumber: 2, username: 'Player2' },
+          },
+          config: { maxPlayers: 4 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player1-id': { playerNumber: 1, username: 'Player1' },
+            'player2-id': { playerNumber: 2, username: 'Player2' },
+          },
+          config: { maxPlayers: 4 },
+        }),
+      });
 
     const request = new NextRequest('http://localhost:3000/api/rooms/join', {
       method: 'POST',
@@ -216,6 +228,229 @@ describe('POST /api/rooms/join', () => {
     const updateCall = mockUpdate.mock.calls[0][0];
     const playerKey = Object.keys(updateCall).find((k) => k.startsWith('players.'));
     expect(updateCall[playerKey!].playerNumber).toBe(3);
+  });
+
+  it('prevents duplicate usernames in the same room', async () => {
+    mockGet.mockResolvedValue({
+      exists: true,
+      data: () => ({
+        status: 'waiting',
+        players: {
+          'player1-id': { playerNumber: 1, username: 'Alice' },
+        },
+        config: { maxPlayers: 4 },
+      }),
+    });
+
+    const request = new NextRequest('http://localhost:3000/api/rooms/join', {
+      method: 'POST',
+      body: JSON.stringify({ roomCode: 'ABC123', username: 'Alice' }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toBe('A player with this username is already in the room');
+  });
+
+  it('allows rejoining with same username after leaving (reuses playerNumber)', async () => {
+    const now = Date.now();
+    const fiveMinutesAgo = { toMillis: () => now - 5 * 60 * 1000 };
+
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player2-id': { playerNumber: 2, username: 'Bob' },
+          },
+          formerPlayers: [
+            { username: 'Alice', playerNumber: 1, leftAt: fiveMinutesAgo },
+          ],
+          config: { maxPlayers: 4 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player2-id': { playerNumber: 2, username: 'Bob' },
+          },
+          config: { maxPlayers: 4 },
+        }),
+      });
+
+    const request = new NextRequest('http://localhost:3000/api/rooms/join', {
+      method: 'POST',
+      body: JSON.stringify({ roomCode: 'ABC123', username: 'Alice' }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalled();
+
+    const updateCall = mockUpdate.mock.calls[0][0];
+    const playerKey = Object.keys(updateCall).find((k) => k.startsWith('players.'));
+    expect(updateCall[playerKey!].username).toBe('Alice');
+    expect(updateCall[playerKey!].playerNumber).toBe(1); // Reused playerNumber
+    
+    // Check that formerPlayers was updated (Alice removed since rejoining)
+    expect(updateCall.formerPlayers).toBeDefined();
+    expect(updateCall.formerPlayers.length).toBe(0);
+  });
+
+  it('assigns new playerNumber if former player history expired (>10 minutes)', async () => {
+    const now = Date.now();
+    const elevenMinutesAgo = { toMillis: () => now - 11 * 60 * 1000 };
+
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player2-id': { playerNumber: 2, username: 'Bob' },
+          },
+          formerPlayers: [
+            { username: 'Alice', playerNumber: 1, leftAt: elevenMinutesAgo },
+          ],
+          config: { maxPlayers: 4 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player2-id': { playerNumber: 2, username: 'Bob' },
+          },
+          config: { maxPlayers: 4 },
+        }),
+      });
+
+    const request = new NextRequest('http://localhost:3000/api/rooms/join', {
+      method: 'POST',
+      body: JSON.stringify({ roomCode: 'ABC123', username: 'Alice' }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalled();
+
+    const updateCall = mockUpdate.mock.calls[0][0];
+    const playerKey = Object.keys(updateCall).find((k) => k.startsWith('players.'));
+    expect(updateCall[playerKey!].username).toBe('Alice');
+    expect(updateCall[playerKey!].playerNumber).toBe(3); // New playerNumber (max 2 + 1)
+    
+    // Check that expired former player was cleaned up
+    expect(updateCall.formerPlayers).toBeDefined();
+    expect(updateCall.formerPlayers.length).toBe(0);
+  });
+
+  it('cleans up expired former players on join', async () => {
+    const now = Date.now();
+    const fiveMinutesAgo = { toMillis: () => now - 5 * 60 * 1000 };
+    const elevenMinutesAgo = { toMillis: () => now - 11 * 60 * 1000 };
+
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player1-id': { playerNumber: 1, username: 'Alice' },
+          },
+          formerPlayers: [
+            { username: 'Bob', playerNumber: 2, leftAt: fiveMinutesAgo },
+            { username: 'Charlie', playerNumber: 3, leftAt: elevenMinutesAgo },
+          ],
+          config: { maxPlayers: 4 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player1-id': { playerNumber: 1, username: 'Alice' },
+          },
+          config: { maxPlayers: 4 },
+        }),
+      });
+
+    const request = new NextRequest('http://localhost:3000/api/rooms/join', {
+      method: 'POST',
+      body: JSON.stringify({ roomCode: 'ABC123', username: 'Dave' }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalled();
+
+    const updateCall = mockUpdate.mock.calls[0][0];
+    
+    // Check that only valid former player (Bob) remains
+    expect(updateCall.formerPlayers).toBeDefined();
+    expect(updateCall.formerPlayers.length).toBe(1);
+    expect(updateCall.formerPlayers[0].username).toBe('Bob');
+  });
+
+  it('handles case-insensitive username matching for rejoining', async () => {
+    const now = Date.now();
+    const fiveMinutesAgo = { toMillis: () => now - 5 * 60 * 1000 };
+
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player2-id': { playerNumber: 2, username: 'Bob' },
+          },
+          formerPlayers: [
+            { username: 'Alice', playerNumber: 1, leftAt: fiveMinutesAgo },
+          ],
+          config: { maxPlayers: 4 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          status: 'waiting',
+          players: {
+            'player2-id': { playerNumber: 2, username: 'Bob' },
+          },
+          config: { maxPlayers: 4 },
+        }),
+      });
+
+    const request = new NextRequest('http://localhost:3000/api/rooms/join', {
+      method: 'POST',
+      body: JSON.stringify({ roomCode: 'ABC123', username: 'ALICE' }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalled();
+
+    const updateCall = mockUpdate.mock.calls[0][0];
+    const playerKey = Object.keys(updateCall).find((k) => k.startsWith('players.'));
+    expect(updateCall[playerKey!].playerNumber).toBe(1); // Reused playerNumber
   });
 
   it('handles errors gracefully', async () => {
