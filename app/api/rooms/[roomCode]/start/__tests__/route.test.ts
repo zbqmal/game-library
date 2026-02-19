@@ -863,4 +863,66 @@ describe("POST /api/rooms/[roomCode]/start", () => {
       gridSize: 3,
     });
   });
+
+  it("handles players with non-sequential playerNumbers correctly", async () => {
+    mockGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "waiting",
+          players: {
+            "player1-id": { playerNumber: 1, username: "Alice" },
+            "player3-id": { playerNumber: 5, username: "Charlie" },
+            "player2-id": { playerNumber: 3, username: "Bob" },
+          },
+          config: { gridSize: 3, maxPlayers: 4 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          roomCode: "ABC123",
+          hostId: "player1-id",
+          status: "playing",
+          gameState: {
+            tiles: new Array(9).fill("covered"),
+            treasurePosition: 4,
+            currentPlayer: 1,
+            winner: null,
+            isGameOver: false,
+            playerCount: 3,
+            playerNames: ["Alice", "Bob", "Charlie"],
+            gridSize: 3,
+          },
+          players: {
+            "player1-id": { playerNumber: 1, username: "Alice" },
+            "player3-id": { playerNumber: 5, username: "Charlie" },
+            "player2-id": { playerNumber: 3, username: "Bob" },
+          },
+          config: { gridSize: 3, maxPlayers: 4 },
+        }),
+      });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/rooms/ABC123/start",
+      {
+        method: "POST",
+        body: JSON.stringify({ playerId: "player1-id" }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ roomCode: "ABC123" }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(initializeGame).toHaveBeenCalledWith({
+      playerCount: 3,
+      playerNames: ["Alice", "Bob", "Charlie"],
+      gridSize: 3,
+    });
+  });
 });
