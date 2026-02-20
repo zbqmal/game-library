@@ -232,10 +232,13 @@ export default function TreasureHuntPage() {
               {playerCount > 0 && !isValidPlayerCount && (
                 <p className="text-xs text-red-600 mt-1">
                   {playerCount < 2
-                    ? "At least 2 players required"
+                    ? texts.treasureMinPlayersRequired
                     : playerCount > maxPlayers
-                      ? `Maximum ${maxPlayers} players for ${gridSize}×${gridSize} grid`
-                      : "Invalid player count"}
+                      ? interpolate(texts.treasureMaxPlayersForGrid, {
+                          max: maxPlayers,
+                          size: gridSize,
+                        })
+                      : texts.treasureInvalidConfig}
                 </p>
               )}
             </div>
@@ -287,7 +290,7 @@ export default function TreasureHuntPage() {
             {/* Online Multiplayer Button */}
             <Link href="/games/treasure-hunt/online">
               <button className="w-full py-3 mb-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors font-semibold text-lg shadow-md">
-                🌐 Play Online Multiplayer
+                {texts.treasurePlayOnlineMultiplayer}
               </button>
             </Link>
 
