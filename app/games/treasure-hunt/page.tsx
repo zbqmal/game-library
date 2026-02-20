@@ -459,7 +459,9 @@ export default function TreasureHuntPage() {
 
               {/* Game Rules */}
               <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-800">
-                <h3 className="font-semibold mb-2">{texts.treasureRulesTitle}</h3>
+                <h3 className="font-semibold mb-2">
+                  {texts.treasureRulesTitle}
+                </h3>
                 <ul className="list-disc list-inside space-y-1">
                   <li>{texts.treasureRuleTurns}</li>
                   <li>{texts.treasureRuleHidden}</li>

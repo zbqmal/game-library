@@ -10,9 +10,7 @@ function OnlinePageRedirect() {
 
   useEffect(() => {
     if (room) {
-      router.replace(
-        `/games/treasure-hunt/online/${room.toUpperCase()}`,
-      );
+      router.replace(`/games/treasure-hunt/online/${room.toUpperCase()}`);
     } else {
       router.replace("/games/treasure-hunt");
     }

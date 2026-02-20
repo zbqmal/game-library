@@ -4,10 +4,12 @@ import { useState } from "react";
 
 type DismissibleLeaverMessageProps = {
   message?: string | null;
+  subtitle?: string;
 };
 
 export default function DismissibleLeaverMessage({
   message,
+  subtitle,
 }: DismissibleLeaverMessageProps) {
   const [dismissedMessage, setDismissedMessage] = useState<string | null>(null);
   const isDismissed = Boolean(message && dismissedMessage === message);
@@ -38,9 +40,9 @@ export default function DismissibleLeaverMessage({
         </svg>
       </button>
       <p className="text-yellow-800 font-semibold">⚠️ {message}</p>
-      <p className="text-yellow-700 text-sm mt-1">
-        Game was reset to lobby. Host can start a new game.
-      </p>
+      {subtitle && (
+        <p className="text-yellow-700 text-sm mt-1">{subtitle}</p>
+      )}
     </div>
   );
 }
