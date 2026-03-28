@@ -109,12 +109,12 @@ export default function Home() {
   }, [searchQuery, fuse, localizedGames]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen">
       <Header />
 
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-8">
             {texts.welcomeMessage}
           </p>
 
@@ -127,7 +127,7 @@ export default function Home() {
         <GameGrid games={filteredGames} />
       </main>
 
-      <footer className="mt-auto py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+      <footer className="mt-auto py-6 text-center text-slate-600 text-sm border-t border-white/[0.05]">
         <p>{texts.footerContent}</p>
       </footer>
     </div>

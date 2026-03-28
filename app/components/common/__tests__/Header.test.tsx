@@ -38,8 +38,8 @@ describe("Header", () => {
     const header = container.querySelector("header");
     expect(header).toHaveClass(
       "bg-gradient-to-r",
-      "from-purple-600",
-      "to-blue-600",
+      "from-violet-950",
+      "to-indigo-950",
     );
   });
 
@@ -82,14 +82,7 @@ describe("Header", () => {
     const { container } = render(<Header />);
 
     const container_div = container.querySelector(".container");
-    expect(container_div).toHaveClass("mx-auto", "px-4", "py-6");
-  });
-
-  it("renders language dropdown", () => {
-    render(<Header />);
-    
-    const languageDropdown = screen.getByRole("combobox");
-    expect(languageDropdown).toBeInTheDocument();
+    expect(container_div).toHaveClass("mx-auto", "px-4", "py-10");
   });
 
   it("displays Spanish title when language is Spanish", () => {

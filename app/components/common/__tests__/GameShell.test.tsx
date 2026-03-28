@@ -109,15 +109,15 @@ describe("GameShell", () => {
     expect(svg).toHaveAttribute("viewBox", "0 0 24 24");
   });
 
-  it("wraps game content in white background box", () => {
+  it("wraps game content in dark glass card", () => {
     const { container } = render(
       <GameShell title="Test Game" description="Test description">
         <div>Game content</div>
       </GameShell>,
     );
 
-    const whiteBox = container.querySelector(".bg-white");
-    expect(whiteBox).toBeInTheDocument();
-    expect(whiteBox).toHaveClass("rounded-lg", "shadow-lg", "p-6");
+    const card = container.querySelector(".bg-slate-900\\/80");
+    expect(card).toBeInTheDocument();
+    expect(card).toHaveClass("rounded-xl", "shadow-lg", "p-6");
   });
 });

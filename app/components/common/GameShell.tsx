@@ -19,12 +19,12 @@ export default function GameShell({
   const { texts } = useGameLibraryTranslations();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4">
+    <div className="min-h-screen py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Back to Home */}
         <Link
           href="/"
-          className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-6 font-semibold transition-colors"
+          className="inline-flex items-center text-violet-400 hover:text-violet-300 mb-6 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a14] rounded-md"
         >
           <svg
             className="w-5 h-5 mr-2"
@@ -44,17 +44,17 @@ export default function GameShell({
 
         {/* Game Header */}
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-purple-600 mb-3">
+          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400 mb-3">
             {title}
           </h1>
-          <p className="text-lg text-gray-600">{description}</p>
+          <p className="text-lg text-slate-400">{description}</p>
         </div>
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Game Area */}
           <div className={scoreboard ? "lg:col-span-2" : "lg:col-span-3"}>
-            <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
+            <div className="bg-slate-900/80 backdrop-blur-sm border border-white/[0.08] rounded-xl shadow-lg p-6 md:p-8">
               {children}
             </div>
           </div>

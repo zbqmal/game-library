@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import TopNav from "./components/common/TopNav";
 
 export const metadata: Metadata = {
   title: "Game Library",
@@ -13,7 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className="antialiased min-h-screen">
+        <TopNav />
         {children}
       </body>
     </html>

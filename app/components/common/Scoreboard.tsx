@@ -52,13 +52,13 @@ export default function Scoreboard({ gameId, title }: ScoreboardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-purple-600 mb-4">
+    <div className="bg-slate-900/80 backdrop-blur-sm border border-white/[0.08] rounded-xl shadow-md p-6">
+      <h2 className="text-2xl font-bold text-violet-400 mb-4">
         {resolvedTitle}
       </h2>
 
       {scores.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-slate-500">
           <p className="text-lg">{texts.scoreboardEmptyTitle}</p>
           <p className="text-sm mt-2">{texts.scoreboardEmptySubtitle}</p>
         </div>
@@ -67,39 +67,39 @@ export default function Scoreboard({ gameId, title }: ScoreboardProps) {
           {scores.map((entry, index) => (
             <div
               key={`${entry.name}-${entry.timestamp}`}
-              className={`flex items-center justify-between p-3 rounded-lg ${
+              className={`flex items-center justify-between p-3 rounded-lg border ${
                 index === 0
-                  ? "bg-gradient-to-r from-yellow-100 to-yellow-50 border-2 border-yellow-400"
+                  ? "bg-amber-500/10 border-amber-500/30"
                   : index === 1
-                    ? "bg-gradient-to-r from-gray-200 to-gray-100 border-2 border-gray-400"
+                    ? "bg-slate-400/10 border-slate-400/20"
                     : index === 2
-                      ? "bg-gradient-to-r from-orange-100 to-orange-50 border-2 border-orange-400"
-                      : "bg-gray-50 border border-gray-200"
+                      ? "bg-orange-500/10 border-orange-500/20"
+                      : "bg-white/[0.03] border-white/[0.06]"
               }`}
             >
               <div className="flex items-center gap-3">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full font-bold ${
+                  className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
                     index === 0
-                      ? "bg-yellow-400 text-yellow-900"
+                      ? "bg-amber-500 text-amber-950"
                       : index === 1
-                        ? "bg-gray-400 text-gray-900"
+                        ? "bg-slate-400 text-slate-900"
                         : index === 2
-                          ? "bg-orange-400 text-orange-900"
-                          : "bg-purple-200 text-purple-900"
+                          ? "bg-orange-500 text-orange-950"
+                          : "bg-violet-500/20 text-violet-300"
                   }`}
                 >
                   {index + 1}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-800">{entry.name}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-semibold text-slate-200">{entry.name}</p>
+                  <p className="text-xs text-slate-500">
                     {formatDate(entry.timestamp)}
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xl font-bold text-purple-600">
+                <p className="text-xl font-bold text-violet-400">
                   {entry.score}
                 </p>
               </div>

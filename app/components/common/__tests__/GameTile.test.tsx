@@ -86,7 +86,7 @@ describe("GameTile", () => {
     expect(link).toHaveClass(
       "focus:outline-none",
       "focus:ring-2",
-      "focus:ring-purple-500",
+      "focus:ring-violet-500",
     );
   });
 

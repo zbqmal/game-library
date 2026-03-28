@@ -11,12 +11,12 @@ interface GameGridProps {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden animate-pulse">
-      <div className="aspect-video bg-gray-300 dark:bg-gray-700" />
+    <div className="bg-slate-900/70 border border-white/[0.06] rounded-xl shadow-md overflow-hidden animate-pulse">
+      <div className="aspect-video bg-slate-800/80" />
       <div className="p-4">
-        <div className="h-5 bg-gray-300 dark:bg-gray-700 rounded mb-2 w-3/4" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded mb-1 w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+        <div className="h-5 bg-slate-700/80 rounded mb-2 w-3/4" />
+        <div className="h-4 bg-slate-700/80 rounded mb-1 w-full" />
+        <div className="h-4 bg-slate-700/80 rounded w-5/6" />
       </div>
     </div>
   );
@@ -38,11 +38,11 @@ export default function GameGrid({ games, isLoading = false }: GameGridProps) {
   if (games.length === 0) {
     return (
       <div className="text-center py-20">
-        <div className="inline-block bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border-2 border-dashed border-gray-300 dark:border-gray-600">
-          <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">
+        <div className="inline-block bg-slate-900/70 border border-white/[0.08] rounded-xl shadow-lg p-8 border-dashed">
+          <p className="text-slate-400 text-lg mb-2">
             🔍 {texts.noResultsMessage}
           </p>
-          <p className="text-gray-500 dark:text-gray-500 text-sm">
+          <p className="text-slate-500 text-sm">
             {texts.noResultsSuggestion}
           </p>
         </div>

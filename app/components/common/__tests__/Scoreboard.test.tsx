@@ -117,7 +117,7 @@ describe("Scoreboard", () => {
 
     await waitFor(() => {
       const firstPlaceDiv = container.querySelector(
-        ".from-yellow-100.to-yellow-50.border-yellow-400",
+        ".bg-amber-500\\/10.border-amber-500\\/30",
       );
       expect(firstPlaceDiv).toBeInTheDocument();
     });
@@ -128,7 +128,7 @@ describe("Scoreboard", () => {
 
     await waitFor(() => {
       const secondPlaceDiv = container.querySelector(
-        ".from-gray-200.to-gray-100.border-gray-400",
+        ".bg-slate-400\\/10.border-slate-400\\/20",
       );
       expect(secondPlaceDiv).toBeInTheDocument();
     });
@@ -139,7 +139,7 @@ describe("Scoreboard", () => {
 
     await waitFor(() => {
       const thirdPlaceDiv = container.querySelector(
-        ".from-orange-100.to-orange-50.border-orange-400",
+        ".bg-orange-500\\/10.border-orange-500\\/20",
       );
       expect(thirdPlaceDiv).toBeInTheDocument();
     });
@@ -247,9 +247,9 @@ describe("Scoreboard", () => {
       // First place badge should be yellow
       const badges = container.querySelectorAll(".rounded-full.font-bold");
       expect(badges.length).toBeGreaterThan(0);
-      expect(badges[0]).toHaveClass("bg-yellow-400", "text-yellow-900");
-      expect(badges[1]).toHaveClass("bg-gray-400", "text-gray-900");
-      expect(badges[2]).toHaveClass("bg-orange-400", "text-orange-900");
+      expect(badges[0]).toHaveClass("bg-amber-500", "text-amber-950");
+      expect(badges[1]).toHaveClass("bg-slate-400", "text-slate-900");
+      expect(badges[2]).toHaveClass("bg-orange-500", "text-orange-950");
     });
   });
 
