@@ -57,7 +57,7 @@ export default function SearchBar({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="block w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+          className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
           placeholder={resolvedPlaceholder}
           autoComplete="off"
         />
@@ -65,7 +65,7 @@ export default function SearchBar({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
             aria-label={texts.clearSearchLabel}
           >
             <svg
@@ -86,7 +86,7 @@ export default function SearchBar({
         )}
       </div>
       {query && (
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-sm text-gray-600">
           {texts.searchingForLabel}{" "}
           <span className="font-semibold">{query}</span>
         </p>
