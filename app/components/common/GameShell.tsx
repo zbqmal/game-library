@@ -19,7 +19,7 @@ export default function GameShell({
   const { texts } = useGameLibraryTranslations();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4">
+    <div className="min-h-screen bg-[var(--bg-base)] py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Back to Home */}
         <Link

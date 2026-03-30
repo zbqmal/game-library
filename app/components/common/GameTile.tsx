@@ -61,9 +61,9 @@ export default function GameTile({ game }: GameTileProps) {
   return (
     <Link
       href={game.route}
-      className="group relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+      className="group relative bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
     >
-      <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
+      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
         <Image
           src={game.thumbnail}
           alt={`${displayTitle} game thumbnail`}
@@ -80,17 +80,17 @@ export default function GameTile({ game }: GameTileProps) {
         )}
       </div>
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
           {displayTitle}
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+        <p className="text-sm text-gray-600 line-clamp-2">
           {displayDescription}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {displayTags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
+              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full"
             >
               {tag}
             </span>
